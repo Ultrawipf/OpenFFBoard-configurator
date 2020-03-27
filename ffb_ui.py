@@ -41,6 +41,7 @@ class FfbUI(QWidget):
 
         self.analogbtns.buttonClicked.connect(self.axesChanged)
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
+        self.pushButton_center.clicked.connect(lambda : self.main.serialWrite("zeroenc\n"))
         
         self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
         self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
