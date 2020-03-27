@@ -57,6 +57,11 @@ class FfbUI(QWidget):
         self.updateSliders()
 
         layout = QVBoxLayout()
+
+        # Clear if reloaded
+        for b in self.analogbtns.buttons():
+            self.analogbtns.removeButton(b)
+            del b
         for i in range(self.axes):
             btn=QCheckBox(str(i+1),self.groupBox_analogaxes)
             self.analogbtns.addButton(btn,i)
