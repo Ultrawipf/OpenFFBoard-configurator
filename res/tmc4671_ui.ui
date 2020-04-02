@@ -20,7 +20,7 @@
       <string>TMC4671</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="2">
+      <item row="0" column="3" alignment="Qt::AlignTop">
        <widget class="QGroupBox" name="groupBox_2">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -94,10 +94,17 @@
            </property>
           </widget>
          </item>
+         <item row="4" column="0">
+          <widget class="QPushButton" name="pushButton_submitpid">
+           <property name="text">
+            <string>Change pids</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
+      <item row="0" column="0" colspan="2" alignment="Qt::AlignTop">
        <widget class="QGroupBox" name="groupBox_3">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -215,14 +222,14 @@
          <item row="4" column="0">
           <widget class="QPushButton" name="pushButton_submitmotor">
            <property name="text">
-            <string>Submit</string>
+            <string>Change motor</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="3" column="0">
        <widget class="QGroupBox" name="groupBox_4">
         <property name="title">
          <string>More</string>
@@ -252,7 +259,7 @@
         </layout>
        </widget>
       </item>
-      <item row="1" column="2" alignment="Qt::AlignBottom">
+      <item row="3" column="3" alignment="Qt::AlignBottom">
        <widget class="QPushButton" name="pushButton_align">
         <property name="text">
          <string>Align Encoder</string>

@@ -40,8 +40,9 @@ class FfbUI(QWidget):
         self.horizontalSlider_degrees.valueChanged.connect(self.sliderDegreesChanged)
         self.main.save.connect(self.save)
 
-        self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
-        self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
+        #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
+        #self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
+        self.pushButton_submit_hw.clicked.connect(self.submitHw)
 
         self.initUi()
 
@@ -49,8 +50,6 @@ class FfbUI(QWidget):
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.pushButton_center.clicked.connect(lambda : self.main.serialWrite("zeroenc\n"))
         
-        
-
         #self.spinBox_ppr.valueChanged.connect(lambda v : self.main.serialWrite("ppr="+str(v)+";"))
 
 
@@ -98,13 +97,15 @@ class FfbUI(QWidget):
 
         self.main.serialWrite("btntypes="+str(mask)+"\n")
 
-
-    def save(self):
+    def submitHw(self):
         val = self.spinBox_ppr.value()
+        self.driverChanged(self.comboBox_driver.currentIndex())
+        self.encoderChanged(self.comboBox_encoder.currentIndex())
         self.main.serialWrite("ppr="+str(val)+"\n")
 
+    def save(self):
         self.main.serialWrite("save\n")
-
+        
 
     def driverChanged(self,idx):
         if idx == -1:
@@ -148,7 +149,7 @@ class FfbUI(QWidget):
 
 
     def getMotorDriver(self):
-        self.comboBox_driver.currentIndexChanged.disconnect()
+        #self.comboBox_driver.currentIndexChanged.disconnect()
         dat = self.main.serialGet("drvtype!\n")
         self.comboBox_driver.clear()
         self.drvIds,self.drvClasses = classlistToIds(dat)
@@ -164,7 +165,7 @@ class FfbUI(QWidget):
             self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
         # else:
         #     self.comboBox_driver.setCurrentIndex(0)
-        self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
+        #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
         # TMC
 
         if(self.drvId == 1):
@@ -178,7 +179,7 @@ class FfbUI(QWidget):
         
 
     def getEncoder(self):
-        self.comboBox_encoder.currentIndexChanged.disconnect()
+        #self.comboBox_encoder.currentIndexChanged.disconnect()
         self.spinBox_ppr.setEnabled(True)
 
         dat = self.main.serialGet("enctype!\n")
@@ -200,7 +201,7 @@ class FfbUI(QWidget):
 
         if(self.encId == 1):
             self.spinBox_ppr.setEnabled(False)
-        self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
+       # self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
         
 
     def getButtonSources(self):

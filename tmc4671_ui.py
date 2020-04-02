@@ -19,13 +19,15 @@ class TMC4671Ui(QWidget):
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
 
-        self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
-        self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
-        self.spinBox_fp.valueChanged.connect(lambda v : self.main.serialWrite("fluxP="+str(v)+";"))
-        self.spinBox_fi.valueChanged.connect(lambda v : self.main.serialWrite("fluxI="+str(v)+";"))
+        # self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
+        # self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
+        # self.spinBox_fp.valueChanged.connect(lambda v : self.main.serialWrite("fluxP="+str(v)+";"))
+        # self.spinBox_fi.valueChanged.connect(lambda v : self.main.serialWrite("fluxI="+str(v)+";"))
         self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.serialWrite("fluxoffset="+str(v)+";"))
 
         self.pushButton_submitmotor.clicked.connect(self.submitMotor)
+        self.pushButton_submitpid.clicked.connect(self.submitPid)
+
     def __del__(self):
         pass
 
@@ -39,11 +41,28 @@ class TMC4671Ui(QWidget):
 
         phiE = self.phiE_idx[self.comboBox_phie.currentIndex()]
         cmd+="phiesrc="+str(phiE)+";"
-
+        
         if(phiE == 3):
             cmd+="phiesrc="+str(self.spinBox_ppr.value())+";"
 
         self.main.serialWrite(cmd)
+
+    def submitPid(self):
+        # PIDs
+        cmd = ""
+        tp = self.spinBox_tp.value()
+        cmd+="torqueP="+str(tp)+";"
+
+        ti = self.spinBox_ti.value()
+        cmd+="torqueI="+str(ti)+";"
+
+        fp = self.spinBox_fp.value()
+        cmd+="fluxP="+str(fp)+";"
+
+        fi = self.spinBox_fi.value()
+        cmd+="fluxI="+str(fi)+";"
+        self.main.serialWrite(cmd)
+
 
     def initUi(self):
         self.comboBox_phie.clear()
