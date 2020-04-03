@@ -1,12 +1,13 @@
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
+from PyQt5.QtWidgets import QWidget,QToolButton 
+from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
 from PyQt5 import uic
 from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
 import main
 import tmc4671_ui
+import buttonconf_ui
 
 class FfbUI(QWidget):
     drvClasses = {}
@@ -25,6 +26,7 @@ class FfbUI(QWidget):
 
     analogbtns = QButtonGroup()
     buttonbtns = QButtonGroup()
+    buttonconfbuttons = []
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.main = parent #type: main.MainUi
@@ -213,18 +215,31 @@ class FfbUI(QWidget):
             self.main.log("Error getting buttons")
             return
         types = int(types)
-        layout = QVBoxLayout()
+        layout = QGridLayout()
         #clear
+        for b in self.buttonconfbuttons:
+            del b
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
             del b
         #add buttons
-
+        row = 0
         for c in self.btnClasses:
             btn=QCheckBox(str(c[1]),self.groupBox_buttons)
             self.buttonbtns.addButton(btn,c[0])
-            layout.addWidget(btn)
-            btn.setChecked(types & (1<<c[0]) != 0)
+            layout.addWidget(btn,row,0)
+            enabled = types & (1<<c[0]) != 0
+            btn.setChecked(enabled)
+
+            confbutton = QToolButton(self)
+            confbutton.setText(">")
+            #confbutton.setPopupMode(QToolButton.InstantPopup)
+            layout.addWidget(confbutton,row,1)
+            self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
+            confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
+            confbutton.setEnabled(enabled)
+            self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+            row+=1
 
         self.groupBox_buttons.setLayout(layout)
         # TODO add UIs
