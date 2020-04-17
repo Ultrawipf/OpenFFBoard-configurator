@@ -3,17 +3,16 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 from PyQt5.QtCore import QIODevice,pyqtSignal
-from PyQt5 import uic
-from helper import res_path
 import main
-class SerialChooser(QWidget):
+from base_ui import WidgetUI
+
+class SerialChooser(WidgetUI):
     connected = pyqtSignal(bool)
     port = None
-    def __init__(self,serial, parent : main.MainUi=None):
-        QWidget.__init__(self, parent)
-        uic.loadUi(res_path('serialchooser.ui'), self)
+    def __init__(self,serial, main):
+        WidgetUI.__init__(self, main,'serialchooser.ui')
+        
         self.serial = serial
-        self.main = parent #type: main.MainUi
         self.pushButton_refresh.clicked.connect(self.getPorts)
         self.pushButton_connect.clicked.connect(self.serialConnect)
         self.comboBox_port.currentIndexChanged.connect(self.selectPort)

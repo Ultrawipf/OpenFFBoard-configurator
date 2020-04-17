@@ -8,8 +8,9 @@ from PyQt5.QtCore import QTimer
 import main
 import tmc4671_ui
 import buttonconf_ui
+from base_ui import WidgetUI
 
-class FfbUI(QWidget):
+class FfbUI(WidgetUI):
     drvClasses = {}
     drvIds = []
 
@@ -27,13 +28,10 @@ class FfbUI(QWidget):
     analogbtns = QButtonGroup()
     buttonbtns = QButtonGroup()
     buttonconfbuttons = []
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
-        self.main = parent #type: main.MainUi
-        uic.loadUi(res_path('ffbclass.ui'), self)
-
-        tabId = self.main.addTab(self,"FFB Wheel")
-        self.main.selectTab(tabId)
+    def __init__(self, main=None):
+        WidgetUI.__init__(self, main,'ffbclass.ui')
+    
+        
 
         self.analogbtns.setExclusive(False)
         self.buttonbtns.setExclusive(False)
@@ -46,7 +44,9 @@ class FfbUI(QWidget):
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
 
-        self.initUi()
+        if(self.initUi()):
+            tabId = self.main.addTab(self,"FFB Wheel")
+            self.main.selectTab(tabId)
 
         self.analogbtns.buttonClicked.connect(self.axesChanged)
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
@@ -57,25 +57,30 @@ class FfbUI(QWidget):
 
 
     def initUi(self):
-        self.main.setSaveBtn(True)
-        self.getMotorDriver()
-        self.getEncoder()
-        self.updateSliders()
+        try:
+            self.main.setSaveBtn(True)
+            self.getMotorDriver()
+            self.getEncoder()
+            self.updateSliders()
 
-        layout = QVBoxLayout()
+            layout = QVBoxLayout()
 
-        # Clear if reloaded
-        for b in self.analogbtns.buttons():
-            self.analogbtns.removeButton(b)
-            del b
-        for i in range(self.axes):
-            btn=QCheckBox(str(i+1),self.groupBox_analogaxes)
-            self.analogbtns.addButton(btn,i)
-            layout.addWidget(btn)
+            # Clear if reloaded
+            for b in self.analogbtns.buttons():
+                self.analogbtns.removeButton(b)
+                del b
+            for i in range(self.axes):
+                btn=QCheckBox(str(i+1),self.groupBox_analogaxes)
+                self.analogbtns.addButton(btn,i)
+                layout.addWidget(btn)
 
-        self.groupBox_analogaxes.setLayout(layout)
-        self.updateAxes()
-        self.getButtonSources()
+            self.groupBox_analogaxes.setLayout(layout)
+            self.updateAxes()
+            self.getButtonSources()
+        except:
+            self.main.log("Error initializing FFB tab")
+            return False
+        return True
 
     def updateAxes(self):
         axismask = int(self.main.serialGet("axismask?\n"))
@@ -172,11 +177,13 @@ class FfbUI(QWidget):
 
         if(self.drvId == 1):
             if not self.main.hasTab("TMC4671"):
-                tabId = self.main.addTab(tmc4671_ui.TMC4671Ui(self.main),"TMC4671")
-                if(int(self.main.serialGet("mtype\n")) == 0):
-                    self.main.selectTab(tabId)
-                    msg = QMessageBox(QMessageBox.Information,"TMC4671","Please setup the motor driver first!")
-                    msg.exec_()
+                tmc = tmc4671_ui.TMC4671Ui(self.main)
+                if(tmc.initUi()):
+                    tabId = self.main.addTab(tmc,"TMC4671")
+                    if(int(self.main.serialGet("mtype\n")) == 0):
+                        self.main.selectTab(tabId)
+                        msg = QMessageBox(QMessageBox.Information,"TMC4671","Please setup the motor driver first!")
+                        msg.exec_()
         
         
 

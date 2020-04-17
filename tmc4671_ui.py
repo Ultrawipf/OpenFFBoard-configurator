@@ -17,7 +17,7 @@ class TMC4671Ui(QWidget):
         uic.loadUi(res_path('tmc4671_ui.ui'), self)
 
         self.pushButton_align.clicked.connect(self.alignEnc)
-        self.initUi()
+        #self.initUi()
 
         # self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
         # self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
@@ -65,15 +65,25 @@ class TMC4671Ui(QWidget):
 
 
     def initUi(self):
-        self.comboBox_phie.clear()
-        for s in self.phiE_ids.values():
-            self.comboBox_phie.addItem(s[0])
+        try:
 
-        self.getMotor()
-        self.getPids()
+            self.comboBox_phie.clear()
+            for s in self.phiE_ids.values():
+                self.comboBox_phie.addItem(s[0])
+
+            self.getMotor()
+            self.getPids()
+
+            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.serialWrite("fluxoffset="+str(v)+";"))
+            self.pushButton_submitmotor.clicked.connect(self.submitMotor)
+            self.pushButton_submitpid.clicked.connect(self.submitPid)
+        except Exception as e:
+            self.main.log("Error initializing TMC tab. Please reconnect: " + str(e))
+            return False
+        return True
 
     def alignEnc(self):
-        res = self.main.serialGet("encalign\n",2000)
+        res = self.main.serialGet("encalign\n",3000)
         if(res):
             msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
             msg.exec_()
@@ -87,7 +97,7 @@ class TMC4671Ui(QWidget):
             self.spinBox_poles.setValue((poles))
         if(phiE):
             if(phiE not in self.phiE_ids):
-                print("Communication error.")
+                self.main.log("PhiE error:" + str(phiE))
                 self.main.reconnect()
                 return
             self.comboBox_phie.setCurrentIndex(self.phiE_ids[(phiE)][1])

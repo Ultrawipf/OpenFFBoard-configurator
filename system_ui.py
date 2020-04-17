@@ -5,15 +5,14 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import uic
 from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
-
-class SystemUI(QWidget):
+from base_ui import WidgetUI
+class SystemUI(WidgetUI):
     classes = []
     classIds = {}
-    def __init__(self, parent=None):
-        self.parent = parent
-        QWidget.__init__(self, parent)
-        self.main = parent
-        uic.loadUi(res_path('baseclass.ui'), self)
+    def __init__(self, main=None):
+
+        WidgetUI.__init__(self, main,'baseclass.ui')
+
         self.setEnabled(False)
         self.pushButton_ok.clicked.connect(self.mainBtn)
         self.pushButton_reboot.clicked.connect(self.reboot)
@@ -76,5 +75,5 @@ class SystemUI(QWidget):
         for c in self.classes:
             self.comboBox_main.addItem(c[1])
         self.comboBox_main.setCurrentIndex(self.classIds[id][0])
-
+        self.main.log("Detected mode: "+self.comboBox_main.currentText())
         self.main.chooseMain(id)
