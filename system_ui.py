@@ -39,7 +39,7 @@ class SystemUI(WidgetUI):
         self.main.reconnect()
     
     def dfu(self):
-        self.parent.serialWrite("dfu\n")
+        self.main.serialWrite("dfu\n")
         self.main.resetPort()
         msg = QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
         msg.exec_()
@@ -77,3 +77,4 @@ class SystemUI(WidgetUI):
         self.comboBox_main.setCurrentIndex(self.classIds[id][0])
         self.main.log("Detected mode: "+self.comboBox_main.currentText())
         self.main.chooseMain(id)
+       

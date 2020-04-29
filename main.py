@@ -15,6 +15,7 @@ version = "0.1"
 # UIs
 import system_ui
 import ffb_ui
+import tmc4671_ui
 
 
 class MainUi(QMainWindow):
@@ -28,19 +29,22 @@ class MainUi(QMainWindow):
         self.serial = QSerialPort(self)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
+        self.tabWidget_main.currentChanged.connect(self.tabChanged)
 
         self.setup()
         self.lastSerial = None
+        self.activeClasses = {}
         
         
     def setup(self):
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial,main = self)
         self.tabWidget_main.addTab(self.serialchooser,"Serial")
+        
         #self.serial.readyRead.connect(self.serialReceive)
         self.serialchooser.getPorts()
         self.actionAbout.triggered.connect(self.openAbout)
         self.serialchooser.connected.connect(self.serialConnected)
-        #self.timer.start(500)
+        self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.serialConnected)
         self.systemUi.pushButton_save.clicked.connect(self.saveClicked)
@@ -63,6 +67,8 @@ class MainUi(QMainWindow):
         if(self.serial.isOpen()):
             if(not self.serialGet("id?\n",1000)):
                 self.resetPort()
+                self.log("Timeout. Please reconnect")
+            
 
     def log(self,s):
         self.logBox.append(s)
@@ -75,11 +81,8 @@ class MainUi(QMainWindow):
         self.log("Save")
         self.save.emit()
 
-    # def serialReceive(self):
-    #     data = self.serial.readAll()
-    #     text = data.data().decode("utf-8")
-    #     self.lastSerial = text
-    #     self.serialchooser.serialLog("<-"+text)
+    def tabChanged(self,id):
+        pass
 
     def addTab(self,widget,name):
         return self.tabWidget_main.addTab(widget,name)
@@ -97,17 +100,37 @@ class MainUi(QMainWindow):
 
     def resetTabs(self):
         self.setSaveBtn(False)
+        self.activeClasses = {}
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
     
     def chooseMain(self,id):
-        if(id==self.curId):
-            return
-        self.resetTabs()
-        if(id == 1):
-            # FFB
-            self.mainClassUi = ffb_ui.FfbUI(main = self)
-            pass
+        lines = [l.split(":") for l in self.serialGet("lsactive\n").split("\n")]
+        newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
+        deleteClasses = [c["ui"] for name,c in self.activeClasses.items() if name not in newActiveClasses]
+        #print(newActiveClasses)
+        for c in deleteClasses:
+            print(c)
+            self.delTab(c)
+            
+        for name,c in newActiveClasses.items():
+            if name in self.activeClasses:
+                continue
+
+            if name == "FFB Wheel":
+                self.mainClassUi = ffb_ui.FfbUI(main = self)
+                self.activeClasses[name] = self.mainClassUi
+            if name == "TMC4671":
+                c = tmc4671_ui.TMC4671Ui(main = self)
+                self.activeClasses[name] = c
+                self.addTab(c,name)
+
+        #self.resetTabs()
+        # if(id == 1):
+        #     # FFB
+        #     self.mainClassUi = ffb_ui.FfbUI(main = self)
+        #     pass
+
     def reconnect(self):
         self.resetPort()
         QTimer.singleShot(3000,self.serialchooser.serialConnect)
@@ -136,8 +159,8 @@ class MainUi(QMainWindow):
 
     def serialWrite(self,cmd):
         if(self.serial.isOpen()):
-            self.serialchooser.serialLog("->"+cmd)
-            self.serial.write(bytes(cmd,"utf-8"))
+            #self.serialchooser.serialLog("->"+cmd)
+            self.serialchooser.write(bytes(cmd,"utf-8"))
             if(not self.serial.waitForBytesWritten(1000)):
                 self.log("Error writing "+cmd)
     
@@ -146,11 +169,12 @@ class MainUi(QMainWindow):
         if(not self.serial.isOpen()):
             self.log("Error: Serial closed")
             return None
+        self.serialchooser.setLog(False) # Disable serial log
         self.serialWrite(cmd)
         if(not self.serial.waitForReadyRead(timeout)):
             self.log("Error: Serial timeout")
             return None
-
+        self.serialchooser.setLog(True)
         data = self.serial.readAll()
         self.lastSerial = data.data().decode("utf-8")
         

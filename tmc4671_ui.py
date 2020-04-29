@@ -6,18 +6,19 @@ from PyQt5 import uic
 from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
 import main
+from base_ui import WidgetUI
 
-class TMC4671Ui(QWidget):
+class TMC4671Ui(WidgetUI):
     
     phiE_ids = {3:("ABN",0),4:("HALL",1)}
     phiE_idx = [3,4]
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
-        self.main = parent #type: main.MainUi
-        uic.loadUi(res_path('tmc4671_ui.ui'), self)
-
+    def __init__(self, main=None):
+        WidgetUI.__init__(self, main,'tmc4671_ui.ui')
+        #QWidget.__init__(self, parent)
+        self.main = main #type: main.MainUi
+    
         self.pushButton_align.clicked.connect(self.alignEnc)
-        #self.initUi()
+        self.initUi()
 
         # self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
         # self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
@@ -43,7 +44,7 @@ class TMC4671Ui(QWidget):
         cmd+="phiesrc="+str(phiE)+";"
         
         if(phiE == 3):
-            cmd+="phiesrc="+str(self.spinBox_ppr.value())+";"
+            cmd+="ppr="+str(self.spinBox_ppr.value())+";"
 
         self.main.serialWrite(cmd)
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>446</width>
-    <height>356</height>
+    <height>461</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,6 +20,131 @@
       <string>TMC4671</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0" colspan="2" alignment="Qt::AlignTop">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>1</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Motor</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Motor Type</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_mtype">
+           <item>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>DC</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Stepper</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>BLDC</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Motor Poles</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinBox_poles">
+           <property name="value">
+            <number>50</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Encoder Type</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="comboBox_phie">
+           <item>
+            <property name="text">
+             <string>EXT</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Openloop</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ABN</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>HALL</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>AENC-E</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>AENC-A</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>PPR</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="spinBox_ppr">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QPushButton" name="pushButton_submitmotor">
+           <property name="text">
+            <string>Change motor</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
       <item row="0" column="3" alignment="Qt::AlignTop">
        <widget class="QGroupBox" name="groupBox_2">
         <property name="sizePolicy">
@@ -104,131 +229,6 @@
         </layout>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2" alignment="Qt::AlignTop">
-       <widget class="QGroupBox" name="groupBox_3">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="title">
-         <string>Motor</string>
-        </property>
-        <layout class="QFormLayout" name="formLayout_2">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Motor Type</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBox_mtype">
-           <item>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>DC</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Stepper</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>BLDC</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QSpinBox" name="spinBox_poles">
-           <property name="value">
-            <number>50</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Motor Poles</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="comboBox_phie">
-           <item>
-            <property name="text">
-             <string>EXT</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Openloop</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>ABN</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>HALL</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>AENC-E</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>AENC-A</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Encoder Type</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>PPR</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QSpinBox" name="spinBox_ppr">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="maximum">
-            <number>65535</number>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QPushButton" name="pushButton_submitmotor">
-           <property name="text">
-            <string>Change motor</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QGroupBox" name="groupBox_4">
         <property name="title">
@@ -256,15 +256,35 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="2">
+          <widget class="QPushButton" name="pushButton_align">
+           <property name="text">
+            <string>Align Encoder</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
-      <item row="3" column="3" alignment="Qt::AlignBottom">
-       <widget class="QPushButton" name="pushButton_align">
-        <property name="text">
-         <string>Align Encoder</string>
+      <item row="4" column="0">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>

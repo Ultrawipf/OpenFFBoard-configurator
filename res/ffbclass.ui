@@ -89,16 +89,6 @@
          <string>Values</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Strength of FFB. Be very careful!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Power</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <widget class="QSlider" name="horizontalSlider_power">
            <property name="maximum">
@@ -124,13 +114,23 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Strength of FFB. Be very careful!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Power</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_5">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Degrees of rotation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Range</string>
+            <string>Range (deg)</string>
            </property>
           </widget>
          </item>
@@ -185,32 +185,57 @@
            </property>
           </widget>
          </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="1" rowspan="3">
-       <widget class="QGroupBox" name="groupBox_3">
-        <property name="title">
-         <string>Gamepad</string>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QGroupBox" name="groupBox_buttons">
-           <property name="title">
-            <string>Button sources</string>
+         <item row="2" column="1">
+          <widget class="QSlider" name="horizontalSlider_friction">
+           <property name="maximum">
+            <number>255</number>
+           </property>
+           <property name="value">
+            <number>127</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_analogaxes">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Friction</string>
            </property>
-           <property name="title">
-            <string>Axes</string>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Idle spring</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSlider" name="horizontalSlider_idle">
+           <property name="maximum">
+            <number>255</number>
+           </property>
+           <property name="value">
+            <number>127</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_friction">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="label_idle">
+           <property name="text">
+            <string>0</string>
            </property>
           </widget>
          </item>
@@ -252,6 +277,71 @@
         </layout>
        </widget>
       </item>
+      <item row="3" column="0">
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="title">
+         <string>Info</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item alignment="Qt::AlignLeft">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>HID rate:</string>
+           </property>
+          </widget>
+         </item>
+         <item alignment="Qt::AlignLeft">
+          <widget class="QLabel" name="label_HIDrate">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="1" rowspan="4">
+       <widget class="QGroupBox" name="groupBox_3">
+        <property name="title">
+         <string>Gamepad</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox_buttons">
+           <property name="title">
+            <string>Button sources</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_analogaxes">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string>Axes</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -288,6 +378,38 @@
     <hint type="destinationlabel">
      <x>397</x>
      <y>321</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSlider_idle</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_idle</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>199</x>
+     <y>289</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>289</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>horizontalSlider_friction</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_friction</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>199</x>
+     <y>261</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>261</y>
     </hint>
    </hints>
   </connection>

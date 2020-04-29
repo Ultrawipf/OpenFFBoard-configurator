@@ -4,13 +4,13 @@ from PyQt5.QtWidgets import QWidget,QToolButton
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
 from PyQt5 import uic
 from helper import res_path,classlistToIds
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer,QEvent
 import main
-import tmc4671_ui
 import buttonconf_ui
 from base_ui import WidgetUI
 
 class FfbUI(WidgetUI):
+    
     drvClasses = {}
     drvIds = []
 
@@ -31,15 +31,19 @@ class FfbUI(WidgetUI):
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'ffbclass.ui')
     
-        
+        self.timer = QTimer(self)
 
         self.analogbtns.setExclusive(False)
         self.buttonbtns.setExclusive(False)
 
-        self.horizontalSlider_power.valueChanged.connect(self.sliderPowerChanged)
-        self.horizontalSlider_degrees.valueChanged.connect(self.sliderDegreesChanged)
-        self.main.save.connect(self.save)
+        self.horizontalSlider_power.valueChanged.connect(lambda val: self.main.serialWrite("power="+str(val)+"\n"))
+        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.serialWrite("degrees="+str(val)+"\n"))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.serialWrite("friction="+str(val)+"\n"))
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.serialWrite("idlespring="+str(val)+"\n"))
 
+        self.main.save.connect(self.save)
+        self.timer.timeout.connect(self.updateTimer)
+        
         #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
@@ -77,16 +81,30 @@ class FfbUI(WidgetUI):
             self.groupBox_analogaxes.setLayout(layout)
             self.updateAxes()
             self.getButtonSources()
+            
         except:
             self.main.log("Error initializing FFB tab")
             return False
         return True
+
+    # Tab is currently shown
+    def showEvent(self,event):
+        self.timer.start(500)
+
+    # Tab is hidden
+    def hideEvent(self,event):
+        self.timer.stop()
 
     def updateAxes(self):
         axismask = int(self.main.serialGet("axismask?\n"))
         for i in range(self.axes):
             self.analogbtns.button(i).setChecked(axismask & (1 << i))
 
+    def updateTimer(self):
+        try:
+            self.label_HIDrate.setText(str(self.main.serialGet("hidrate\n"))+"Hz")
+        except:
+            pass
     # Axis checkboxes
     def axesChanged(self,id):
         mask = 0
@@ -134,25 +152,22 @@ class FfbUI(WidgetUI):
             self.getEncoder()
         
     
-    def sliderPowerChanged(self,val):
-        self.main.serialWrite("power="+str(val)+"\n")
-        
-    def sliderDegreesChanged(self,val):
-        self.main.serialWrite("degrees="+str(val)+"\n")
-
     def updateSliders(self):
-        power = self.main.serialGet("power?\n",150)
-        degrees = self.main.serialGet("degrees?\n",150)
+        power = int(self.main.serialGet("power?\n"))
+        degrees = int(self.main.serialGet("degrees?\n"))
+        friction = int(self.main.serialGet("friction?\n"))
+        spring = int(self.main.serialGet("idlespring?\n"))
 
-        if not(power and degrees):
-            main.log("Error getting values")
-            return
-        power = int(power)
-        degrees = int(degrees)
+
         self.horizontalSlider_power.setValue(power)
         self.horizontalSlider_degrees.setValue(degrees)
+        self.horizontalSlider_friction.setValue(friction)
+        self.horizontalSlider_idle.setValue(spring)
+
         self.label_power.setNum(power)
         self.label_range.setNum(degrees)
+        self.label_friction.setNum(friction)
+        self.label_idle.setNum(spring)
 
 
     def getMotorDriver(self):
@@ -175,15 +190,15 @@ class FfbUI(WidgetUI):
         #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
         # TMC
 
-        if(self.drvId == 1):
-            if not self.main.hasTab("TMC4671"):
-                tmc = tmc4671_ui.TMC4671Ui(self.main)
-                if(tmc.initUi()):
-                    tabId = self.main.addTab(tmc,"TMC4671")
-                    if(int(self.main.serialGet("mtype\n")) == 0):
-                        self.main.selectTab(tabId)
-                        msg = QMessageBox(QMessageBox.Information,"TMC4671","Please setup the motor driver first!")
-                        msg.exec_()
+        # if(self.drvId == 1):
+        #     if not self.main.hasTab("TMC4671"):
+        #         tmc = tmc4671_ui.TMC4671Ui(self.main)
+        #         if(tmc.initUi()):
+        #             tabId = self.main.addTab(tmc,"TMC4671")
+        #             if(int(self.main.serialGet("mtype\n")) == 0):
+        #                 self.main.selectTab(tabId)
+        #                 msg = QMessageBox(QMessageBox.Information,"TMC4671","Please setup the motor driver first!")
+        #                 msg.exec_()
         
         
 

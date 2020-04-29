@@ -20,15 +20,14 @@ class ButtonOptionsDialog(QDialog):
             self.readValues()
         except:
             self.main.log("Error getting button info")
-            self.reject()
+            msg = QMessageBox(QMessageBox.Error,"Error","Can't get values.\nSource inactive or connection lost")
+            msg.exec_()
+            return
 
     def readValues(self):
         request = "btnpol?"+str(self.id)+";btncut?"+str(self.id)+";btnnum?"+str(self.id)+";"
         reply = self.main.serialGet(request).split("\n")
-        if not reply:
-            msg = QMessageBox(QMessageBox.Error,"Error","Can't get values.\nSource inactive or connection lost")
-            msg.exec_()
-            return
+        
         invert,cutleft,num = [int(s) for s in reply]
         self.checkBox_invert.setChecked(invert==1)
         self.checkBox_cutleft.setChecked(cutleft==1)
