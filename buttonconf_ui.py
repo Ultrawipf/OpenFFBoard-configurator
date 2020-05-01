@@ -86,7 +86,6 @@ class ButtonOptionsDialog(QDialog):
             self.readValues()
         except Exception as e:
             self.main.log("Error getting button info")
-            print(e)
             return
 
     def readValues(self):

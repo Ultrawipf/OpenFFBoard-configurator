@@ -160,7 +160,7 @@
          </size>
         </property>
         <property name="title">
-         <string>PIDs (Not saved)</string>
+         <string>PIDs</string>
         </property>
         <layout class="QFormLayout" name="formLayout">
          <item row="0" column="0">
