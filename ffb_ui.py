@@ -185,21 +185,7 @@ class FfbUI(WidgetUI):
 
         if(self.drvId in self.drvIds and self.comboBox_driver.currentIndex() != self.drvIds[self.drvId][0]):
             self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
-        # else:
-        #     self.comboBox_driver.setCurrentIndex(0)
-        #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
-        # TMC
 
-        # if(self.drvId == 1):
-        #     if not self.main.hasTab("TMC4671"):
-        #         tmc = tmc4671_ui.TMC4671Ui(self.main)
-        #         if(tmc.initUi()):
-        #             tabId = self.main.addTab(tmc,"TMC4671")
-        #             if(int(self.main.serialGet("mtype\n")) == 0):
-        #                 self.main.selectTab(tabId)
-        #                 msg = QMessageBox(QMessageBox.Information,"TMC4671","Please setup the motor driver first!")
-        #                 msg.exec_()
-        
         
 
     def getEncoder(self):
