@@ -82,7 +82,8 @@ class SerialChooser(WidgetUI):
         
         
     def selectPort(self,id):
-        self.port = self.ports[self.comboBox_port.currentIndex()]
+        if(id != -1):
+            self.port = self.ports[id]
    
     def getPorts(self):
         oldport = self.port.portName() if self.port else None
@@ -95,4 +96,4 @@ class SerialChooser(WidgetUI):
         plist = [p.portName() for p in self.ports]
         if oldport in plist:
             self.comboBox_port.setCurrentIndex(plist.index(oldport))
-        self.port = self.ports[self.comboBox_port.currentIndex()]
+        self.selectPort(self.comboBox_port.currentIndex())

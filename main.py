@@ -16,6 +16,7 @@ version = "0.1"
 import system_ui
 import ffb_ui
 import tmc4671_ui
+import pwmdriver_ui
 
 
 class MainUi(QMainWindow):
@@ -122,6 +123,10 @@ class MainUi(QMainWindow):
                 self.activeClasses[name] = self.mainClassUi
             if name == "TMC4671":
                 c = tmc4671_ui.TMC4671Ui(main = self)
+                self.activeClasses[name] = c
+                self.addTab(c,name)
+            if name == "PWM":
+                c = pwmdriver_ui.PwmDriverUI(main = self)
                 self.activeClasses[name] = c
                 self.addTab(c,name)
 

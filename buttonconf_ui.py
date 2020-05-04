@@ -104,5 +104,5 @@ class ButtonOptionsDialog(QDialog):
             modes = self.main.serialGet("shifter_mode!\n").split("\n")
             modes = [m.split(":") for m in modes]
             for m in modes:
-                self.modeBox.addItem(m[1],m[0])
+                self.modeBox.addItem(m[0],m[1])
             self.modeBox.setCurrentIndex(int(self.main.serialGet("shifter_mode?\n")))
