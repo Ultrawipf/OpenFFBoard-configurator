@@ -66,7 +66,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Motor Poles</string>
+            <string>Pole Pairs</string>
            </property>
           </widget>
          </item>

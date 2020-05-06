@@ -262,6 +262,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="checkBox_invertX">
+           <property name="text">
+            <string>Invert X axis</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

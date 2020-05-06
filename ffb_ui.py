@@ -41,6 +41,8 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.serialWrite("friction="+str(val)+"\n"))
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.serialWrite("idlespring="+str(val)+"\n"))
 
+        self.checkBox_invertX.stateChanged.connect(lambda val : self.main.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
+
         self.main.save.connect(self.save)
         self.timer.timeout.connect(self.updateTimer)
         
@@ -99,12 +101,15 @@ class FfbUI(WidgetUI):
         axismask = int(self.main.serialGet("axismask?\n"))
         for i in range(self.axes):
             self.analogbtns.button(i).setChecked(axismask & (1 << i))
+        self.checkBox_invertX.setChecked(int(self.main.serialGet("invertx?\n")))
 
     def updateTimer(self):
         try:
-            self.label_HIDrate.setText(str(self.main.serialGet("hidrate\n"))+"Hz")
+            rate,active = self.main.serialGet("hidrate;ffbactive;").split("\n")
+            act = ("FFB ON" if active == "1" else "FFB OFF")
+            self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
         except:
-            pass
+            self.main.log("Update error")
     # Axis checkboxes
     def axesChanged(self,id):
         mask = 0

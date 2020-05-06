@@ -69,9 +69,9 @@ class SerialChooser(WidgetUI):
 
 
     def serialConnect(self):
-        self.port = self.ports[self.comboBox_port.currentIndex()]
+        self.selectPort(self.comboBox_port.currentIndex())
            
-        if(not self.serial.isOpen()):
+        if(not self.serial.isOpen() and self.port != None):
             self.main.log("Connecting...")
             self.serial.setPort(self.port)
             self.serial.open(QIODevice.ReadWrite)
@@ -84,6 +84,8 @@ class SerialChooser(WidgetUI):
     def selectPort(self,id):
         if(id != -1):
             self.port = self.ports[id]
+        else:
+            self.port = None
    
     def getPorts(self):
         oldport = self.port.portName() if self.port else None
