@@ -76,5 +76,5 @@ class SystemUI(WidgetUI):
             self.comboBox_main.addItem(c[1])
         self.comboBox_main.setCurrentIndex(self.classIds[id][0])
         self.main.log("Detected mode: "+self.comboBox_main.currentText())
-        self.main.chooseMain(id)
+        self.main.updateTabs()
        

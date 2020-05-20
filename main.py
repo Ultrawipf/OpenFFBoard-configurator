@@ -105,13 +105,12 @@ class MainUi(QMainWindow):
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
     
-    def chooseMain(self,id):
+    def updateTabs(self):
         lines = [l.split(":") for l in self.serialGet("lsactive\n").split("\n")]
         newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
-        deleteClasses = [c["ui"] for name,c in self.activeClasses.items() if name not in newActiveClasses]
+        deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
         #print(newActiveClasses)
         for c in deleteClasses:
-            print(c)
             self.delTab(c)
             
         for name,c in newActiveClasses.items():

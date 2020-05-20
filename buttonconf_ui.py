@@ -53,6 +53,8 @@ class ButtonOptionsDialog(QDialog):
             vbox.addWidget(QLabel("Mode"))
             self.modeBox = QComboBox()
             vbox.addWidget(self.modeBox)
+        else:
+            vbox.addWidget(QLabel("No config options"))
 
         # Ok Button
         okbtn = QPushButton("OK")

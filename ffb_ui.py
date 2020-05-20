@@ -145,6 +145,7 @@ class FfbUI(WidgetUI):
             self.main.serialWrite("drvtype="+str(id)+"\n")
             self.getMotorDriver()
             self.getEncoder()
+            self.main.updateTabs()
 
         
    
@@ -155,6 +156,7 @@ class FfbUI(WidgetUI):
         if(self.encId != id):
             self.main.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
+            self.main.updateTabs()
         
     
     def updateSliders(self):
