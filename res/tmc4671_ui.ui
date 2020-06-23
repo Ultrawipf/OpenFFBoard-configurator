@@ -85,35 +85,10 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="comboBox_phie">
+          <widget class="QComboBox" name="comboBox_enc">
            <item>
             <property name="text">
-             <string>EXT</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Openloop</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>ABN</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>HALL</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>AENC-E</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>AENC-A</string>
+             <string>NONE</string>
             </property>
            </item>
           </widget>
@@ -128,7 +103,7 @@
          <item row="3" column="1">
           <widget class="QSpinBox" name="spinBox_ppr">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="maximum">
             <number>65535</number>

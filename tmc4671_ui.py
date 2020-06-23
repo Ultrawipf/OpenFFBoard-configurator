@@ -10,8 +10,6 @@ from base_ui import WidgetUI
 
 class TMC4671Ui(WidgetUI):
     
-    phiE_ids = {3:("ABN",0),4:("HALL",1)}
-    phiE_idx = [3,4]
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         #QWidget.__init__(self, parent)
@@ -40,11 +38,12 @@ class TMC4671Ui(WidgetUI):
         poles = self.spinBox_poles.value()
         cmd+="poles="+str(poles)+";"
 
-        phiE = self.phiE_idx[self.comboBox_phie.currentIndex()]
-        cmd+="phiesrc="+str(phiE)+";"
+        cmd+="pprtmc="+str(self.spinBox_ppr.value())+";"
+
+        enc = self.comboBox_enc.currentIndex()
+        cmd+="encsrc="+str(enc)+";"
         
-        if(phiE == 3):
-            cmd+="ppr="+str(self.spinBox_ppr.value())+";"
+
 
         self.main.serialWrite(cmd)
 
@@ -67,10 +66,12 @@ class TMC4671Ui(WidgetUI):
 
     def initUi(self):
         try:
-
-            self.comboBox_phie.clear()
-            for s in self.phiE_ids.values():
-                self.comboBox_phie.addItem(s[0])
+            # Fill encoder source types
+            self.comboBox_enc.clear()
+            encsrcs = self.main.serialGet("encsrc!\n")
+            for s in encsrcs.split(","):
+                e = s.split("=")
+                self.comboBox_enc.addItem(e[0],e[1])
 
             self.getMotor()
             self.getPids()
@@ -90,20 +91,16 @@ class TMC4671Ui(WidgetUI):
             msg.exec_()
 
     def getMotor(self):
-        res = self.main.serialGet("mtype?;poles?;phiesrc?;")
-        mtype,poles,phiE = [int(s) for s in res.split("\n")]
+        res = self.main.serialGet("mtype?;poles?;encsrc?;")
+        mtype,poles,enc = [int(s) for s in res.split("\n")]
         if(mtype):
             self.comboBox_mtype.setCurrentIndex((mtype))
         if(poles):
             self.spinBox_poles.setValue((poles))
-        if(phiE):
-            if(phiE not in self.phiE_ids):
-                self.main.log("PhiE error:" + str(phiE))
-                self.main.reconnect()
-                return
-            self.comboBox_phie.setCurrentIndex(self.phiE_ids[(phiE)][1])
-            self.spinBox_ppr.setEnabled(phiE == 3)
-            self.spinBox_ppr.setValue(int(self.main.serialGet("ppr?\n")))
+        if(enc):
+            self.comboBox_enc.setCurrentIndex(enc)
+            
+            self.spinBox_ppr.setValue(int(self.main.serialGet("pprtmc?\n")))
                 
 
     def getPids(self):

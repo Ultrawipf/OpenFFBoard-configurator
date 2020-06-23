@@ -32,20 +32,23 @@ class ButtonOptionsDialog(QDialog):
             self.buttongroup.setExclusive(False)
             vbox.addWidget(QLabel("Active pins:"))
             for i in range(8):
-                cb = QCheckBox(str(i))
+                cb = QCheckBox(str(i+1))
                 self.buttongroup.addButton(cb,i)
                 vbox.addWidget(cb)
 
         elif(self.id == 1): # SPI
             self.setMinimumWidth(100)
+            vbox.addWidget(QLabel("Buttons"))
             self.numBtnBox = QSpinBox()
             self.numBtnBox.setMinimum(0)
             self.numBtnBox.setMaximum(32)
             vbox.addWidget(self.numBtnBox)
 
-            self.cutBox = QCheckBox("Cut bits right")
+            vbox.addWidget(QLabel("Mode"))
+            self.modeBox = QComboBox()
+            vbox.addWidget(self.modeBox)
+
             self.polBox = QCheckBox("Invert")
-            vbox.addWidget(self.cutBox)
             vbox.addWidget(self.polBox)
 
         elif(self.id == 2): #Shifter
@@ -72,9 +75,10 @@ class ButtonOptionsDialog(QDialog):
             self.main.serialWrite("local_btnmask="+str(mask)+"\n")
 
         elif(self.id == 1):
-            cmd = "spi_btnnum="+str(self.numBtnBox.value())+";"
-            cmd+="spi_btncut="+"1" if self.cutBox.isChecked() else "0"+";"
-            cmd+="spi_btnpol="+"1" if self.polBox.isChecked() else "0"+";"
+            cmd = "spibtn_mode="+str(self.modeBox.currentData()+";")
+            cmd += "spi_btnnum="+str(self.numBtnBox.value())+";"
+            cmd += "spi_btnpol="+("1" if self.polBox.isChecked() else "0")+";"
+    
             self.main.serialWrite(cmd)
 
         elif(self.id == 2):
@@ -98,7 +102,14 @@ class ButtonOptionsDialog(QDialog):
 
         elif(self.id == 1):
             self.numBtnBox.setValue(int(self.main.serialGet("spi_btnnum?\n")))
-            self.cutBox.setChecked(int(self.main.serialGet("spi_btncut?\n")))
+
+            self.modeBox.clear()
+            modes = self.main.serialGet("spibtn_mode!\n").split("\n")
+            modes = [m.split(":") for m in modes]
+            for m in modes:
+                self.modeBox.addItem(m[0],m[1])
+            self.modeBox.setCurrentIndex(int(self.main.serialGet("spibtn_mode?\n")))
+
             self.polBox.setChecked(int(self.main.serialGet("spi_btnpol?\n")))
         
         elif(self.id == 2):
