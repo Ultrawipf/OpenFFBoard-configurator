@@ -9,14 +9,19 @@ import main
 from base_ui import WidgetUI
 
 class TMC4671Ui(WidgetUI):
+
+    amp_gain = 60
+    shunt_ohm = 0.0015
     
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         #QWidget.__init__(self, parent)
         self.main = main #type: main.MainUi
+        self.timer = QTimer(self)
     
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
+        
 
         # self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
         # self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
@@ -26,9 +31,30 @@ class TMC4671Ui(WidgetUI):
 
         self.pushButton_submitmotor.clicked.connect(self.submitMotor)
         self.pushButton_submitpid.clicked.connect(self.submitPid)
+        self.main.setSaveBtn(True)
+        
+        self.timer.timeout.connect(self.updateTimer)
 
     def __del__(self):
         pass
+
+    def showEvent(self,event):
+        self.timer.start(250)
+
+    # Tab is hidden
+    def hideEvent(self,event):
+        self.timer.stop()
+        
+    def updateTimer(self):
+        try:
+            current = float(self.main.serialGet("acttorque;"))
+            v = (2.5/0x7fff) * current
+            amps = round((v / self.amp_gain) / self.shunt_ohm,3)
+            self.label_Current.setText(str(amps)+"A")
+
+        except Exception as e:
+            self.main.log("TMC update error: " + str(e)) 
+    
 
     def submitMotor(self):
         cmd = ""

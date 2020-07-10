@@ -10,6 +10,9 @@ import buttonconf_ui
 from base_ui import WidgetUI
 
 class FfbUI(WidgetUI):
+
+    amp_gain = 60
+    shunt_ohm = 0.0015
     
     drvClasses = {}
     drvIds = []
@@ -35,8 +38,7 @@ class FfbUI(WidgetUI):
 
         self.analogbtns.setExclusive(False)
         self.buttonbtns.setExclusive(False)
-
-        self.horizontalSlider_power.valueChanged.connect(lambda val: self.main.serialWrite("power="+str(val)+"\n"))
+        self.horizontalSlider_power.valueChanged.connect(self.power_changed)
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.serialWrite("degrees="+str(val)+"\n"))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.serialWrite("friction="+str(val)+"\n"))
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.serialWrite("idlespring="+str(val)+"\n"))
@@ -118,6 +120,19 @@ class FfbUI(WidgetUI):
                 mask |= 1 << i
         self.main.serialWrite("axismask="+str(mask)+"\n")
 
+    def power_changed(self,val):
+        self.main.serialWrite("power="+str(val)+"\n")
+        text = str(val)     
+
+        # If tmc is used show a current estimate
+        if(self.drvId == 1):
+            v = (2.5/0x7fff) * val
+            current = (v / self.amp_gain) / self.shunt_ohm
+            text += " ("+str(round(current,1)) + "A)"
+     
+        self.label_power.setText(text)
+
+        
     # Button selector
     def buttonsChanged(self,id):
         mask = 0
@@ -146,6 +161,8 @@ class FfbUI(WidgetUI):
             self.getMotorDriver()
             self.getEncoder()
             self.main.updateTabs()
+            self.updateSliders()
+            
 
         
    
@@ -157,6 +174,7 @@ class FfbUI(WidgetUI):
             self.main.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
             self.main.updateTabs()
+            self.updateSliders()
         
     
     def updateSliders(self):
@@ -175,6 +193,12 @@ class FfbUI(WidgetUI):
         self.label_range.setNum(degrees)
         self.label_friction.setNum(friction)
         self.label_idle.setNum(spring)
+        self.power_changed(power)
+
+        if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
+            self.horizontalSlider_power.setMaximum(28000)
+        else:
+            self.horizontalSlider_power.setMaximum(0x7fff)
 
 
     def getMotorDriver(self):
