@@ -106,6 +106,8 @@ class FfbUI(WidgetUI):
         self.checkBox_invertX.setChecked(int(self.main.serialGet("invertx?\n")))
 
     def updateTimer(self):
+        if main.serialBusy:
+            return
         try:
             rate,active = self.main.serialGet("hidrate;ffbactive;").split("\n")
             act = ("FFB ON" if active == "1" else "FFB OFF")
@@ -183,6 +185,11 @@ class FfbUI(WidgetUI):
         friction = int(self.main.serialGet("friction?\n"))
         spring = int(self.main.serialGet("idlespring?\n"))
 
+        if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
+            self.horizontalSlider_power.setMaximum(28000)
+        else:
+            self.horizontalSlider_power.setMaximum(0x7fff)
+
 
         self.horizontalSlider_power.setValue(power)
         self.horizontalSlider_degrees.setValue(degrees)
@@ -195,10 +202,7 @@ class FfbUI(WidgetUI):
         self.label_idle.setNum(spring)
         self.power_changed(power)
 
-        if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
-            self.horizontalSlider_power.setMaximum(28000)
-        else:
-            self.horizontalSlider_power.setMaximum(0x7fff)
+        
 
 
     def getMotorDriver(self):

@@ -10,7 +10,12 @@ import sys
 
 from helper import res_path
 import serial_ui
-version = "0.1"
+
+# This GUIs version
+version = "1.0.1"
+# Minimal supported firmware version. 
+# Major version of firmware must match firmware. Minor versions must be higher or equal
+min_fw = "1.0.0" 
 
 # UIs
 import system_ui
@@ -34,7 +39,10 @@ class MainUi(QMainWindow):
 
         self.setup()
         self.lastSerial = None
+        self.serialBusy = False
         self.activeClasses = {}
+
+        self.fwverstr = None
         
         
     def setup(self):
@@ -62,7 +70,7 @@ class MainUi(QMainWindow):
         msg.exec_()
 
     def openAbout(self):
-        AboutDialog().exec_()
+        AboutDialog(self).exec_()
 
     def updateTimer(self):
         if(self.serial.isOpen()):
@@ -129,12 +137,6 @@ class MainUi(QMainWindow):
                 self.activeClasses[name] = c
                 self.addTab(c,name)
 
-        #self.resetTabs()
-        # if(id == 1):
-        #     # FFB
-        #     self.mainClassUi = ffb_ui.FfbUI(main = self)
-        #     pass
-
     def reconnect(self):
         self.resetPort()
         QTimer.singleShot(3000,self.serialchooser.serialConnect)
@@ -148,12 +150,39 @@ class MainUi(QMainWindow):
         self.serialchooser.getPorts()
         self.resetTabs()
 
+    def versionCheck(self):
+        self.fwverstr = self.serialGet("swver\n")
+        if not self.fwverstr:
+            self.log("Communication error")
+            self.resetPort()
+            return False
+        fwver = [int(i) for i in self.fwverstr.split(".")]
+        min_fw_t = [int(i) for i in min_fw.split(".")]
+        print(min_fw_t,fwver)
+        fwoutdated = False
+        guioutdated = fwver[0] > min_fw_t[0]
+
+        for v in zip(min_fw_t,fwver):
+            if(v[0] > v[1]):
+                fwoutdated = True
+                break
+        if guioutdated:
+            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date.")
+            msg.exec_()
+        elif fwoutdated:
+            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\nPlease make sure both firmware and GUI are up to date.")
+            msg.exec_()
+
+        return True
+
+
     def serialConnected(self,connected):
         if(connected):
             if(self.serialGet("id\n")):
                 # self.tabWidget_main.addTab(SystemUI(parent = self),"System")
                 # self.tabWidget_main.setCurrentIndex(1)
                 self.log("Connected")
+                self.versionCheck()
             else:
                 self.log("Can't detect board")
                 self.resetPort()
@@ -169,14 +198,20 @@ class MainUi(QMainWindow):
                 self.log("Error writing "+cmd)
     
     def serialGet(self,cmd,timeout = 500):
+        if(self.serialBusy):
+            self.log("Serial busy")
+            return None
+
         self.lastSerial = None
         if(not self.serial.isOpen()):
             self.log("Error: Serial closed")
             return None
         self.serialchooser.setLog(False) # Disable serial log
+        self.serialBusy = True
         self.serialWrite(cmd)
         if(not self.serial.waitForReadyRead(timeout)):
             self.log("Error: Serial timeout")
+            self.serialBusy = False
             return None
         self.serialchooser.setLog(True)
         data = self.serial.readAll()
@@ -184,7 +219,7 @@ class MainUi(QMainWindow):
         
         if(self.lastSerial and self.lastSerial[-1] == "\n"):
             self.lastSerial=self.lastSerial[0:-1]
-
+        self.serialBusy = False
         return self.lastSerial
 
 
@@ -192,7 +227,11 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         uic.loadUi(res_path('about.ui'), self)
-        self.version.setText("Version: " + version)
+        verstr = "Version: " + version
+        if parent.fwverstr:
+            verstr += " / Firmware: " + parent.fwverstr
+
+        self.version.setText(verstr)
         
             
 
