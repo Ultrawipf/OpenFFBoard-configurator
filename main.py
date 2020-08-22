@@ -12,7 +12,7 @@ from helper import res_path
 import serial_ui
 
 # This GUIs version
-version = "1.0.1"
+version = "1.0.2"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
 min_fw = "1.0.0" 
@@ -29,6 +29,7 @@ class MainUi(QMainWindow):
     curId = 0
     save = pyqtSignal()
     mainClassUi = None
+    serialBusy = False
     def __init__(self):
         super(MainUi, self).__init__()
         uic.loadUi(res_path('MainWindow.ui'), self)
@@ -39,7 +40,7 @@ class MainUi(QMainWindow):
 
         self.setup()
         self.lastSerial = None
-        self.serialBusy = False
+        
         self.activeClasses = {}
 
         self.fwverstr = None
@@ -139,7 +140,7 @@ class MainUi(QMainWindow):
 
     def reconnect(self):
         self.resetPort()
-        QTimer.singleShot(3000,self.serialchooser.serialConnect)
+        QTimer.singleShot(4000,self.serialchooser.serialConnect)
         #self.serialchooser.serialConnect()
 
     def resetPort(self):
@@ -158,11 +159,14 @@ class MainUi(QMainWindow):
             return False
         fwver = [int(i) for i in self.fwverstr.split(".")]
         min_fw_t = [int(i) for i in min_fw.split(".")]
-        print(min_fw_t,fwver)
+        self.log("FW v" + self.fwverstr)
         fwoutdated = False
         guioutdated = fwver[0] > min_fw_t[0]
 
         for v in zip(min_fw_t,fwver):
+            if(v[0] < v[1]): # Newer
+                break
+            # If same higher version then check minor version
             if(v[0] > v[1]):
                 fwoutdated = True
                 break

@@ -46,6 +46,8 @@ class TMC4671Ui(WidgetUI):
         self.timer.stop()
         
     def updateTimer(self):
+        if self.main.serialBusy:
+            return
         try:
             current = float(self.main.serialGet("acttorque;"))
             v = (2.5/0x7fff) * current

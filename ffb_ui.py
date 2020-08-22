@@ -106,7 +106,7 @@ class FfbUI(WidgetUI):
         self.checkBox_invertX.setChecked(int(self.main.serialGet("invertx?\n")))
 
     def updateTimer(self):
-        if main.serialBusy:
+        if self.main.serialBusy:
             return
         try:
             rate,active = self.main.serialGet("hidrate;ffbactive;").split("\n")
