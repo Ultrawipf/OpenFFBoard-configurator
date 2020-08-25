@@ -78,6 +78,10 @@ class TMC4671Ui(WidgetUI):
     def submitPid(self):
         # PIDs
         cmd = ""
+
+        seq = 1 if self.checkBox_advancedpid.isChecked() else 0
+        cmd+="seqpi="+str(seq)+";"
+
         tp = self.spinBox_tp.value()
         cmd+="torqueP="+str(tp)+";"
 
@@ -132,11 +136,12 @@ class TMC4671Ui(WidgetUI):
                 
 
     def getPids(self):
-        pids = [int(s) for s in self.main.serialGet("torqueP?;torqueI?;fluxP?;fluxI?;fluxoffset?;").split("\n")]
+        pids = [int(s) for s in self.main.serialGet("torqueP?;torqueI?;fluxP?;fluxI?;fluxoffset?;seqpi?;").split("\n")]
         self.spinBox_tp.setValue(pids[0])
         self.spinBox_ti.setValue(pids[1])
         self.spinBox_fp.setValue(pids[2])
         self.spinBox_fi.setValue(pids[3])
 
         self.spinBox_fluxoffset.setValue(pids[4])
-        
+
+        self.checkBox_advancedpid.setChecked(pids[5])

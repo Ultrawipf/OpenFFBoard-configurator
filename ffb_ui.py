@@ -11,6 +11,7 @@ from base_ui import WidgetUI
 
 class FfbUI(WidgetUI):
 
+    endstop_margin = 0.7
     amp_gain = 60
     shunt_ohm = 0.0015
     
@@ -42,6 +43,9 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.serialWrite("degrees="+str(val)+"\n"))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.serialWrite("friction="+str(val)+"\n"))
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.serialWrite("idlespring="+str(val)+"\n"))
+        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.main.serialWrite("esgain="+str(val)+"\n"))
+        self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
+
 
         self.checkBox_invertX.stateChanged.connect(lambda val : self.main.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
 
@@ -134,7 +138,14 @@ class FfbUI(WidgetUI):
      
         self.label_power.setText(text)
 
-        
+    # Effect/Endstop ratio scaler
+    def fxratio_changed(self,val):
+
+        self.main.serialWrite("fxratio="+str(val)+"\n")
+        ratio = 1-(self.endstop_margin * ((255-val) / 255))
+        text = str(round(100*ratio,1)) + "%"
+        self.label_fxratio.setText(text)
+
     # Button selector
     def buttonsChanged(self,id):
         mask = 0
@@ -184,6 +195,8 @@ class FfbUI(WidgetUI):
         degrees = int(self.main.serialGet("degrees?\n"))
         friction = int(self.main.serialGet("friction?\n"))
         spring = int(self.main.serialGet("idlespring?\n"))
+        esgain = int(self.main.serialGet("esgain?\n"))
+        fxratio = int(self.main.serialGet("fxratio?\n"))
 
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -195,14 +208,16 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_degrees.setValue(degrees)
         self.horizontalSlider_friction.setValue(friction)
         self.horizontalSlider_idle.setValue(spring)
+        self.horizontalSlider_fxratio.setValue(fxratio)
+        self.horizontalSlider_esgain.setValue(esgain)
 
         self.label_power.setNum(power)
         self.label_range.setNum(degrees)
         self.label_friction.setNum(friction)
         self.label_idle.setNum(spring)
         self.power_changed(power)
-
-        
+        self.label_esgain.setNum(esgain)
+        self.fxratio_changed(fxratio)
 
 
     def getMotorDriver(self):

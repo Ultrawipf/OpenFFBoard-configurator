@@ -6,16 +6,16 @@ from PyQt5.QtCore import QIODevice,pyqtSignal
 from PyQt5.QtCore import QTimer
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
-import sys
+import sys,itertools
 
 from helper import res_path
 import serial_ui
 
 # This GUIs version
-version = "1.0.2"
+version = "1.0.4"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.0.0" 
+min_fw = "1.0.3" 
 
 # UIs
 import system_ui
@@ -163,7 +163,7 @@ class MainUi(QMainWindow):
         fwoutdated = False
         guioutdated = fwver[0] > min_fw_t[0]
 
-        for v in zip(min_fw_t,fwver):
+        for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
             if(v[0] < v[1]): # Newer
                 break
             # If same higher version then check minor version
