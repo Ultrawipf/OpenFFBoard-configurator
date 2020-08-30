@@ -12,10 +12,10 @@ from helper import res_path
 import serial_ui
 
 # This GUIs version
-version = "1.0.4"
+version = "1.0.6"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.0.3" 
+min_fw = "1.0.5"
 
 # UIs
 import system_ui

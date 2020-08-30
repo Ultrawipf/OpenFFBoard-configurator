@@ -11,7 +11,6 @@ from base_ui import WidgetUI
 
 class FfbUI(WidgetUI):
 
-    endstop_margin = 0.7
     amp_gain = 60
     shunt_ohm = 0.0015
     
@@ -64,7 +63,7 @@ class FfbUI(WidgetUI):
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.pushButton_center.clicked.connect(lambda : self.main.serialWrite("zeroenc\n"))
         
-        #self.spinBox_ppr.valueChanged.connect(lambda v : self.main.serialWrite("ppr="+str(v)+";"))
+        #self.spinBox_cpr.valueChanged.connect(lambda v : self.main.serialWrite("cpr="+str(v)+";"))
 
 
 
@@ -142,7 +141,7 @@ class FfbUI(WidgetUI):
     def fxratio_changed(self,val):
 
         self.main.serialWrite("fxratio="+str(val)+"\n")
-        ratio = 1-(self.endstop_margin * ((255-val) / 255))
+        ratio = val / 255
         text = str(round(100*ratio,1)) + "%"
         self.label_fxratio.setText(text)
 
@@ -156,10 +155,10 @@ class FfbUI(WidgetUI):
         self.main.serialWrite("btntypes="+str(mask)+"\n")
 
     def submitHw(self):
-        val = self.spinBox_ppr.value()
+        val = self.spinBox_cpr.value()
         self.driverChanged(self.comboBox_driver.currentIndex())
         self.encoderChanged(self.comboBox_encoder.currentIndex())
-        self.main.serialWrite("ppr="+str(val)+"\n")
+        self.main.serialWrite("cpr="+str(val)+"\n")
 
     def save(self):
         self.main.serialWrite("save\n")
@@ -240,7 +239,7 @@ class FfbUI(WidgetUI):
 
     def getEncoder(self):
         #self.comboBox_encoder.currentIndexChanged.disconnect()
-        self.spinBox_ppr.setEnabled(True)
+        self.spinBox_cpr.setEnabled(True)
 
         dat = self.main.serialGet("enctype!\n")
         self.comboBox_encoder.clear()
@@ -256,11 +255,11 @@ class FfbUI(WidgetUI):
         idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
         self.comboBox_encoder.setCurrentIndex(idx)
         
-        ppr = self.main.serialGet("ppr?\n")
-        self.spinBox_ppr.setValue(int(ppr))
+        vpr = self.main.serialGet("cpr?\n")
+        self.spinBox_cpr.setValue(int(vpr))
 
         if(self.encId == 1):
-            self.spinBox_ppr.setEnabled(False)
+            self.spinBox_cpr.setEnabled(False)
        # self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
         
 

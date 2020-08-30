@@ -82,8 +82,14 @@
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;High = Effects and endstop have the same peak torque. Low = effect peak is reduced to make endstop more prominent&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
+           <property name="minimum">
+            <number>102</number>
+           </property>
            <property name="maximum">
             <number>255</number>
+           </property>
+           <property name="value">
+            <number>200</number>
            </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -314,7 +320,7 @@
          <item row="2" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>Encoder PPR</string>
+            <string>Encoder CPR (4*PPR)</string>
            </property>
           </widget>
          </item>
@@ -339,7 +345,10 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QSpinBox" name="spinBox_ppr">
+          <widget class="QSpinBox" name="spinBox_cpr">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder resolution after quadrature (4 * PPR = CPR)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="maximum">
             <number>65535</number>
            </property>

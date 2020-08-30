@@ -66,7 +66,7 @@ class TMC4671Ui(WidgetUI):
         poles = self.spinBox_poles.value()
         cmd+="poles="+str(poles)+";"
 
-        cmd+="pprtmc="+str(self.spinBox_ppr.value())+";"
+        cmd+="cprtmc="+str(self.spinBox_cpr.value())+";"
 
         enc = self.comboBox_enc.currentIndex()
         cmd+="encsrc="+str(enc)+";"
@@ -132,7 +132,7 @@ class TMC4671Ui(WidgetUI):
         if(enc):
             self.comboBox_enc.setCurrentIndex(enc)
             
-            self.spinBox_ppr.setValue(int(self.main.serialGet("pprtmc?\n")))
+            self.spinBox_cpr.setValue(int(self.main.serialGet("cprtmc?\n")))
                 
 
     def getPids(self):
