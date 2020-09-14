@@ -103,10 +103,12 @@ class FfbUI(WidgetUI):
         self.timer.stop()
 
     def updateAxes(self):
-        axismask = int(self.main.comms.serialGet("axismask?\n"))
-        for i in range(self.axes):
-            self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        self.checkBox_invertX.setChecked(int(self.main.comms.serialGet("invertx?\n")))
+        
+        def f(axismask):
+            for i in range(self.axes):
+                self.analogbtns.button(i).setChecked(axismask & (1 << i))
+        axismask = self.main.comms.serialGetAsync("axismask?",f,int)
+        self.main.comms.serialGetAsync("invertx?",self.checkBox_invertX.setChecked,int)
 
     def updateTimer(self):
         if self.main.serialBusy:
@@ -190,33 +192,22 @@ class FfbUI(WidgetUI):
         
     
     def updateSliders(self):
-        power = int(self.main.comms.serialGet("power?\n"))
-        degrees = int(self.main.comms.serialGet("degrees?\n"))
-        friction = int(self.main.comms.serialGet("friction?\n"))
-        spring = int(self.main.comms.serialGet("idlespring?\n"))
-        esgain = int(self.main.comms.serialGet("esgain?\n"))
-        fxratio = int(self.main.comms.serialGet("fxratio?\n"))
-
+        commands = ["power?","degrees?","friction?","idlespring?","idlespring?","esgain?","fxratio?"]
+  
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
 
+        callbacks = [
+        self.horizontalSlider_power.setValue,
+        self.horizontalSlider_degrees.setValue,
+        self.horizontalSlider_friction.setValue,
+        self.horizontalSlider_idle.setValue,
+        self.horizontalSlider_fxratio.setValue,
+        self.horizontalSlider_esgain.setValue]
 
-        self.horizontalSlider_power.setValue(power)
-        self.horizontalSlider_degrees.setValue(degrees)
-        self.horizontalSlider_friction.setValue(friction)
-        self.horizontalSlider_idle.setValue(spring)
-        self.horizontalSlider_fxratio.setValue(fxratio)
-        self.horizontalSlider_esgain.setValue(esgain)
-
-        self.label_power.setNum(power)
-        self.label_range.setNum(degrees)
-        self.label_friction.setNum(friction)
-        self.label_idle.setNum(spring)
-        self.power_changed(power)
-        self.label_esgain.setNum(esgain)
-        self.fxratio_changed(fxratio)
+        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
 
 
     def getMotorDriver(self):

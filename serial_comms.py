@@ -9,7 +9,7 @@ class SerialComms:
         self.sendQueue = queue.Queue()
         self.serial.readyRead.connect(self.serialReceive)
         self.sentCommandSize=0 # tracks sent bytes so never more than 64 bytes are sent
-
+        self.waitForEmptyQueue = False
     def checkOk(self,reply):
         if(reply == "OK" or reply.find("Err") == -1):
             return
@@ -74,7 +74,7 @@ class SerialComms:
         if(cur_queue[3]): # read all
             process_cmd(text,cur_queue)
             return
-        for reply in text.split("\n"):
+        for reply in text.split(">"):
             if reply=="":
                 continue
             
@@ -124,7 +124,9 @@ class SerialComms:
         if(not self.serial.isOpen()):
             self.main.log("Error: Serial closed")
             return None
-    
+        if not self.serialQueue.empty():
+            # do something to wait until queue empty....
+            pass
         self.setAsync(False)
         self.main.serialchooser.write(bytes(cmd,"utf-8"))
 

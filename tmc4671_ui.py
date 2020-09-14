@@ -96,10 +96,12 @@ class TMC4671Ui(WidgetUI):
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
-            encsrcs = self.main.comms.serialGet("encsrc!\n")
-            for s in encsrcs.split(","):
-                e = s.split("=")
-                self.comboBox_enc.addItem(e[0],e[1])
+           
+            def encs(encsrcs):
+                for s in encsrcs.split(","):
+                    e = s.split("=")
+                    self.comboBox_enc.addItem(e[0],e[1])
+            self.main.comms.serialGetAsync("encsrc!",encs)
 
             self.getMotor()
             self.getPids()

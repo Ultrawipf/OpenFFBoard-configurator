@@ -60,21 +60,21 @@ class SystemUI(WidgetUI):
         msg.exec_()
 
     def getMainClasses(self):
-        dat = self.main.comms.serialGet("lsmain\n")
-        self.comboBox_main.clear()
-        self.classIds,self.classes = classlistToIds(dat)
-        id = self.main.comms.serialGet("id?\n")
-        if(id == None):
-            #self.main.resetPort()
-            self.setEnabled(False)
-            return
+        
+        def updateMains(dat):
+            self.comboBox_main.clear()
+            self.classIds,self.classes = classlistToIds(dat)
+            id = self.main.comms.serialGet("id?\n")
+            if(id == None):
+                #self.main.resetPort()
+                self.setEnabled(False)
+                return
+            self.setEnabled(True)
+            id = int(id)
+            for c in self.classes:
+                self.comboBox_main.addItem(c[1])
+            self.comboBox_main.setCurrentIndex(self.classIds[id][0])
+            self.main.log("Detected mode: "+self.comboBox_main.currentText())
+            self.main.updateTabs()
 
-        self.setEnabled(True)
-        id = int(id)
-
-        for c in self.classes:
-            self.comboBox_main.addItem(c[1])
-        self.comboBox_main.setCurrentIndex(self.classIds[id][0])
-        self.main.log("Detected mode: "+self.comboBox_main.currentText())
-        self.main.updateTabs()
-       
+        self.main.comms.serialGetAsync("lsmain",updateMains)
