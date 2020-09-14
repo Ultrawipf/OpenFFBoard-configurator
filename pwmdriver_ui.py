@@ -19,24 +19,24 @@ class PwmDriverUI(WidgetUI):
 
     def initUi(self):
         self.comboBox_mode.clear()
-        modes = self.main.serialGet("pwm_mode!\n").split("\n")
+        modes = self.main.comms.serialGet("pwm_mode!\n").split("\n")
         modes = [m.split(":") for m in modes]
         for m in modes:
             self.comboBox_mode.addItem(m[0],m[1])
-        self.comboBox_mode.setCurrentIndex(int(self.main.serialGet("pwm_mode?\n")))
+        self.comboBox_mode.setCurrentIndex(int(self.main.comms.serialGet("pwm_mode?\n")))
 
         self.comboBox_freq.clear()
-        modes = self.main.serialGet("pwm_speed!\n").split("\n")
+        modes = self.main.comms.serialGet("pwm_speed!\n").split("\n")
         modes = [m.split(":") for m in modes]
         for m in modes:
             self.comboBox_freq.addItem(m[0],m[1])
-        self.comboBox_freq.setCurrentIndex(int(self.main.serialGet("pwm_speed?\n")))
+        self.comboBox_freq.setCurrentIndex(int(self.main.comms.serialGet("pwm_speed?\n")))
 
  
     def apply(self):
         cmd = "pwm_mode="+str(self.comboBox_mode.currentData())+";"
         cmd+= "pwm_speed="+str(self.comboBox_freq.currentData())+";"
 
-        self.main.serialWrite(cmd)
+        self.main.comms.serialWrite(cmd)
         self.initUi() # Update UI
 

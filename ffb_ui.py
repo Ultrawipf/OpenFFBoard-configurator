@@ -39,14 +39,14 @@ class FfbUI(WidgetUI):
         self.analogbtns.setExclusive(False)
         self.buttonbtns.setExclusive(False)
         self.horizontalSlider_power.valueChanged.connect(self.power_changed)
-        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.serialWrite("degrees="+str(val)+"\n"))
-        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.serialWrite("friction="+str(val)+"\n"))
-        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.serialWrite("idlespring="+str(val)+"\n"))
-        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.main.serialWrite("esgain="+str(val)+"\n"))
+        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.comms.serialWrite("degrees="+str(val)+"\n"))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.comms.serialWrite("idlespring="+str(val)+"\n"))
+        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.main.comms.serialWrite("esgain="+str(val)+"\n"))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
 
 
-        self.checkBox_invertX.stateChanged.connect(lambda val : self.main.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
+        self.checkBox_invertX.stateChanged.connect(lambda val : self.main.comms.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
 
         self.main.save.connect(self.save)
         self.timer.timeout.connect(self.updateTimer)
@@ -61,9 +61,9 @@ class FfbUI(WidgetUI):
 
         self.analogbtns.buttonClicked.connect(self.axesChanged)
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
-        self.pushButton_center.clicked.connect(lambda : self.main.serialWrite("zeroenc\n"))
+        self.pushButton_center.clicked.connect(lambda : self.main.comms.serialWrite("zeroenc\n"))
         
-        #self.spinBox_cpr.valueChanged.connect(lambda v : self.main.serialWrite("cpr="+str(v)+";"))
+        #self.spinBox_cpr.valueChanged.connect(lambda v : self.main.comms.serialWrite("cpr="+str(v)+";"))
 
 
 
@@ -103,16 +103,16 @@ class FfbUI(WidgetUI):
         self.timer.stop()
 
     def updateAxes(self):
-        axismask = int(self.main.serialGet("axismask?\n"))
+        axismask = int(self.main.comms.serialGet("axismask?\n"))
         for i in range(self.axes):
             self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        self.checkBox_invertX.setChecked(int(self.main.serialGet("invertx?\n")))
+        self.checkBox_invertX.setChecked(int(self.main.comms.serialGet("invertx?\n")))
 
     def updateTimer(self):
         if self.main.serialBusy:
             return
         try:
-            rate,active = self.main.serialGet("hidrate;ffbactive;").split("\n")
+            rate,active = self.main.comms.serialGet("hidrate;ffbactive;").split("\n")
             act = ("FFB ON" if active == "1" else "FFB OFF")
             self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
         except:
@@ -123,10 +123,10 @@ class FfbUI(WidgetUI):
         for i in range(self.axes):
             if (self.analogbtns.button(i).isChecked()):
                 mask |= 1 << i
-        self.main.serialWrite("axismask="+str(mask)+"\n")
+        self.main.comms.serialWrite("axismask="+str(mask)+"\n")
 
     def power_changed(self,val):
-        self.main.serialWrite("power="+str(val)+"\n")
+        self.main.comms.serialWrite("power="+str(val)+"\n")
         text = str(val)     
 
         # If tmc is used show a current estimate
@@ -140,7 +140,7 @@ class FfbUI(WidgetUI):
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
 
-        self.main.serialWrite("fxratio="+str(val)+"\n")
+        self.main.comms.serialWrite("fxratio="+str(val)+"\n")
         ratio = val / 255
         text = str(round(100*ratio,1)) + "%"
         self.label_fxratio.setText(text)
@@ -152,16 +152,16 @@ class FfbUI(WidgetUI):
             if(b.isChecked()):
                 mask |= 1 << self.buttonbtns.id(b)
 
-        self.main.serialWrite("btntypes="+str(mask)+"\n")
+        self.main.comms.serialWrite("btntypes="+str(mask)+"\n")
 
     def submitHw(self):
         val = self.spinBox_cpr.value()
         self.driverChanged(self.comboBox_driver.currentIndex())
         self.encoderChanged(self.comboBox_encoder.currentIndex())
-        self.main.serialWrite("cpr="+str(val)+"\n")
+        self.main.comms.serialWrite("cpr="+str(val)+"\n")
 
     def save(self):
-        self.main.serialWrite("save\n")
+        self.main.comms.serialWrite("save\n")
         
 
     def driverChanged(self,idx):
@@ -169,7 +169,7 @@ class FfbUI(WidgetUI):
             return
         id = self.drvClasses[idx][0]
         if(self.drvId != id):
-            self.main.serialWrite("drvtype="+str(id)+"\n")
+            self.main.comms.serialWrite("drvtype="+str(id)+"\n")
             self.getMotorDriver()
             self.getEncoder()
             self.main.updateTabs()
@@ -183,19 +183,19 @@ class FfbUI(WidgetUI):
             return
         id = self.encClasses[idx][0]
         if(self.encId != id):
-            self.main.serialWrite("enctype="+str(id)+"\n")
+            self.main.comms.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
             self.main.updateTabs()
             self.updateSliders()
         
     
     def updateSliders(self):
-        power = int(self.main.serialGet("power?\n"))
-        degrees = int(self.main.serialGet("degrees?\n"))
-        friction = int(self.main.serialGet("friction?\n"))
-        spring = int(self.main.serialGet("idlespring?\n"))
-        esgain = int(self.main.serialGet("esgain?\n"))
-        fxratio = int(self.main.serialGet("fxratio?\n"))
+        power = int(self.main.comms.serialGet("power?\n"))
+        degrees = int(self.main.comms.serialGet("degrees?\n"))
+        friction = int(self.main.comms.serialGet("friction?\n"))
+        spring = int(self.main.comms.serialGet("idlespring?\n"))
+        esgain = int(self.main.comms.serialGet("esgain?\n"))
+        fxratio = int(self.main.comms.serialGet("fxratio?\n"))
 
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -221,10 +221,10 @@ class FfbUI(WidgetUI):
 
     def getMotorDriver(self):
         #self.comboBox_driver.currentIndexChanged.disconnect()
-        dat = self.main.serialGet("drvtype!\n")
+        dat = self.main.comms.serialGet("drvtype!\n")
         self.comboBox_driver.clear()
         self.drvIds,self.drvClasses = classlistToIds(dat)
-        id = self.main.serialGet("drvtype?\n")
+        id = self.main.comms.serialGet("drvtype?\n")
         if(id == None):
             self.main.log("Error getting driver")
             return
@@ -241,10 +241,10 @@ class FfbUI(WidgetUI):
         #self.comboBox_encoder.currentIndexChanged.disconnect()
         self.spinBox_cpr.setEnabled(True)
 
-        dat = self.main.serialGet("enctype!\n")
+        dat = self.main.comms.serialGet("enctype!\n")
         self.comboBox_encoder.clear()
         self.encIds,self.encClasses = classlistToIds(dat)
-        id = self.main.serialGet("enctype?\n")
+        id = self.main.comms.serialGet("enctype?\n")
         if(id == None):
             self.main.log("Error getting encoder")
             return
@@ -255,7 +255,7 @@ class FfbUI(WidgetUI):
         idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
         self.comboBox_encoder.setCurrentIndex(idx)
         
-        vpr = self.main.serialGet("cpr?\n")
+        vpr = self.main.comms.serialGet("cpr?\n")
         self.spinBox_cpr.setValue(int(vpr))
 
         if(self.encId == 1):
@@ -264,10 +264,10 @@ class FfbUI(WidgetUI):
         
 
     def getButtonSources(self):
-        dat = self.main.serialGet("lsbtn\n")
+        dat = self.main.comms.serialGet("lsbtn\n")
         
         self.btnIds,self.btnClasses = classlistToIds(dat)
-        types = self.main.serialGet("btntypes?\n")
+        types = self.main.comms.serialGet("btntypes?\n")
         if(types == None):
             self.main.log("Error getting buttons")
             return

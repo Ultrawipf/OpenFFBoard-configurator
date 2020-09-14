@@ -12,16 +12,17 @@ from helper import res_path
 import serial_ui
 
 # This GUIs version
-version = "1.0.6"
+version = "1.1.0"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.0.5"
+min_fw = "1.1.0"
 
 # UIs
 import system_ui
 import ffb_ui
 import tmc4671_ui
 import pwmdriver_ui
+import serial_comms
 
 
 class MainUi(QMainWindow):
@@ -30,17 +31,18 @@ class MainUi(QMainWindow):
     save = pyqtSignal()
     mainClassUi = None
     serialBusy = False
+    
     def __init__(self):
         super(MainUi, self).__init__()
         uic.loadUi(res_path('MainWindow.ui'), self)
         self.serial = QSerialPort(self)
+        self.comms = serial_comms.SerialComms(self,self.serial)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
 
         self.setup()
-        self.lastSerial = None
-        
+
         self.activeClasses = {}
 
         self.fwverstr = None
@@ -75,7 +77,7 @@ class MainUi(QMainWindow):
 
     def updateTimer(self):
         if(self.serial.isOpen()):
-            if(not self.serialGet("id?\n",1000)):
+            if(not self.comms.serialGet("id?\n",1000)):
                 self.resetPort()
                 self.log("Timeout. Please reconnect")
             
@@ -115,7 +117,7 @@ class MainUi(QMainWindow):
             self.delTab(self.tabWidget_main.widget(i))
     
     def updateTabs(self):
-        lines = [l.split(":") for l in self.serialGet("lsactive\n").split("\n")]
+        lines = [l.split(":") for l in self.comms.serialGet("lsactive\n").split("\n")]
         newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
         deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
         #print(newActiveClasses)
@@ -152,7 +154,7 @@ class MainUi(QMainWindow):
         self.resetTabs()
 
     def versionCheck(self):
-        self.fwverstr = self.serialGet("swver\n")
+        self.fwverstr = self.comms.serialGet("swver\n")
         if not self.fwverstr:
             self.log("Communication error")
             self.resetPort()
@@ -182,7 +184,7 @@ class MainUi(QMainWindow):
 
     def serialConnected(self,connected):
         if(connected):
-            if(self.serialGet("id\n")):
+            if(self.comms.serialGet("id\n")):
                 # self.tabWidget_main.addTab(SystemUI(parent = self),"System")
                 # self.tabWidget_main.setCurrentIndex(1)
                 self.log("Connected")
@@ -193,38 +195,6 @@ class MainUi(QMainWindow):
         else:
             self.log("Disconnected")
             self.resetTabs()
-
-    def serialWrite(self,cmd):
-        if(self.serial.isOpen()):
-            #self.serialchooser.serialLog("->"+cmd)
-            self.serialchooser.write(bytes(cmd,"utf-8"))
-            if(not self.serial.waitForBytesWritten(1000)):
-                self.log("Error writing "+cmd)
-    
-    def serialGet(self,cmd,timeout = 500):
-        if(self.serialBusy):
-            self.log("Serial busy")
-            return None
-
-        self.lastSerial = None
-        if(not self.serial.isOpen()):
-            self.log("Error: Serial closed")
-            return None
-        self.serialchooser.setLog(False) # Disable serial log
-        self.serialBusy = True
-        self.serialWrite(cmd)
-        if(not self.serial.waitForReadyRead(timeout)):
-            self.log("Error: Serial timeout")
-            self.serialBusy = False
-            return None
-        self.serialchooser.setLog(True)
-        data = self.serial.readAll()
-        self.lastSerial = data.data().decode("utf-8")
-        
-        if(self.lastSerial and self.lastSerial[-1] == "\n"):
-            self.lastSerial=self.lastSerial[0:-1]
-        self.serialBusy = False
-        return self.lastSerial
 
 
 class AboutDialog(QDialog):

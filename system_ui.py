@@ -29,17 +29,17 @@ class SystemUI(WidgetUI):
 
     def mainBtn(self):
         id = self.classes[self.comboBox_main.currentIndex()][0]
-        self.main.serialWrite("main="+str(id)+"\n")
+        self.main.comms.serialWrite("main="+str(id)+"\n")
         self.main.resetPort()
         msg = QMessageBox(QMessageBox.Information,"Main class changed","Please reconnect.\n Depending on the main class the serial port may have changed.")
         msg.exec_()
   
     def reboot(self):
-        self.main.serialWrite("reboot\n")
+        self.main.comms.serialWrite("reboot\n")
         self.main.reconnect()
     
     def dfu(self):
-        self.main.serialWrite("dfu\n")
+        self.main.comms.serialWrite("dfu\n")
         self.main.resetPort()
         msg = QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
         msg.exec_()
@@ -47,8 +47,8 @@ class SystemUI(WidgetUI):
     def factoryReset(self, btn):
         cmd = btn.text()
         if(cmd=="OK"):
-            self.main.serialWrite("format=1\n")
-            self.main.serialWrite("reboot\n")
+            self.main.comms.serialWrite("format=1\n")
+            self.main.comms.serialWrite("reboot\n")
             self.main.resetPort()
 
     def factoryResetBtn(self):
@@ -60,10 +60,10 @@ class SystemUI(WidgetUI):
         msg.exec_()
 
     def getMainClasses(self):
-        dat = self.main.serialGet("lsmain\n")
+        dat = self.main.comms.serialGet("lsmain\n")
         self.comboBox_main.clear()
         self.classIds,self.classes = classlistToIds(dat)
-        id = self.main.serialGet("id?\n")
+        id = self.main.comms.serialGet("id?\n")
         if(id == None):
             #self.main.resetPort()
             self.setEnabled(False)
