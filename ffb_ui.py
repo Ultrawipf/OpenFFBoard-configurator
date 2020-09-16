@@ -114,9 +114,11 @@ class FfbUI(WidgetUI):
         if self.main.serialBusy:
             return
         try:
-            rate,active = self.main.comms.serialGet("hidrate;ffbactive;").split("\n")
-            act = ("FFB ON" if active == "1" else "FFB OFF")
-            self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
+            def f(d):
+                rate,active = d
+                act = ("FFB ON" if active == "1" else "FFB OFF")
+                self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
+            self.main.comms.serialGetAsync(["hidrate","ffbactive"],f,int)
         except:
             self.main.log("Update error")
     # Axis checkboxes
@@ -192,7 +194,7 @@ class FfbUI(WidgetUI):
         
     
     def updateSliders(self):
-        commands = ["power?","degrees?","friction?","idlespring?","idlespring?","esgain?","fxratio?"]
+        commands = ["power?","degrees?","friction?","idlespring?","fxratio?","esgain?"]
   
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -211,86 +213,92 @@ class FfbUI(WidgetUI):
 
 
     def getMotorDriver(self):
-        #self.comboBox_driver.currentIndexChanged.disconnect()
-        dat = self.main.comms.serialGet("drvtype!\n")
-        self.comboBox_driver.clear()
-        self.drvIds,self.drvClasses = classlistToIds(dat)
-        id = self.main.comms.serialGet("drvtype?\n")
-        if(id == None):
-            self.main.log("Error getting driver")
-            return
-        self.drvId = int(id)
-        for c in self.drvClasses:
-            self.comboBox_driver.addItem(c[1])
+        def drvtypecb(dat):
+            l,i = dat
+            self.comboBox_driver.clear()
+            self.drvIds,self.drvClasses = classlistToIds(l)
+            if(i == None):
+                self.main.log("Error getting driver")
+                return
+            self.drvId = int(i)
+            for c in self.drvClasses:
+                self.comboBox_driver.addItem(c[1])
 
-        if(self.drvId in self.drvIds and self.comboBox_driver.currentIndex() != self.drvIds[self.drvId][0]):
-            self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
-
-        
+            if(self.drvId in self.drvIds and self.comboBox_driver.currentIndex() != self.drvIds[self.drvId][0]):
+                self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
+        self.main.comms.serialGetAsync(["drvtype!","drvtype?"],drvtypecb)
+       
 
     def getEncoder(self):
         #self.comboBox_encoder.currentIndexChanged.disconnect()
         self.spinBox_cpr.setEnabled(True)
 
-        dat = self.main.comms.serialGet("enctype!\n")
-        self.comboBox_encoder.clear()
-        self.encIds,self.encClasses = classlistToIds(dat)
-        id = self.main.comms.serialGet("enctype?\n")
-        if(id == None):
-            self.main.log("Error getting encoder")
-            return
-        self.encId = int(id)
-        for c in self.encClasses:
-            self.comboBox_encoder.addItem(c[1])
-
-        idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
-        self.comboBox_encoder.setCurrentIndex(idx)
         
-        vpr = self.main.comms.serialGet("cpr?\n")
-        self.spinBox_cpr.setValue(int(vpr))
+        def f(dat):
+            self.comboBox_encoder.clear()
+            self.encIds,self.encClasses = classlistToIds(dat)
+            for c in self.encClasses:
+                self.comboBox_encoder.addItem(c[1])
+        self.main.comms.serialGetAsync("enctype!",f)
 
-        if(self.encId == 1):
-            self.spinBox_cpr.setEnabled(False)
-       # self.comboBox_encoder.currentIndexChanged.connect(self.encoderChanged)
+        
+        def encid_f(id):
+            if(id == None):
+                self.main.log("Error getting encoder")
+                return
+            self.encId = int(id)
+            
+            idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
+            self.comboBox_encoder.setCurrentIndex(idx)
+                        
+
+            if(self.encId == 1):
+                self.spinBox_cpr.setEnabled(False)
+        self.main.comms.serialGetAsync("enctype?",encid_f,int)
+        def f_cpr(v):
+            self.spinBox_cpr.setValue(v)
+        self.main.comms.serialGetAsync("cpr?",f_cpr,int)
         
 
     def getButtonSources(self):
-        dat = self.main.comms.serialGet("lsbtn\n")
         
-        self.btnIds,self.btnClasses = classlistToIds(dat)
-        types = self.main.comms.serialGet("btntypes?\n")
-        if(types == None):
-            self.main.log("Error getting buttons")
-            return
-        types = int(types)
-        layout = QGridLayout()
-        #clear
-        for b in self.buttonconfbuttons:
-            del b
-        for b in self.buttonbtns.buttons():
-            self.buttonbtns.removeButton(b)
-            del b
-        #add buttons
-        row = 0
-        for c in self.btnClasses:
-            btn=QCheckBox(str(c[1]),self.groupBox_buttons)
-            self.buttonbtns.addButton(btn,c[0])
-            layout.addWidget(btn,row,0)
-            enabled = types & (1<<c[0]) != 0
-            btn.setChecked(enabled)
+        def cb_buttonSources(dat):
+            btns = dat[0]
+            types = int(dat[1])
+            
+            self.btnIds,self.btnClasses = classlistToIds(btns)
+            if(types == None):
+                self.main.log("Error getting buttons")
+                return
+            types = int(types)
+            layout = QGridLayout()
+            #clear
+            for b in self.buttonconfbuttons:
+                del b
+            for b in self.buttonbtns.buttons():
+                self.buttonbtns.removeButton(b)
+                del b
+            #add buttons
+            row = 0
+            for c in self.btnClasses:
+                btn=QCheckBox(str(c[1]),self.groupBox_buttons)
+                self.buttonbtns.addButton(btn,c[0])
+                layout.addWidget(btn,row,0)
+                enabled = types & (1<<c[0]) != 0
+                btn.setChecked(enabled)
 
-            confbutton = QToolButton(self)
-            confbutton.setText(">")
-            #confbutton.setPopupMode(QToolButton.InstantPopup)
-            layout.addWidget(confbutton,row,1)
-            self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
-            confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
-            confbutton.setEnabled(enabled)
-            self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
-            row+=1
+                confbutton = QToolButton(self)
+                confbutton.setText(">")
+                #confbutton.setPopupMode(QToolButton.InstantPopup)
+                layout.addWidget(confbutton,row,1)
+                self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
+                confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
+                confbutton.setEnabled(enabled)
+                self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+                row+=1
 
-        self.groupBox_buttons.setLayout(layout)
-        # TODO add UIs
+            self.groupBox_buttons.setLayout(layout)
+        self.main.comms.serialGetAsync(["lsbtn","btntypes?"],cb_buttonSources)
         
 
         

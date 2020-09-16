@@ -33,7 +33,7 @@ class SerialChooser(WidgetUI):
         cmd = self.lineEdit_cmd.text()+"\n"
         self.serialLog(cmd)
         #self.serial.write(bytes(cmd,"utf-8"))
-        self.main.comms.serialGetAsync(cmd,self.serialLog,readall=True)
+        self.serialLog(self.main.comms.serialGet(cmd))
 
     def write(self,data):
         self.serial.write(data)

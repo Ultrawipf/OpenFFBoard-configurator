@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
 from PyQt5.QtCore import QIODevice,pyqtSignal
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer,QThread
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
@@ -35,8 +35,12 @@ class MainUi(QMainWindow):
     def __init__(self):
         super(MainUi, self).__init__()
         uic.loadUi(res_path('MainWindow.ui'), self)
-        self.serial = QSerialPort(self)
+        #self.serialThread = QThread()
+        self.serial = QSerialPort()
+        #self.serial.moveToThread(self.serialThread)
+
         self.comms = serial_comms.SerialComms(self,self.serial)
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
@@ -117,28 +121,29 @@ class MainUi(QMainWindow):
             self.delTab(self.tabWidget_main.widget(i))
     
     def updateTabs(self):
-        lines = [l.split(":") for l in self.comms.serialGet("lsactive\n").split("\n")]
-        newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
-        deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
-        #print(newActiveClasses)
-        for c in deleteClasses:
-            self.delTab(c)
-            
-        for name,c in newActiveClasses.items():
-            if name in self.activeClasses:
-                continue
+        def updateTabs_cb(active):
+            lines = [l.split(":") for l in active.split("\n") if l]
+            newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
+            deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
+            #print(newActiveClasses)
+            for c in deleteClasses:
+                self.delTab(c)
+            for name,c in newActiveClasses.items():
+                if name in self.activeClasses:
+                    continue
 
-            if name == "FFB Wheel":
-                self.mainClassUi = ffb_ui.FfbUI(main = self)
-                self.activeClasses[name] = self.mainClassUi
-            if name == "TMC4671":
-                c = tmc4671_ui.TMC4671Ui(main = self)
-                self.activeClasses[name] = c
-                self.addTab(c,name)
-            if name == "PWM":
-                c = pwmdriver_ui.PwmDriverUI(main = self)
-                self.activeClasses[name] = c
-                self.addTab(c,name)
+                if name == "FFB Wheel":
+                    self.mainClassUi = ffb_ui.FfbUI(main = self)
+                    self.activeClasses[name] = self.mainClassUi
+                if name == "TMC4671":
+                    c = tmc4671_ui.TMC4671Ui(main = self)
+                    self.activeClasses[name] = c
+                    self.addTab(c,name)
+                if name == "PWM":
+                    c = pwmdriver_ui.PwmDriverUI(main = self)
+                    self.activeClasses[name] = c
+                    self.addTab(c,name)
+        self.comms.serialGetAsync("lsactive",updateTabs_cb)
 
     def reconnect(self):
         self.resetPort()
@@ -153,12 +158,13 @@ class MainUi(QMainWindow):
         self.serialchooser.getPorts()
         self.resetTabs()
 
-    def versionCheck(self):
-        self.fwverstr = self.comms.serialGet("swver\n")
+    def versionCheck(self,ver):
+        
+        self.fwverstr = ver.replace("\n","")
         if not self.fwverstr:
             self.log("Communication error")
             self.resetPort()
-            return False
+            
         fwver = [int(i) for i in self.fwverstr.split(".")]
         min_fw_t = [int(i) for i in min_fw.split(".")]
         self.log("FW v" + self.fwverstr)
@@ -179,16 +185,16 @@ class MainUi(QMainWindow):
             msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\nPlease make sure both firmware and GUI are up to date.")
             msg.exec_()
 
-        return True
+
 
 
     def serialConnected(self,connected):
         if(connected):
-            if(self.comms.serialGet("id\n")):
+            if(self.comms.serialGet("id?;")):
                 # self.tabWidget_main.addTab(SystemUI(parent = self),"System")
                 # self.tabWidget_main.setCurrentIndex(1)
                 self.log("Connected")
-                self.versionCheck()
+                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
             else:
                 self.log("Can't detect board")
                 self.resetPort()

@@ -9,10 +9,10 @@ from base_ui import WidgetUI
 class SystemUI(WidgetUI):
     classes = []
     classIds = {}
+    mainID = None
     def __init__(self, main=None):
 
         WidgetUI.__init__(self, main,'baseclass.ui')
-
         self.setEnabled(False)
         self.pushButton_ok.clicked.connect(self.mainBtn)
         self.pushButton_reboot.clicked.connect(self.reboot)
@@ -64,17 +64,20 @@ class SystemUI(WidgetUI):
         def updateMains(dat):
             self.comboBox_main.clear()
             self.classIds,self.classes = classlistToIds(dat)
-            id = self.main.comms.serialGet("id?\n")
-            if(id == None):
+            
+            if(self.mainID == None):
                 #self.main.resetPort()
                 self.setEnabled(False)
                 return
             self.setEnabled(True)
-            id = int(id)
             for c in self.classes:
                 self.comboBox_main.addItem(c[1])
-            self.comboBox_main.setCurrentIndex(self.classIds[id][0])
+            self.comboBox_main.setCurrentIndex(self.classIds[self.mainID][0])
             self.main.log("Detected mode: "+self.comboBox_main.currentText())
             self.main.updateTabs()
 
+        def f(i):
+            self.mainID = i
+        self.main.comms.serialGetAsync("id?",f,int)
         self.main.comms.serialGetAsync("lsmain",updateMains)
+        

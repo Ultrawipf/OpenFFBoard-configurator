@@ -1,15 +1,26 @@
-import queue
+import queue,time
+from PyQt5.QtCore import QObject
+from PyQt5.QtWidgets import QApplication
+from collections import deque
+class SerialComms(QObject):
+    maxSendBytes = 64 # How many bytes to send before waiting for replies
 
-
-class SerialComms:
     def __init__(self,main,serialport):
+        QObject.__init__(self)
         self.serial = serialport
         self.main=main
-        self.serialQueue = queue.Queue()
-        self.sendQueue = queue.Queue()
+        self.serialQueue = deque()
+        self.sendQueue = deque()
         self.serial.readyRead.connect(self.serialReceive)
-        self.sentCommandSize=0 # tracks sent bytes so never more than 64 bytes are sent
-        self.waitForEmptyQueue = False
+        self.sentCommandSize=0 # tracks sent bytes so never more than 64 bytes are sent. Includes next command to send
+        self.waitForRead = False
+        self.serial.aboutToClose.connect(self.reset)
+        self.cmdbuf = []
+    
+    def reset(self):
+        self.serialQueue.clear()
+        self.sendQueue.clear()
+        
     def checkOk(self,reply):
         if(reply == "OK" or reply.find("Err") == -1):
             return
@@ -18,9 +29,7 @@ class SerialComms:
 
     def serialWrite(self,cmd):
         if(self.serial.isOpen()):
-            self.serialGetAsync(cmd,self.checkOk,readall=True)
-            if(not self.serial.waitForBytesWritten(1000)):
-                self.main.log("Error writing "+cmd)
+            self.serialGetAsync(cmd,self.checkOk)
 
     def setAsync(self,enabled):
         try:
@@ -31,117 +40,129 @@ class SerialComms:
         except:
             pass
 
-    def checkSendQueue(self):
-        if(not self.sendQueue.empty()): # remaining commands
-            cmd = self.sendQueue.get()
-            if(self.sentCommandSize + len(cmd) < 64):
-                print("Removing queue")
-                self.sentCommandSize += len(cmd)
-                self.main.serialchooser.write(bytes(cmd,"utf-8"))
-            else:
-                # Add to send queue again
-                self.sendQueue.put(cmd)
+    def trySend(self):
+        if(len(self.sendQueue) == 0):
+            return
+        nextLen = len(self.sendQueue[0])
+        
+        if(self.sentCommandSize + nextLen < self.maxSendBytes):
+            cmd = self.sendQueue.popleft()
+            self.sentCommandSize += nextLen
+            self.serial.write(bytes(cmd,"utf-8"))
 
     def serialReceive(self):
+        if(self.waitForRead):
+            self.waitForRead=False
+            return
+
         data = self.serial.readAll()
         text = data.data().decode("utf-8")
 
-        # Command replies start with > and end with \n
-        if(self.serialQueue.empty()):
-            self.main.serialchooser.serialLog(text)
-            self.checkSendQueue()
-            return
-        cur_queue = self.serialQueue.get()
-        self.sentCommandSize -= len(cur_queue[0])
         
         def process_cmd(reply,cur_queue): 
-            if(reply[0] == ">"):
-                if(not cur_queue[3]):
-                    reply = reply[1::]
-                
+
+            num = cur_queue[3] # commands per callback
+            
+            if(reply[0] != "!"):            
                 if(reply.startswith("Err")):
                     self.main.log(reply)
-                elif(cur_queue[1]):
+                    print(reply)
+                    reply = None
+                    return
+                else:
                     if(cur_queue[2]):
                         reply = cur_queue[2](reply) #apply conversion
-                    cur_queue[1](reply)
-                
             else:
                 # Not a command. pass to log
                 self.main.serialchooser.serialLog(reply+"\n")
-            self.checkSendQueue()
+                return
+            # Wait for more?
+            self.cmdbuf.append(reply)
+            if(len(self.cmdbuf) < num):
+                return
 
-        if(cur_queue[3]): # read all
-            process_cmd(text,cur_queue)
-            return
-        for reply in text.split(">"):
+            if(cur_queue[1]):
+                if(cur_queue[3] == 1):
+                    self.cmdbuf = self.cmdbuf[0]
+                cur_queue[1](self.cmdbuf)
+                self.cmdbuf = [] # reset
+
+        split_reply = text.split(">")
+        n = 0
+        self.cmdbuf = []
+        cur_queue = self.serialQueue[0]
+        for reply in split_reply:
             if reply=="":
                 continue
+            if(len(self.cmdbuf) == 0):
+                cur_queue = self.serialQueue.popleft()
+            self.sentCommandSize -= len(cur_queue[0])
             
             process_cmd(reply,cur_queue)
-            if(not self.serialQueue.empty()):
-                cur_queue = self.serialQueue.get()
-                self.sentCommandSize -= len(cur_queue[0])
+            self.trySend()
+
         
+    # Adds command to send and receive queue
+    def addToQueue(self,cmd,callback,convert,num):
+        
+        if(not cmd.endswith(";") and not cmd.endswith("\n")):
+            cmd = cmd+";"
+        self.serialQueue.append([cmd,callback,convert,num])
+        self.sendQueue.append(cmd)
+        self.trySend()
+
     """
      Get asynchronous commands and pass the result to the callback. 
      Better performance.
      cmds and callbacks can be lists or a single command (without ; or \n)
      Pass a conversion function to apply to all replies before passing to callbacks. (int or float for example)
     """
-    def serialGetAsync(self,cmds,callbacks,convert=None,readall=False):
-        commands=[]
-        if(type(cmds) == list and type(callbacks) == list):
+    def serialGetAsync(self,cmds,callbacks,convert=None,num = 1):
+        #commands=[]
+        if(type(cmds) == list and type(callbacks) == list): # Multiple commands and callbacks
             for cmd,callback in zip(cmds,callbacks):
-                cmd = cmd+";"
-                self.serialQueue.put([cmd,callback,convert,False])
-                commands.append(cmd)
-        elif(type(cmds) == list):
-            for cmd in cmds:
-                cmd = cmd+";"
-                self.serialQueue.put([cmd,callbacks,convert,readall])
-                commands.append(cmd)
-        else:
-            cmds = cmds+";"
-            self.serialQueue.put([cmds,callbacks,convert,readall])
-            commands.append(cmds)
+                self.addToQueue(cmd,callback,convert,1)
+        elif(type(cmds) == list): # Multiple commands. One callback
+            #for cmd in cmds:
+            num = len(cmds)
+            cmd = ";".join(cmds)
+            self.addToQueue(cmd,callbacks,convert,num)
+        else: # One command and callback or direct
+            self.addToQueue(cmds,callbacks,convert,num)
 
-        for cmd in commands:
             
-            if(self.sentCommandSize + len(cmd) < 64):
-                self.sentCommandSize+=len(cmd)
-                self.main.serialchooser.write(bytes(cmd,"utf-8"))
-            else:
-                # Add to send queue
-                print("Append queue")
-                self.sendQueue.put(cmd)
-
 
 
     # get a synchronous reply with timeout
     def serialGet(self,cmd,timeout=500):
-    
+        
         if(not self.serial.isOpen()):
             self.main.log("Error: Serial closed")
             return None
-        if not self.serialQueue.empty():
-            # do something to wait until queue empty....
-            pass
-        self.setAsync(False)
-        self.main.serialchooser.write(bytes(cmd,"utf-8"))
+        t=0
+        while len(self.serialQueue)>0:
+            if(timeout-t < 0):
+                print("Timeout")
+                return None
+            t+=10
+            time.sleep(0.01)
+            QApplication.processEvents()
 
-        if(not self.serial.waitForReadyRead(timeout)):
-            self.main.log("Error: Serial timeout")
-            self.setAsync(True)
-            return None
-        
+        self.waitForRead = True
+        self.serial.write(bytes(cmd,"utf-8"))
+        t=0
+        while self.waitForRead:
+            if(timeout-t < 0):
+                return None
+            t+=10
+            time.sleep(0.01)
+            QApplication.processEvents()
+
         data = self.serial.readAll()
-        self.setAsync(True)
-        lastSerial = data.data().decode("utf-8")
-        #print(lastSerial)
 
+        lastSerial = data.data().decode("utf-8")
         lastSerial=lastSerial.replace(">","")
-        
+ 
         if(lastSerial and lastSerial[-1] == "\n"):
             lastSerial=lastSerial[0:-1]
         

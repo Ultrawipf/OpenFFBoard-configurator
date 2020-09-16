@@ -23,7 +23,7 @@ class TMC4671Ui(WidgetUI):
         self.initUi()
         
 
-        self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
+        #self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
 
         self.main.setSaveBtn(True)
         
