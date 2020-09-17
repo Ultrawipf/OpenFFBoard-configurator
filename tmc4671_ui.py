@@ -33,7 +33,7 @@ class TMC4671Ui(WidgetUI):
         pass
 
     def showEvent(self,event):
-        self.timer.start(250)
+        self.timer.start(50)
 
     # Tab is hidden
     def hideEvent(self,event):
@@ -46,6 +46,8 @@ class TMC4671Ui(WidgetUI):
             amps = round((v / self.amp_gain) / self.shunt_ohm,3)
             self.label_Current.setText(str(amps)+"A")
 
+            self.progressBar_power.setValue(current)
+
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
 
@@ -55,41 +57,34 @@ class TMC4671Ui(WidgetUI):
     
 
     def submitMotor(self):
-        cmd = ""
         mtype = self.comboBox_mtype.currentIndex()
-        cmd+="mtype="+str(mtype)+";"
+        self.main.comms.serialWrite("mtype="+str(mtype))
 
         poles = self.spinBox_poles.value()
-        cmd+="poles="+str(poles)+";"
+        self.main.comms.serialWrite("poles="+str(poles))
 
-        cmd+="cprtmc="+str(self.spinBox_cpr.value())+";"
+        self.main.comms.serialWrite("cprtmc="+str(self.spinBox_cpr.value()))
 
         enc = self.comboBox_enc.currentIndex()
-        cmd+="encsrc="+str(enc)+";"
+        self.main.comms.serialWrite("encsrc="+str(enc))
         
-
-
-        self.main.comms.serialWrite(cmd)
-
     def submitPid(self):
         # PIDs
-        cmd = ""
-
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        cmd+="seqpi="+str(seq)+";"
+        self.main.comms.serialWrite("seqpi="+str(seq))
 
         tp = self.spinBox_tp.value()
-        cmd+="torqueP="+str(tp)+";"
+        self.main.comms.serialWrite("torqueP="+str(tp))
 
         ti = self.spinBox_ti.value()
-        cmd+="torqueI="+str(ti)+";"
+        self.main.comms.serialWrite("torqueI="+str(ti))
 
         fp = self.spinBox_fp.value()
-        cmd+="fluxP="+str(fp)+";"
+        self.main.comms.serialWrite("fluxP="+str(fp))
 
         fi = self.spinBox_fi.value()
-        cmd+="fluxI="+str(fi)+";"
-        self.main.comms.serialWrite(cmd)
+        self.main.comms.serialWrite("fluxI="+str(fi))
+        
 
 
     def initUi(self):
@@ -115,10 +110,12 @@ class TMC4671Ui(WidgetUI):
         return True
 
     def alignEnc(self):
-        res = self.main.comms.serialGet("encalign\n",3000)
-        if(res):
-            msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
-            msg.exec_()
+        def f(res):
+            if(res):
+                msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
+                msg.exec_()
+        res = self.main.comms.serialGetAsync("encalign",f)
+        
 
     def getMotor(self):
         commands=["mtype?","poles?","encsrc?","cprtmc?"]

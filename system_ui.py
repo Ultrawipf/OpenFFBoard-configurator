@@ -60,7 +60,6 @@ class SystemUI(WidgetUI):
         msg.exec_()
 
     def getMainClasses(self):
-        
         def updateMains(dat):
             self.comboBox_main.clear()
             self.classIds,self.classes = classlistToIds(dat)

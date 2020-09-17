@@ -41,7 +41,7 @@ class SerialComms(QObject):
             pass
 
     def trySend(self):
-        if(len(self.sendQueue) == 0):
+        if(len(self.sendQueue) == 0 or not self.serial.isOpen()):
             return
         nextLen = len(self.sendQueue[0])
         
@@ -49,6 +49,7 @@ class SerialComms(QObject):
             cmd = self.sendQueue.popleft()
             self.sentCommandSize += nextLen
             self.serial.write(bytes(cmd,"utf-8"))
+            self.trySend()
 
     def serialReceive(self):
         if(self.waitForRead):
@@ -58,7 +59,7 @@ class SerialComms(QObject):
         data = self.serial.readAll()
         text = data.data().decode("utf-8")
 
-        
+        ################################
         def process_cmd(reply,cur_queue): 
 
             num = cur_queue[3] # commands per callback
@@ -87,6 +88,7 @@ class SerialComms(QObject):
                 cur_queue[1](self.cmdbuf)
                 self.cmdbuf = [] # reset
 
+        ####################################
         split_reply = text.split(">")
         n = 0
         self.cmdbuf = []
@@ -113,12 +115,17 @@ class SerialComms(QObject):
 
     """
      Get asynchronous commands and pass the result to the callback. 
-     Better performance.
+     Better performance. Recommended
      cmds and callbacks can be lists or a single command (without ; or \n)
-     Pass a conversion function to apply to all replies before passing to callbacks. (int or float for example)
+     Usages:
+     pass multiple commands in a list with a single callback (Will pass a list of replies)
+     pass a single command and a single callback
+     pass multiple commands and callbacks in lists
+     You can also pass an additional conversion function to apply to all replies before sending to callbacks. (int or float for example)
     """
     def serialGetAsync(self,cmds,callbacks,convert=None,num = 1):
-        #commands=[]
+        if(not self.serial.isOpen()):
+            return False
         if(type(cmds) == list and type(callbacks) == list): # Multiple commands and callbacks
             for cmd,callback in zip(cmds,callbacks):
                 self.addToQueue(cmd,callback,convert,1)
@@ -133,7 +140,7 @@ class SerialComms(QObject):
             
 
 
-    # get a synchronous reply with timeout
+    # get a synchronous reply with timeout. Not recommended
     def serialGet(self,cmd,timeout=500):
         
         if(not self.serial.isOpen()):

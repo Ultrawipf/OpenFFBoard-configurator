@@ -111,8 +111,6 @@ class FfbUI(WidgetUI):
         self.main.comms.serialGetAsync("invertx?",self.checkBox_invertX.setChecked,int)
 
     def updateTimer(self):
-        if self.main.serialBusy:
-            return
         try:
             def f(d):
                 rate,active = d

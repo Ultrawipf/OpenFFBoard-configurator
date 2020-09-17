@@ -23,14 +23,14 @@ import ffb_ui
 import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
+import midi_ui
 
 
 class MainUi(QMainWindow):
     serial = None
-    curId = 0
     save = pyqtSignal()
     mainClassUi = None
-    serialBusy = False
+    timeouting = False
     
     def __init__(self):
         super(MainUi, self).__init__()
@@ -80,10 +80,22 @@ class MainUi(QMainWindow):
         AboutDialog(self).exec_()
 
     def updateTimer(self):
+        def f(i):
+            if i != self.systemUi.mainID:
+                self.resetPort()       
+                self.log("Communication error. Please reconnect")
+            else:
+                self.timeouting = False
         if(self.serial.isOpen()):
-            if(not self.comms.serialGet("id?\n",1000)):
+            if self.timeouting:
+                self.timeouting = False
                 self.resetPort()
                 self.log("Timeout. Please reconnect")
+                return
+            else:
+                self.timeouting = True
+                self.comms.serialGetAsync("id?",f,int)
+                
             
 
     def log(self,s):
@@ -131,7 +143,7 @@ class MainUi(QMainWindow):
             for name,c in newActiveClasses.items():
                 if name in self.activeClasses:
                     continue
-
+                
                 if name == "FFB Wheel":
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
@@ -143,6 +155,10 @@ class MainUi(QMainWindow):
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                if name == "MIDI":
+                    c = midi_ui.MidiUI(main = self)
+                    self.activeClasses[name] = c
+                    self.addTab(c,name)
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
 
     def reconnect(self):
@@ -152,11 +168,15 @@ class MainUi(QMainWindow):
 
     def resetPort(self):
         self.log("Reset port")
+        
         self.systemUi.setEnabled(False)
         self.serial.waitForBytesWritten(500)
         self.serial.close()
+        self.comms.reset()
+        self.timeouting = False
         self.serialchooser.getPorts()
         self.resetTabs()
+        
 
     def versionCheck(self,ver):
         
@@ -191,8 +211,6 @@ class MainUi(QMainWindow):
     def serialConnected(self,connected):
         if(connected):
             if(self.comms.serialGet("id?;")):
-                # self.tabWidget_main.addTab(SystemUI(parent = self),"System")
-                # self.tabWidget_main.setCurrentIndex(1)
                 self.log("Connected")
                 self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
             else:
