@@ -33,7 +33,7 @@ class TMC4671Ui(WidgetUI):
         pass
 
     def showEvent(self,event):
-        self.timer.start(50)
+        self.timer.start(40)
 
     # Tab is hidden
     def hideEvent(self,event):
@@ -52,7 +52,7 @@ class TMC4671Ui(WidgetUI):
             self.main.log("TMC update error: " + str(e)) 
 
     def updateTimer(self):
-        self.main.comms.serialGetAsync("acttorque",self.updateCurrent)
+        self.main.comms.serialGetAsync("acttrq",self.updateCurrent)
         
     
 

@@ -189,7 +189,7 @@ class MainUi(QMainWindow):
         min_fw_t = [int(i) for i in min_fw.split(".")]
         self.log("FW v" + self.fwverstr)
         fwoutdated = False
-        guioutdated = fwver[0] > min_fw_t[0]
+        guioutdated = fwver[0] > min_fw_t[0] or fwver[1] > min_fw_t[1]
 
         for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
             if(v[0] < v[1]): # Newer
