@@ -58,6 +58,9 @@ class SerialComms(QObject):
 
         data = self.serial.readAll()
         text = data.data().decode("utf-8")
+        if(len(self.serialQueue) == 0 or text[0]!=">"):
+            self.main.serialchooser.serialLog(text)
+            return
 
         ################################
         def process_cmd(reply,cur_queue): 
@@ -92,6 +95,7 @@ class SerialComms(QObject):
         split_reply = text.split(">")
         n = 0
         self.cmdbuf = []
+        
         cur_queue = self.serialQueue[0]
         for reply in split_reply:
             if reply=="":
