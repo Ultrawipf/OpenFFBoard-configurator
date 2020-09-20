@@ -114,7 +114,7 @@ class FfbUI(WidgetUI):
         try:
             def f(d):
                 rate,active = d
-                act = ("FFB ON" if active == "1" else "FFB OFF")
+                act = ("FFB ON" if active else "FFB OFF")
                 self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
             self.main.comms.serialGetAsync(["hidrate","ffbactive"],f,int)
         except:
