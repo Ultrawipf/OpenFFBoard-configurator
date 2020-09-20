@@ -72,19 +72,16 @@ class ButtonOptionsDialog(QDialog):
             for i in range(8):
                 if(self.buttongroup.button(i).isChecked()):
                     mask |= 1 << i
-            self.main.serialWrite("local_btnmask="+str(mask)+"\n")
+            self.main.comms.serialWrite("local_btnmask="+str(mask)+"\n")
 
         elif(self.id == 1):
-            cmd = "spibtn_mode="+str(self.modeBox.currentData()+";")
-            cmd += "spi_btnnum="+str(self.numBtnBox.value())+";"
-            cmd += "spi_btnpol="+("1" if self.polBox.isChecked() else "0")+";"
+            self.main.comms.serialWrite("spibtn_mode="+str(self.modeBox.currentData()))
+            self.main.comms.serialWrite("spi_btnnum="+str(self.numBtnBox.value()))
+            self.main.comms.serialWrite("spi_btnpol="+("1" if self.polBox.isChecked() else "0"))
     
-            self.main.serialWrite(cmd)
-
+    
         elif(self.id == 2):
-            cmd = "shifter_mode="+str(self.modeBox.currentData())
-            self.main.serialWrite(cmd)
-        
+            self.main.comms.serialWrite("shifter_mode="+str(self.modeBox.currentData()))
         self.close()
 
     def showEvent(self,event):
@@ -96,26 +93,32 @@ class ButtonOptionsDialog(QDialog):
 
     def readValues(self):
         if(self.id == 0): # Local
-            mask = int(self.main.serialGet("local_btnmask\n"))
-            for i in range(8):
-                self.buttongroup.button(i).setChecked(mask & (1 << i))
-
+            def localcb(mask):
+                for i in range(8):
+                    self.buttongroup.button(i).setChecked(mask & (1 << i))
+            self.main.comms.serialGetAsync("local_btnmask",localcb,int)
+            
+        # SPI
         elif(self.id == 1):
-            self.numBtnBox.setValue(int(self.main.serialGet("spi_btnnum?\n")))
-
+            self.main.comms.serialGetAsync("spi_btnnum?",self.numBtnBox.setValue,int)
             self.modeBox.clear()
-            modes = self.main.serialGet("spibtn_mode!\n").split("\n")
-            modes = [m.split(":") for m in modes]
-            for m in modes:
-                self.modeBox.addItem(m[0],m[1])
-            self.modeBox.setCurrentIndex(int(self.main.serialGet("spibtn_mode?\n")))
-
-            self.polBox.setChecked(int(self.main.serialGet("spi_btnpol?\n")))
-        
+            def modecb(mode):
+                modes = mode.split("\n")
+                modes = [m.split(":") for m in modes if m]
+                for m in modes:
+                    self.modeBox.addItem(m[0],m[1])
+                self.main.comms.serialGetAsync("spibtn_mode?",self.modeBox.setCurrentIndex,int)
+            self.main.comms.serialGetAsync("spibtn_mode!",modecb)
+            self.main.comms.serialGetAsync("spi_btnpol?",self.polBox.setChecked,int)
+           
+            
+        # Shifter
         elif(self.id == 2):
             self.modeBox.clear()
-            modes = self.main.serialGet("shifter_mode!\n").split("\n")
-            modes = [m.split(":") for m in modes]
-            for m in modes:
-                self.modeBox.addItem(m[0],m[1])
-            self.modeBox.setCurrentIndex(int(self.main.serialGet("shifter_mode?\n")))
+            def modecb(mode):
+                modes = mode.split("\n")
+                modes = [m.split(":") for m in modes if m]
+                for m in modes:
+                    self.modeBox.addItem(m[0],m[1])
+                self.main.comms.serialGetAsync("shifter_mode?",self.modeBox.setCurrentIndex,int)
+            self.main.comms.serialGetAsync("shifter_mode!",modecb)

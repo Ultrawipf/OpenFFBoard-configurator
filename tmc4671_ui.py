@@ -23,14 +23,8 @@ class TMC4671Ui(WidgetUI):
         self.initUi()
         
 
-        # self.spinBox_tp.valueChanged.connect(lambda v : self.main.serialWrite("torqueP="+str(v)+";"))
-        # self.spinBox_ti.valueChanged.connect(lambda v : self.main.serialWrite("torqueI="+str(v)+";"))
-        # self.spinBox_fp.valueChanged.connect(lambda v : self.main.serialWrite("fluxP="+str(v)+";"))
-        # self.spinBox_fi.valueChanged.connect(lambda v : self.main.serialWrite("fluxI="+str(v)+";"))
-        self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.serialWrite("fluxoffset="+str(v)+";"))
+        #self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
 
-        self.pushButton_submitmotor.clicked.connect(self.submitMotor)
-        self.pushButton_submitpid.clicked.connect(self.submitPid)
         self.main.setSaveBtn(True)
         
         self.timer.timeout.connect(self.updateTimer)
@@ -39,76 +33,75 @@ class TMC4671Ui(WidgetUI):
         pass
 
     def showEvent(self,event):
-        self.timer.start(250)
+        self.timer.start(40)
 
     # Tab is hidden
     def hideEvent(self,event):
         self.timer.stop()
         
-    def updateTimer(self):
-        if self.main.serialBusy:
-            return
+    def updateCurrent(self,current):
         try:
-            current = float(self.main.serialGet("acttorque;"))
+            current = float(current)
             v = (2.5/0x7fff) * current
             amps = round((v / self.amp_gain) / self.shunt_ohm,3)
             self.label_Current.setText(str(amps)+"A")
 
+            self.progressBar_power.setValue(current)
+
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
+
+    def updateTimer(self):
+        self.main.comms.serialGetAsync("acttrq",self.updateCurrent)
+        
     
 
     def submitMotor(self):
-        cmd = ""
         mtype = self.comboBox_mtype.currentIndex()
-        cmd+="mtype="+str(mtype)+";"
+        self.main.comms.serialWrite("mtype="+str(mtype))
 
         poles = self.spinBox_poles.value()
-        cmd+="poles="+str(poles)+";"
+        self.main.comms.serialWrite("poles="+str(poles))
 
-        cmd+="cprtmc="+str(self.spinBox_cpr.value())+";"
+        self.main.comms.serialWrite("cprtmc="+str(self.spinBox_cpr.value()))
 
         enc = self.comboBox_enc.currentIndex()
-        cmd+="encsrc="+str(enc)+";"
+        self.main.comms.serialWrite("encsrc="+str(enc))
         
-
-
-        self.main.serialWrite(cmd)
-
     def submitPid(self):
         # PIDs
-        cmd = ""
-
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        cmd+="seqpi="+str(seq)+";"
+        self.main.comms.serialWrite("seqpi="+str(seq))
 
         tp = self.spinBox_tp.value()
-        cmd+="torqueP="+str(tp)+";"
+        self.main.comms.serialWrite("torqueP="+str(tp))
 
         ti = self.spinBox_ti.value()
-        cmd+="torqueI="+str(ti)+";"
+        self.main.comms.serialWrite("torqueI="+str(ti))
 
         fp = self.spinBox_fp.value()
-        cmd+="fluxP="+str(fp)+";"
+        self.main.comms.serialWrite("fluxP="+str(fp))
 
         fi = self.spinBox_fi.value()
-        cmd+="fluxI="+str(fi)+";"
-        self.main.serialWrite(cmd)
+        self.main.comms.serialWrite("fluxI="+str(fi))
+        
 
 
     def initUi(self):
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
-            encsrcs = self.main.serialGet("encsrc!\n")
-            for s in encsrcs.split(","):
-                e = s.split("=")
-                self.comboBox_enc.addItem(e[0],e[1])
+           
+            def encs(encsrcs):
+                for s in encsrcs.split(","):
+                    e = s.split("=")
+                    self.comboBox_enc.addItem(e[0],e[1])
+            self.main.comms.serialGetAsync("encsrc!",encs)
 
             self.getMotor()
             self.getPids()
 
-            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.serialWrite("fluxoffset="+str(v)+";"))
+            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
         except Exception as e:
@@ -117,31 +110,31 @@ class TMC4671Ui(WidgetUI):
         return True
 
     def alignEnc(self):
-        res = self.main.serialGet("encalign\n",3000)
-        if(res):
-            msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
-            msg.exec_()
+        def f(res):
+            if(res):
+                msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
+                msg.exec_()
+        res = self.main.comms.serialGetAsync("encalign",f)
+        
 
     def getMotor(self):
-        res = self.main.serialGet("mtype?;poles?;encsrc?;")
-        mtype,poles,enc = [int(s) for s in res.split("\n")]
-        if(mtype):
-            self.comboBox_mtype.setCurrentIndex((mtype))
-        if(poles):
-            self.spinBox_poles.setValue((poles))
-        if(enc):
-            self.comboBox_enc.setCurrentIndex(enc)
-            
-            self.spinBox_cpr.setValue(int(self.main.serialGet("cprtmc?\n")))
+        commands=["mtype?","poles?","encsrc?","cprtmc?"]
+        callbacks = [self.comboBox_mtype.setCurrentIndex,
+        self.spinBox_poles.setValue,
+        self.comboBox_enc.setCurrentIndex,
+        self.spinBox_cpr.setValue]
+        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
                 
 
     def getPids(self):
-        pids = [int(s) for s in self.main.serialGet("torqueP?;torqueI?;fluxP?;fluxI?;fluxoffset?;seqpi?;").split("\n")]
-        self.spinBox_tp.setValue(pids[0])
-        self.spinBox_ti.setValue(pids[1])
-        self.spinBox_fp.setValue(pids[2])
-        self.spinBox_fi.setValue(pids[3])
+        callbacks = [self.spinBox_tp.setValue,
+        self.spinBox_ti.setValue,
+        self.spinBox_fp.setValue,
+        self.spinBox_fi.setValue,
+        self.spinBox_fluxoffset.setValue,
+        self.checkBox_advancedpid.setChecked]
 
-        self.spinBox_fluxoffset.setValue(pids[4])
+        commands = ["torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
+        
+        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
 
-        self.checkBox_advancedpid.setChecked(pids[5])

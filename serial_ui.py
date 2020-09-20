@@ -18,7 +18,7 @@ class SerialChooser(WidgetUI):
         self.comboBox_port.currentIndexChanged.connect(self.selectPort)
         self.pushButton_send.clicked.connect(self.sendLine)
         self.lineEdit_cmd.returnPressed.connect(self.sendLine)
-        self.serial.readyRead.connect(self.serialReceive)
+        
         self.getPorts()
 
         self.ports = []
@@ -27,26 +27,13 @@ class SerialChooser(WidgetUI):
     def serialLog(self,txt):
         self.serialLogBox.append(txt)
 
-    def setLog(self,enabled):
-        try:
-            if(enabled):
-                self.serial.readyRead.connect(self.serialReceive)
-            else:
-                self.serial.readyRead.disconnect(self.serialReceive)
-        except:
-            pass
-
-    def serialReceive(self):
-        data = self.serial.readAll()
-        text = data.data().decode("utf-8")
-        self.lastSerial = text
-        self.serialLog(text)
 
     def sendLine(self):
         
         cmd = self.lineEdit_cmd.text()+"\n"
         self.serialLog(cmd)
-        self.serial.write(bytes(cmd,"utf-8"))
+        #self.serial.write(bytes(cmd,"utf-8"))
+        self.serialLog(self.main.comms.serialGet(cmd))
 
     def write(self,data):
         self.serial.write(data)
