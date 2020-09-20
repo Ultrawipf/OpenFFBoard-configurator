@@ -18,25 +18,27 @@ class PwmDriverUI(WidgetUI):
         self.pushButton_apply.clicked.connect(self.apply)
 
     def initUi(self):
-        self.comboBox_mode.clear()
-        modes = self.main.comms.serialGet("pwm_mode!\n").split("\n")
-        modes = [m.split(":") for m in modes]
-        for m in modes:
-            self.comboBox_mode.addItem(m[0],m[1])
-        self.comboBox_mode.setCurrentIndex(int(self.main.comms.serialGet("pwm_mode?\n")))
-
+        self.main.comms.serialGetAsync("pwm_mode!",self.pwmmode_cb)
+        self.main.comms.serialGetAsync("pwm_speed!",self.freq_cb)
+    
+    def freq_cb(self,modes):
         self.comboBox_freq.clear()
-        modes = self.main.comms.serialGet("pwm_speed!\n").split("\n")
-        modes = [m.split(":") for m in modes]
+        modes = [m.split(":") for m in modes.split("\n") if m]
         for m in modes:
             self.comboBox_freq.addItem(m[0],m[1])
-        self.comboBox_freq.setCurrentIndex(int(self.main.comms.serialGet("pwm_speed?\n")))
+        self.main.comms.serialGetAsync("pwm_speed?",self.comboBox_freq.setCurrentIndex,int)
+
+    def pwmmode_cb(self,modes):
+        self.comboBox_mode.clear()
+        modes = [m.split(":") for m in modes.split("\n") if m]
+        for m in modes:
+            self.comboBox_mode.addItem(m[0],m[1])
+        self.main.comms.serialGetAsync("pwm_mode?",self.comboBox_mode.setCurrentIndex,int)
 
  
     def apply(self):
-        cmd = "pwm_mode="+str(self.comboBox_mode.currentData())+";"
-        cmd+= "pwm_speed="+str(self.comboBox_freq.currentData())+";"
 
-        self.main.comms.serialWrite(cmd)
+        self.main.comms.serialWrite("pwm_mode="+str(self.comboBox_mode.currentData()))
+        self.main.comms.serialWrite("pwm_speed="+str(self.comboBox_freq.currentData()))
         self.initUi() # Update UI
 
