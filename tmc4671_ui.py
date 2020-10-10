@@ -8,12 +8,19 @@ from PyQt5.QtCore import QTimer
 import main
 from base_ui import WidgetUI
 
+#for graph here, need pyqtgraph and numpy
+from pyqtgraph import PlotWidget, plot
+import pyqtgraph as pg
+import numpy as np
+
 class TMC4671Ui(WidgetUI):
 
     amp_gain = 60
     shunt_ohm = 0.0015
     
     def __init__(self, main=None):
+        global curveAmp
+        global curveAmpData
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         #QWidget.__init__(self, parent)
         self.main = main #type: main.MainUi
@@ -29,6 +36,12 @@ class TMC4671Ui(WidgetUI):
         
         self.timer.timeout.connect(self.updateTimer)
 
+        # for curveAmp!
+        # ref: https://www.learnpyqt.com/courses/qt-creator/embed-pyqtgraph-custom-widgets-qt-app/
+
+        curveAmp = self.graphWidget_Amps.plot(pen='y')
+        curveAmpData = [0]
+
     def __del__(self):
         pass
 
@@ -40,6 +53,8 @@ class TMC4671Ui(WidgetUI):
         self.timer.stop()
         
     def updateCurrent(self,current):
+        global curveAmp
+        global curveAmpData
         try:
             current = float(current)
             v = (2.5/0x7fff) * current
@@ -47,6 +62,9 @@ class TMC4671Ui(WidgetUI):
             self.label_Current.setText(str(amps)+"A")
 
             self.progressBar_power.setValue(current)
+
+            curveAmpData.append(amps)
+            curveAmp.setData(curveAmpData)
 
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
