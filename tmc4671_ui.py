@@ -55,7 +55,7 @@ class TMC4671Ui(WidgetUI):
 
             self.progressBar_power.setValue(current)
 
-            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData))-self.max_datapoints,0):]
+            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData)-self.max_datapoints,0):]
             self.curveAmpData.append(amps)
             self.curveAmp.setData(self.curveAmpData)
 
