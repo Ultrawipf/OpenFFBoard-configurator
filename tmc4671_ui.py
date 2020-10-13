@@ -17,12 +17,10 @@ class TMC4671Ui(WidgetUI):
 
     amp_gain = 60
     shunt_ohm = 0.0015
+    max_datapoints = 1000
     
     def __init__(self, main=None):
-        global curveAmp
-        global curveAmpData
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
-        #QWidget.__init__(self, parent)
         self.main = main #type: main.MainUi
         self.timer = QTimer(self)
     
@@ -30,17 +28,12 @@ class TMC4671Ui(WidgetUI):
         self.initUi()
         
 
-        #self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
-
         self.main.setSaveBtn(True)
         
         self.timer.timeout.connect(self.updateTimer)
 
-        # for curveAmp!
-        # ref: https://www.learnpyqt.com/courses/qt-creator/embed-pyqtgraph-custom-widgets-qt-app/
-
-        curveAmp = self.graphWidget_Amps.plot(pen='y')
-        curveAmpData = [0]
+        self.curveAmp = self.graphWidget_Amps.plot(pen='y')
+        self.curveAmpData = [0]
 
     def __del__(self):
         pass
@@ -53,8 +46,7 @@ class TMC4671Ui(WidgetUI):
         self.timer.stop()
         
     def updateCurrent(self,current):
-        global curveAmp
-        global curveAmpData
+   
         try:
             current = float(current)
             v = (2.5/0x7fff) * current
@@ -63,8 +55,9 @@ class TMC4671Ui(WidgetUI):
 
             self.progressBar_power.setValue(current)
 
-            curveAmpData.append(amps)
-            curveAmp.setData(curveAmpData)
+            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData))-self.max_datapoints,0):]
+            self.curveAmpData.append(amps)
+            self.curveAmp.setData(self.curveAmpData)
 
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
