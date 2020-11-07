@@ -28,26 +28,16 @@ class LocalButtonsConf(OptionsDialogGroupBox):
     def __init__(self,name,main):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
-<<<<<<< HEAD
         self.buttonBox = QGroupBox("Pins")
         self.buttonBoxLayout = QVBoxLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
 
     def initUI(self):
-=======
-
-    def initUI(self):
-        self.main.comms.serialGetAsync("local_btnpins?",self.initButtons,int)
-
-    def initButtons(self,num):
-        self.num = num
->>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
         vbox = QVBoxLayout()
         self.polBox = QCheckBox("Invert")
         vbox.addWidget(self.polBox)
         self.buttongroup = QButtonGroup()
         self.buttongroup.setExclusive(False)
-<<<<<<< HEAD
         vbox.addWidget(self.buttonBox)
         
         self.setLayout(vbox)
@@ -77,16 +67,6 @@ class LocalButtonsConf(OptionsDialogGroupBox):
                 self.buttongroup.button(i).setChecked(mask & (1 << i))
         self.main.comms.serialGetAsync("local_btnmask?",localcb,int)
         
-=======
-        vbox.addWidget(QLabel("Active pins:"))
-        for i in range(self.num):
-            cb = QCheckBox(str(i+1))
-            self.buttongroup.addButton(cb,i)
-            vbox.addWidget(cb)
-        self.setLayout(vbox)
-
-
->>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
  
     def apply(self):
         mask = 0
@@ -97,7 +77,6 @@ class LocalButtonsConf(OptionsDialogGroupBox):
         self.main.comms.serialWrite("local_btnpol="+("1" if self.polBox.isChecked() else "0"))
     
     def readValues(self):
-<<<<<<< HEAD
         self.main.comms.serialGetAsync("local_btnpins?",self.initButtons,int)
         
         self.main.comms.serialGetAsync("local_btnpol?",self.polBox.setChecked,int)
@@ -105,17 +84,6 @@ class LocalButtonsConf(OptionsDialogGroupBox):
 
 class SPIButtonsConf(OptionsDialogGroupBox):
 
-=======
-        def localcb(mask):
-            for i in range(self.num):
-                self.buttongroup.button(i).setChecked(mask & (1 << i))
-        self.main.comms.serialGetAsync("local_btnmask?",localcb,int)
-        self.main.comms.serialGetAsync("local_btnpol?",self.polBox.setChecked,int)
-
-
-class SPIButtonsConf(OptionsDialogGroupBox):
-
->>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
     def __init__(self,name,main):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
