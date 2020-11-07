@@ -7,6 +7,7 @@ from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
+import analogconf_ui
 from base_ui import WidgetUI
 
 class FfbUI(WidgetUI):
@@ -23,21 +24,24 @@ class FfbUI(WidgetUI):
     btnClasses = {}
     btnIds = []
 
+    axisClasses = {}
+    axisIds = []
+
     drvId = 0
     encId = 0
 
-    axes = 6
-
-    analogbtns = QButtonGroup()
     buttonbtns = QButtonGroup()
     buttonconfbuttons = []
+
+    axisbtns = QButtonGroup()
+    axisconfbuttons = []
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'ffbclass.ui')
     
         self.timer = QTimer(self)
 
-        self.analogbtns.setExclusive(False)
         self.buttonbtns.setExclusive(False)
+        self.axisbtns.setExclusive(False)
         self.horizontalSlider_power.valueChanged.connect(self.power_changed)
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.main.comms.serialWrite("degrees="+str(val)+"\n"))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
@@ -59,8 +63,8 @@ class FfbUI(WidgetUI):
             tabId = self.main.addTab(self,"FFB Wheel")
             self.main.selectTab(tabId)
 
-        self.analogbtns.buttonClicked.connect(self.axesChanged)
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
+        self.axisbtns.buttonClicked.connect(self.axesChanged)
         self.pushButton_center.clicked.connect(lambda : self.main.comms.serialWrite("zeroenc\n"))
         
         #self.spinBox_cpr.valueChanged.connect(lambda v : self.main.comms.serialWrite("cpr="+str(v)+";"))
@@ -74,20 +78,9 @@ class FfbUI(WidgetUI):
             self.getEncoder()
             self.updateSliders()
 
-            layout = QVBoxLayout()
-
-            # Clear if reloaded
-            for b in self.analogbtns.buttons():
-                self.analogbtns.removeButton(b)
-                del b
-            for i in range(self.axes):
-                btn=QCheckBox(str(i+1),self.groupBox_analogaxes)
-                self.analogbtns.addButton(btn,i)
-                layout.addWidget(btn)
-
-            self.groupBox_analogaxes.setLayout(layout)
-            self.updateAxes()
+            self.main.comms.serialGetAsync("invertx?",self.checkBox_invertX.setChecked,int)
             self.getButtonSources()
+            self.getAxisSources()
             
         except:
             self.main.log("Error initializing FFB tab")
@@ -102,13 +95,6 @@ class FfbUI(WidgetUI):
     def hideEvent(self,event):
         self.timer.stop()
 
-    def updateAxes(self):
-        
-        def f(axismask):
-            for i in range(self.axes):
-                self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        axismask = self.main.comms.serialGetAsync("axismask?",f,int)
-        self.main.comms.serialGetAsync("invertx?",self.checkBox_invertX.setChecked,int)
 
     def updateTimer(self):
         try:
@@ -119,13 +105,7 @@ class FfbUI(WidgetUI):
             self.main.comms.serialGetAsync(["hidrate","ffbactive"],f,int)
         except:
             self.main.log("Update error")
-    # Axis checkboxes
-    def axesChanged(self,id):
-        mask = 0
-        for i in range(self.axes):
-            if (self.analogbtns.button(i).isChecked()):
-                mask |= 1 << i
-        self.main.comms.serialWrite("axismask="+str(mask)+"\n")
+    
 
     def power_changed(self,val):
         self.main.comms.serialWrite("power="+str(val)+"\n")
@@ -155,6 +135,15 @@ class FfbUI(WidgetUI):
                 mask |= 1 << self.buttonbtns.id(b)
 
         self.main.comms.serialWrite("btntypes="+str(mask)+"\n")
+
+    # Axis selector
+    def axesChanged(self,id):
+        mask = 0
+        for b in self.axisbtns.buttons():
+            if(b.isChecked()):
+                mask |= 1 << self.axisbtns.id(b)
+
+        self.main.comms.serialWrite("aintypes="+str(mask)+"\n")
 
     def submitHw(self):
         val = self.spinBox_cpr.value()
@@ -287,7 +276,6 @@ class FfbUI(WidgetUI):
 
                 confbutton = QToolButton(self)
                 confbutton.setText(">")
-                #confbutton.setPopupMode(QToolButton.InstantPopup)
                 layout.addWidget(confbutton,row,1)
                 self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
                 confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
@@ -297,6 +285,46 @@ class FfbUI(WidgetUI):
 
             self.groupBox_buttons.setLayout(layout)
         self.main.comms.serialGetAsync(["lsbtn","btntypes?"],cb_buttonSources)
+
+
+    def getAxisSources(self):
+        
+        def cb_axisSources(dat):
+            btns = dat[0]
+            types = int(dat[1])
+            
+            self.axisIds,self.axisClasses = classlistToIds(btns)
+            if(types == None):
+                self.main.log("Error getting buttons")
+                return
+            types = int(types)
+            layout = QGridLayout()
+            #clear
+            for b in self.axisconfbuttons:
+                del b
+            for b in self.axisbtns.buttons():
+                self.axisbtns.removeButton(b)
+                del b
+            #add buttons
+            row = 0
+            for c in self.axisClasses:
+                btn=QCheckBox(str(c[1]),self.groupBox_buttons)
+                self.axisbtns.addButton(btn,c[0])
+                layout.addWidget(btn,row,0)
+                enabled = types & (1<<c[0]) != 0
+                btn.setChecked(enabled)
+
+                confbutton = QToolButton(self)
+                confbutton.setText(">")
+                layout.addWidget(confbutton,row,1)
+                self.axisconfbuttons.append((confbutton,analogconf_ui.AnalogOptionsDialog(str(c[1]),c[0],self.main)))
+                confbutton.clicked.connect(self.axisconfbuttons[row][1].exec)
+                confbutton.setEnabled(enabled)
+                self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+                row+=1
+
+            self.groupBox_analogaxes.setLayout(layout)
+        self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
         
 
         
