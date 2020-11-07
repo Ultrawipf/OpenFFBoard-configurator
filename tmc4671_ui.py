@@ -41,7 +41,7 @@ class TMC4671Ui(WidgetUI):
         pass
 
     def showEvent(self,event):
-        self.timer.start(40)
+        self.timer.start(50)
         self.timer_status.start(250)
 
     # Tab is hidden
@@ -70,11 +70,18 @@ class TMC4671Ui(WidgetUI):
         if(t > 150 or t < -20):
             return
         self.label_Temp.setText(str(round(t,2)) + "°C")
+    
+    def updateVolt(self,v):
+        t = "Mot: {:2.2f}V".format(v[0]/1000)
+        t += "\nIn: {:2.2f}V".format(v[1]/1000)
+        self.label_volt.setText(t)
+
     def updateTimer(self):
         self.main.comms.serialGetAsync("acttrq",self.updateCurrent)
         
     def updateStatus(self):
         self.main.comms.serialGetAsync("tmctemp",self.updateTemp,float)
+        self.main.comms.serialGetAsync(["vint","vext"],self.updateVolt,float)
 
     def submitMotor(self):
         mtype = self.comboBox_mtype.currentIndex()
