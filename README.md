@@ -19,3 +19,4 @@ Then you need to manually install for example the STM VCP driver for the device.
 Dependencies:
 
 PyQt5
+pyqtgraph (For TMC graph)
