@@ -28,6 +28,8 @@ class ButtonOptionsDialog(QDialog):
         if(self.id == 0): # local buttons
             # Buttonmasks
             self.setMinimumWidth(100)
+            self.polBox = QCheckBox("Invert")
+            vbox.addWidget(self.polBox)
             self.buttongroup = QButtonGroup()
             self.buttongroup.setExclusive(False)
             vbox.addWidget(QLabel("Active pins:"))
@@ -72,7 +74,8 @@ class ButtonOptionsDialog(QDialog):
             for i in range(8):
                 if(self.buttongroup.button(i).isChecked()):
                     mask |= 1 << i
-            self.main.comms.serialWrite("local_btnmask="+str(mask)+"\n")
+            self.main.comms.serialWrite("local_btnmask="+str(mask))
+            self.main.comms.serialWrite("local_btnpol="+("1" if self.polBox.isChecked() else "0"))
 
         elif(self.id == 1):
             self.main.comms.serialWrite("spibtn_mode="+str(self.modeBox.currentData()))
@@ -97,6 +100,8 @@ class ButtonOptionsDialog(QDialog):
                 for i in range(8):
                     self.buttongroup.button(i).setChecked(mask & (1 << i))
             self.main.comms.serialGetAsync("local_btnmask",localcb,int)
+            self.main.comms.serialGetAsync("local_btnpol?",self.polBox.setChecked,int)
+           
             
         # SPI
         elif(self.id == 1):

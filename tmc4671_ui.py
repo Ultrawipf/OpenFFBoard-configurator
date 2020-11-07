@@ -23,6 +23,7 @@ class TMC4671Ui(WidgetUI):
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         self.main = main #type: main.MainUi
         self.timer = QTimer(self)
+        self.timer_status = QTimer(self)
     
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
@@ -31,6 +32,7 @@ class TMC4671Ui(WidgetUI):
         self.main.setSaveBtn(True)
         
         self.timer.timeout.connect(self.updateTimer)
+        self.timer_status.timeout.connect(self.updateStatus)
 
         self.curveAmp = self.graphWidget_Amps.plot(pen='y')
         self.curveAmpData = [0]
@@ -40,10 +42,12 @@ class TMC4671Ui(WidgetUI):
 
     def showEvent(self,event):
         self.timer.start(40)
+        self.timer_status.start(250)
 
     # Tab is hidden
     def hideEvent(self,event):
         self.timer.stop()
+        self.timer_status.stop()
         
     def updateCurrent(self,current):
    
@@ -62,10 +66,15 @@ class TMC4671Ui(WidgetUI):
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
 
+    def updateTemp(self,t):
+        if(t > 150 or t < -20):
+            return
+        self.label_Temp.setText(str(round(t,2)) + "°C")
     def updateTimer(self):
         self.main.comms.serialGetAsync("acttrq",self.updateCurrent)
         
-    
+    def updateStatus(self):
+        self.main.comms.serialGetAsync("tmctemp",self.updateTemp,float)
 
     def submitMotor(self):
         mtype = self.comboBox_mtype.currentIndex()
