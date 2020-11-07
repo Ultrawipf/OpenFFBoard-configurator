@@ -414,7 +414,7 @@
             </sizepolicy>
            </property>
            <property name="title">
-            <string>Axes</string>
+            <string>Analog Axes</string>
            </property>
           </widget>
          </item>
