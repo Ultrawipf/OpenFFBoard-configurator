@@ -25,6 +25,7 @@ class AnalogInputConf(OptionsDialogGroupBox):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
         self.analogbtns.setExclusive(False)
+<<<<<<< HEAD
         self.buttonBox = QGroupBox("Pins")
         self.buttonBoxLayout = QVBoxLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
@@ -62,11 +63,42 @@ class AnalogInputConf(OptionsDialogGroupBox):
             for i in range(self.axes):
                 self.analogbtns.button(i).setChecked(axismask & (1 << i))
         self.main.comms.serialGetAsync("local_ain_mask?",f,int)
+=======
+        #self.analogbtns.buttonClicked.connect(self.axesChanged)
+
+    def initUI(self):
+        self.main.comms.serialGetAsync("local_ain_num?",self.createAinButtons,int)
+        
+    def readValues(self):
+        def f(axismask):
+            for i in range(self.axes):
+                self.analogbtns.button(i).setChecked(axismask & (1 << i))
+        self.main.comms.serialGetAsync("local_ain_mask?",f,int)
+
+    def createAinButtons(self,axes):
+        self.axes = axes
+        layout = QVBoxLayout()
+
+        for b in self.analogbtns.buttons():
+            self.analogbtns.removeButton(b)
+            del b
+
+        for i in range(axes):
+            btn=QCheckBox(str(i+1),self)
+            self.analogbtns.addButton(btn,i)
+            layout.addWidget(btn)
+
+        self.setLayout(layout)
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
 
     def apply(self):
         mask = 0
         for i in range(self.axes):
             if (self.analogbtns.button(i).isChecked()):
                 mask |= 1 << i
+<<<<<<< HEAD
         self.main.comms.serialWrite("local_ain_mask="+str(mask))
         self.main.comms.serialWrite("local_ain_acal="+ ("1" if self.autorangeBox.isChecked() else "0"))
+=======
+        self.main.comms.serialWrite("local_ain_mask="+str(mask)+"\n")
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a

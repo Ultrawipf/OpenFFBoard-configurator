@@ -11,7 +11,10 @@ class OptionsDialog(QDialog):
     
     def __init__(self,dialog, parent):
         QDialog.__init__(self, parent)
+<<<<<<< HEAD
         self.initialized = False
+=======
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
         self.main = parent #type: main.MainUi
         self.layout = QVBoxLayout()
         self.setWindowTitle(dialog.name)
@@ -19,7 +22,10 @@ class OptionsDialog(QDialog):
         self.setDialog(dialog)
  
     def initBaseUI(self):
+<<<<<<< HEAD
         self.initialized = True
+=======
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
         self.conf_ui.initUI()
         self.layout.addWidget(self.conf_ui)
 
@@ -34,16 +40,26 @@ class OptionsDialog(QDialog):
 
     def showEvent(self,event):
         try:
+<<<<<<< HEAD
             if not self.initialized:
                 self.initBaseUI()
             self.conf_ui.readValues()
         except Exception as e:
             self.main.log("Error getting info")
             print(e)
+=======
+            self.conf_ui.readValues()
+        except Exception as e:
+            self.main.log("Error getting info")
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
             return
 
     def setDialog(self,dialog):
         self.conf_ui = dialog
+<<<<<<< HEAD
+=======
+        self.initBaseUI()
+>>>>>>> 3ba178a8f139ef856bc8813e63ae8478cc92d98a
 
 class OptionsDialogGroupBox(QGroupBox):
     name = "Options"
