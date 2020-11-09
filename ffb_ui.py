@@ -48,6 +48,7 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.comms.serialWrite("idlespring="+str(val)+"\n"))
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.main.comms.serialWrite("esgain="+str(val)+"\n"))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
+        self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 
 
         self.checkBox_invertX.stateChanged.connect(lambda val : self.main.comms.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
@@ -95,7 +96,7 @@ class FfbUI(WidgetUI):
     def hideEvent(self,event):
         self.timer.stop()
 
-
+ 
     def updateTimer(self):
         try:
             def f(d):
@@ -106,6 +107,13 @@ class FfbUI(WidgetUI):
         except:
             self.main.log("Update error")
     
+    def cffilter_changed(self,v):
+        freq = max(min(v,500),0)
+        self.main.comms.serialWrite("ffbfiltercf="+str(freq)+"\n")
+        lbl = str(freq)+"Hz"
+        if(freq == 500):
+            lbl = "Off"
+        self.label_cffilter.setText(lbl)
 
     def power_changed(self,val):
         self.main.comms.serialWrite("power="+str(val)+"\n")
@@ -166,8 +174,6 @@ class FfbUI(WidgetUI):
             self.main.updateTabs()
             self.updateSliders()
             
-
-        
    
     def encoderChanged(self,idx):
         if idx == -1:
@@ -181,7 +187,7 @@ class FfbUI(WidgetUI):
         
     
     def updateSliders(self):
-        commands = ["power?","degrees?","friction?","idlespring?","fxratio?","esgain?"]
+        commands = ["power?","degrees?","friction?","idlespring?","fxratio?","esgain?","ffbfiltercf?"]
   
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -194,7 +200,8 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_friction.setValue,
         self.horizontalSlider_idle.setValue,
         self.horizontalSlider_fxratio.setValue,
-        self.horizontalSlider_esgain.setValue]
+        self.horizontalSlider_esgain.setValue,
+        self.horizontalSlider_cffilter.setValue]
 
         self.main.comms.serialGetAsync(commands,callbacks,convert=int)
 
