@@ -20,6 +20,8 @@ class SerialComms(QObject):
     def reset(self):
         self.serialQueue.clear()
         self.sendQueue.clear()
+        self.waitForRead = False
+        self.cmdbuf = []
         
     def checkOk(self,reply):
         if(reply == "OK" or reply.find("Err") == -1):
