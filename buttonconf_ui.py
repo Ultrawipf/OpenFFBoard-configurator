@@ -16,8 +16,10 @@ class ButtonOptionsDialog(OptionsDialog):
         if(id == 0): # local buttons
             self.dialog = (LocalButtonsConf(name,self.main))
         elif(id == 1):
-            self.dialog = (SPIButtonsConf(name,self.main))
+            self.dialog = (SPIButtonsConf(name,self.main,1))
         elif(id == 2):
+            self.dialog = (SPIButtonsConf(name,self.main,2))
+        elif(id == 3):
             self.dialog = (ShifterButtonsConf(name,self.main))
         
         OptionsDialog.__init__(self, self.dialog,main)
@@ -84,9 +86,13 @@ class LocalButtonsConf(OptionsDialogGroupBox):
 
 class SPIButtonsConf(OptionsDialogGroupBox):
 
-    def __init__(self,name,main):
+    def __init__(self,name,main,id):
         self.main = main
+        self.id = id
         OptionsDialogGroupBox.__init__(self,name,main)
+
+    def getPrefix(self):
+        return f"spi{self.id}_"
    
     def initUI(self):
         vbox = QVBoxLayout()
@@ -105,21 +111,21 @@ class SPIButtonsConf(OptionsDialogGroupBox):
         self.setLayout(vbox)
 
     def apply(self):
-        self.main.comms.serialWrite("spibtn_mode="+str(self.modeBox.currentData()))
-        self.main.comms.serialWrite("spi_btnnum="+str(self.numBtnBox.value()))
-        self.main.comms.serialWrite("spi_btnpol="+("1" if self.polBox.isChecked() else "0"))
+        self.main.comms.serialWrite(f"{self.getPrefix()}btn_mode="+str(self.modeBox.currentData()))
+        self.main.comms.serialWrite(f"{self.getPrefix()}btnnum="+str(self.numBtnBox.value()))
+        self.main.comms.serialWrite(f"{self.getPrefix()}btnpol="+("1" if self.polBox.isChecked() else "0"))
 
     def readValues(self):
-        self.main.comms.serialGetAsync("spi_btnnum?",self.numBtnBox.setValue,int)
+        self.main.comms.serialGetAsync(f"{self.getPrefix()}btnnum?",self.numBtnBox.setValue,int)
         self.modeBox.clear()
         def modecb(mode):
             modes = mode.split("\n")
             modes = [m.split(":") for m in modes if m]
             for m in modes:
                 self.modeBox.addItem(m[0],m[1])
-            self.main.comms.serialGetAsync("spibtn_mode?",self.modeBox.setCurrentIndex,int)
-        self.main.comms.serialGetAsync("spibtn_mode!",modecb)
-        self.main.comms.serialGetAsync("spi_btnpol?",self.polBox.setChecked,int)
+            self.main.comms.serialGetAsync(f"{self.getPrefix()}btn_mode?",self.modeBox.setCurrentIndex,int)
+        self.main.comms.serialGetAsync(f"{self.getPrefix()}btn_mode!",modecb)
+        self.main.comms.serialGetAsync(f"{self.getPrefix()}btnpol?",self.polBox.setChecked,int)
 
 class ShifterButtonsConf(OptionsDialogGroupBox):
 
