@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QGroupBox
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
@@ -142,15 +143,67 @@ class ShifterButtonsConf(OptionsDialogGroupBox):
         OptionsDialogGroupBox.__init__(self,name,main)
    
     def initUI(self):
+        def addThreshold(name):
+            vbox.addWidget(QLabel(name))
+            numBtnBox = QSpinBox()
+            numBtnBox.setMinimum(0)
+            numBtnBox.setMaximum(4096)
+            vbox.addWidget(numBtnBox)
+            return numBtnBox
+
         vbox = QVBoxLayout()
         vbox.addWidget(QLabel("Mode"))
         self.modeBox = QComboBox()
         vbox.addWidget(self.modeBox)
+
+        self.xPos = QLineEdit()
+        self.xPos.setReadOnly(True)
+        self.yPos = QLineEdit()
+        self.yPos.setReadOnly(True)
+
+        posGroup = QHBoxLayout()
+        posGroup.addWidget(QLabel("X"))
+        posGroup.addWidget(self.xPos)
+        posGroup.addWidget(QLabel("Y"))
+        posGroup.addWidget(self.yPos)
+        posGroupBox = QGroupBox()
+        posGroupBox.setTitle("Current")
+        posGroupBox.setLayout(posGroup)
+        vbox.addWidget(posGroupBox)
+
+        self.x12 = addThreshold("X 1,2 Threshold")
+        self.x56 = addThreshold("X 5,6 Threshold")
+        self.y135 = addThreshold("Y 1,3,5 Threshold")
+        self.y246 = addThreshold("Y 2,4,6 Threshold")
+
+        vbox.addWidget(QLabel("Reverse Button Number"))
+        self.revBtnBox = QSpinBox()
+        self.revBtnBox.setMinimum(0)
+        self.revBtnBox.setMaximum(32)
+        vbox.addWidget(self.revBtnBox)
+
         self.setLayout(vbox)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.readXYPosition)
+        self.timer.start(500)
   
  
     def apply(self):
-        self.main.comms.serialWrite("shifter_mode="+str(self.modeBox.currentData()))
+        self.main.comms.serialWrite(f"shifter_mode={self.modeBox.currentData()}")
+        self.main.comms.serialWrite(f"shifter_x_12={self.x12.value()}")
+        self.main.comms.serialWrite(f"shifter_x_56={self.x56.value()}")
+        self.main.comms.serialWrite(f"shifter_y_135={self.y135.value()}")
+        self.main.comms.serialWrite(f"shifter_y_246={self.y246.value()}")
+        self.main.comms.serialWrite(f"shifter_rev_btn={self.revBtnBox.value()}")
+
+    def readXYPosition(self):
+        def updatePosition(valueStr: str):
+            x,y = valueStr.strip().split(",")
+            self.xPos.setText(x)
+            self.yPos.setText(y)
+        self.main.comms.serialGetAsync("shifter_vals?",updatePosition, str)
+        
 
     def readValues(self):
         self.modeBox.clear()
@@ -161,3 +214,9 @@ class ShifterButtonsConf(OptionsDialogGroupBox):
                 self.modeBox.addItem(m[0],m[1])
             self.main.comms.serialGetAsync("shifter_mode?",self.modeBox.setCurrentIndex,int)
         self.main.comms.serialGetAsync("shifter_mode!",modecb)
+        self.main.comms.serialGetAsync("shifter_x_12?",self.x12.setValue,int)
+        self.main.comms.serialGetAsync("shifter_x_56?",self.x56.setValue,int)
+        self.main.comms.serialGetAsync("shifter_y_135?",self.y135.setValue,int)
+        self.main.comms.serialGetAsync("shifter_y_246?",self.y246.setValue,int)
+        self.readXYPosition()
+
