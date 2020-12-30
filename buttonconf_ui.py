@@ -178,7 +178,7 @@ class ShifterButtonsConf(OptionsDialogGroupBox):
 
         vbox.addWidget(QLabel("Reverse Button Number"))
         self.revBtnBox = QSpinBox()
-        self.revBtnBox.setMinimum(0)
+        self.revBtnBox.setMinimum(1)
         self.revBtnBox.setMaximum(32)
         vbox.addWidget(self.revBtnBox)
 
@@ -218,5 +218,6 @@ class ShifterButtonsConf(OptionsDialogGroupBox):
         self.main.comms.serialGetAsync("shifter_x_56?",self.x56.setValue,int)
         self.main.comms.serialGetAsync("shifter_y_135?",self.y135.setValue,int)
         self.main.comms.serialGetAsync("shifter_y_246?",self.y246.setValue,int)
+        self.main.comms.serialGetAsync("shifter_rev_btn?",self.revBtnBox.setValue,int)
         self.readXYPosition()
 
