@@ -110,10 +110,17 @@ class SPIButtonsConf(OptionsDialogGroupBox):
         vbox.addWidget(self.polBox)
         self.setLayout(vbox)
 
+        vbox.addWidget(QLabel("CS #"))
+        self.csBox = QSpinBox()
+        self.csBox.setMinimum(1)
+        self.csBox.setMaximum(3)
+        vbox.addWidget(self.csBox)
+
     def apply(self):
         self.main.comms.serialWrite(f"{self.getPrefix()}btn_mode="+str(self.modeBox.currentData()))
         self.main.comms.serialWrite(f"{self.getPrefix()}btnnum="+str(self.numBtnBox.value()))
         self.main.comms.serialWrite(f"{self.getPrefix()}btnpol="+("1" if self.polBox.isChecked() else "0"))
+        self.main.comms.serialWrite(f"{self.getPrefix()}btn_cs={self.csBox.value()}")
 
     def readValues(self):
         self.main.comms.serialGetAsync(f"{self.getPrefix()}btnnum?",self.numBtnBox.setValue,int)
@@ -126,6 +133,7 @@ class SPIButtonsConf(OptionsDialogGroupBox):
             self.main.comms.serialGetAsync(f"{self.getPrefix()}btn_mode?",self.modeBox.setCurrentIndex,int)
         self.main.comms.serialGetAsync(f"{self.getPrefix()}btn_mode!",modecb)
         self.main.comms.serialGetAsync(f"{self.getPrefix()}btnpol?",self.polBox.setChecked,int)
+        self.main.comms.serialGetAsync(f"{self.getPrefix()}btn_cs?", self.csBox.setValue, int)
 
 class ShifterButtonsConf(OptionsDialogGroupBox):
 
