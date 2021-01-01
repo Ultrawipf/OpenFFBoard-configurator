@@ -11,7 +11,7 @@ from base_ui import WidgetUI
 #for graph here, need pyqtgraph and numpy
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
-import numpy as np
+
 
 class TMC4671Ui(WidgetUI):
 
