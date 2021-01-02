@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QDialogButtonBox, QHBoxLayout, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QGroupBox
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
@@ -24,23 +24,44 @@ class OptionsDialog(QDialog):
         self.layout.addWidget(self.conf_ui)
 
         okbtn = QPushButton("OK")
-        okbtn.clicked.connect(self.apply)
-        self.layout.addWidget(okbtn)
+        okbtn.clicked.connect(self.ok)
+        cancelButton = QPushButton("Cancel")
+        cancelButton.clicked.connect(self.close)
+        applyButton = QPushButton("Apply")
+        applyButton.clicked.connect(self.apply)
+
+        btnGroup = QDialogButtonBox()
+        btnGroup.addButton(okbtn, QDialogButtonBox.AcceptRole)
+        btnGroup.addButton(cancelButton, QDialogButtonBox.RejectRole)
+        btnGroup.addButton(applyButton, QDialogButtonBox.ApplyRole)
+        self.layout.addWidget(btnGroup)
+
         self.setLayout(self.layout)
+
+    def ok(self):
+        self.apply()
+        self.close()
 
     def apply(self):
         self.conf_ui.apply()
-        self.close()
 
-    def showEvent(self,event):
+    def closeEvent(self, a0) -> None:
+        self.onclose()
+        return super().closeEvent(a0)
+
+    def onclose(self):
+        self.conf_ui.onclose()
+
+    def exec(self) -> None:
         try:
             if not self.initialized:
                 self.initBaseUI()
             self.conf_ui.readValues()
+            self.conf_ui.onshown()
         except Exception as e:
             self.main.log("Error getting info")
             print(e)
-            return
+        return super().exec()
 
     def setDialog(self,dialog):
         self.conf_ui = dialog
@@ -61,4 +82,10 @@ class OptionsDialogGroupBox(QGroupBox):
         pass
     
     def readValues(self):
+        pass
+
+    def onshown(self):
+        pass
+
+    def onclose(self):
         pass
