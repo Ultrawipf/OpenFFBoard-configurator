@@ -2,7 +2,7 @@ from base_ui import WidgetUI
 import pydfu
 import threading
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets  import QFileDialog,QMessageBox
+from PyQt5.QtWidgets  import QFileDialog,QMessageBox,QApplication
 
 class DFUModeUI(WidgetUI):
     selectedFile = None
@@ -27,7 +27,7 @@ class DFUModeUI(WidgetUI):
         dfu_devices = pydfu.get_dfu_devices()
         if not dfu_devices:
             # No devices found
-            self.log("No DFU device found")
+            self.log("No DFU device found. Retrying")
 
         elif len(dfu_devices) > 1:
             self.log("Found multiple DFU devices:" + str(dfu_devices))
@@ -105,7 +105,9 @@ class DFUModeUI(WidgetUI):
     def log(self,txt):
         self.textBrowser_dfu.append(txt)
         self.update()
+        QApplication.processEvents()
 
     def progress(self,addr, offset, size):
         self.progressBar.setValue(offset * 100 / size)
         self.update()
+        QApplication.processEvents()

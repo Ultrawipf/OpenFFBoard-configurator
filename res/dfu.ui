@@ -57,13 +57,20 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="3" column="0">
       <widget class="QPushButton" name="pushButton_fullerase">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="text">
         <string>Full chip erase</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Erases all flash sectors. Can help if an upgrade causes issues</string>
        </property>
       </widget>
      </item>

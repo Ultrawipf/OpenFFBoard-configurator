@@ -40,7 +40,8 @@ class SystemUI(WidgetUI):
     
     def dfu(self):
         self.main.comms.serialWrite("dfu\n")
-        # self.main.resetPort()
+        self.main.log("Entering DFU...")
+        self.main.resetPort()
         self.main.dfuUploader()
 
     def factoryReset(self, btn):

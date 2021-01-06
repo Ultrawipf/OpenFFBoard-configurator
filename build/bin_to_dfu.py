@@ -28,14 +28,17 @@ def build(file,targets,device=DEFAULT_DEVICE):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert bin to dfu")
-    parser.add_argument('-b', required=True, type=str, help="bin file input")
+    parser.add_argument('binary',  type=str, help="bin file input")
     parser.add_argument('--address', type=str, help="flash address. Default 0x8000000",default = "0x8000000")
     #parser.add_argument('--addroffset', type=str, help="flash address offset after eeprom emulation. Default 0xc000",default = "0xc000")
-    parser.add_argument('out', nargs='?', type=str,help = ".dfu file output",default = "out.dfu")
+    parser.add_argument('--out', nargs='?', type=str,help = ".dfu file output",default = None)
 
     args = parser.parse_args()
-    binfile = args.b
+    binfile = args.binary
     outfile = args.out
+
+    if not outfile:
+        outfile = binfile.replace(".bin","") + ".dfu"
     if(args.address):
         address = int(args.address,0)
     # if(args.addroffset):
