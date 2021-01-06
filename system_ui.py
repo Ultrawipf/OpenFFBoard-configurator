@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget,QDialog,QVBoxLayout
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import uic
 from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
 from base_ui import WidgetUI
+
 class SystemUI(WidgetUI):
     classes = []
     classIds = {}
@@ -40,9 +40,8 @@ class SystemUI(WidgetUI):
     
     def dfu(self):
         self.main.comms.serialWrite("dfu\n")
-        self.main.resetPort()
-        msg = QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
-        msg.exec_()
+        # self.main.resetPort()
+        self.main.dfuUploader()
 
     def factoryReset(self, btn):
         cmd = btn.text()

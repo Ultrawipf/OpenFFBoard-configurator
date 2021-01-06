@@ -10,9 +10,10 @@ import sys,itertools
 
 from helper import res_path
 import serial_ui
+from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.1.4"
+version = "1.1.5"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
 min_fw = "1.1.5"
@@ -67,6 +68,7 @@ class MainUi(QMainWindow):
         self.setSaveBtn(False)
 
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
+        self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
 
         layout = QVBoxLayout()
         layout.addWidget(self.systemUi)
@@ -75,6 +77,16 @@ class MainUi(QMainWindow):
     def ffbwizard(self):
         msg = QMessageBox(QMessageBox.Information,"Wizard","Not implemented")
         msg.exec_()
+
+    def dfuUploader(self):
+        msg = QDialog()#QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
+        msg.setWindowTitle("DFU Mode")
+        dfu = DFUModeUI(msg)
+        l = QVBoxLayout()
+        l.addWidget(dfu)
+        msg.setLayout(l)
+        msg.exec_()
+        dfu.deleteLater()
 
     def openAbout(self):
         AboutDialog(self).exec_()

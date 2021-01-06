@@ -4,9 +4,9 @@ import argparse
 address = 0x8000000
 DEFAULT_DEVICE="0x0483:0xdf11"
 
-# (Start,length) to skip eeprom emulation sectors
-flash_sectors_f4 = [
-(0x8000000,0x3fff),(0x800C000,0x33FFF) # multiple sectors combined
+# (Start,length)
+flash_pages_f4 = [
+(0x8000000,0x3fff),(0x800C000,0x3fff),(0x8010000,0xffff),(0x8020000,0x1ffff)
 ]
 
 def compute_crc(data):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     ## F4 targets
     target = []
-    for page in flash_sectors_f4:
+    for page in flash_pages_f4:
         start_offset = page[0]-address
         if start_offset > len(data):
             break

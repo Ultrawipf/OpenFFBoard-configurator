@@ -131,6 +131,7 @@
      <addaction name="actionFFB_Wheel_TMC_wizard"/>
     </widget>
     <addaction name="menuWizards"/>
+    <addaction name="actionDFU_Uploader"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -144,6 +145,11 @@
   <action name="actionFFB_Wheel_TMC_wizard">
    <property name="text">
     <string>FFB Wheel TMC</string>
+   </property>
+  </action>
+  <action name="actionDFU_Uploader">
+   <property name="text">
+    <string>DFU Uploader</string>
    </property>
   </action>
  </widget>
