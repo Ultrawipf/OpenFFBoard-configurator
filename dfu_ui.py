@@ -9,7 +9,7 @@ class DFUModeUI(WidgetUI):
     dfuDevice = None
     def __init__(self, main=None,device = None):
             WidgetUI.__init__(self, main,'dfu.ui')
-            self.setEnabled(False)
+            self.groupbox_controls.setEnabled(False)
             self.main = main #type: main.MainUi
 
             self.pushButton_filechooser.clicked.connect(self.fileClicked)
@@ -38,7 +38,7 @@ class DFUModeUI(WidgetUI):
             pydfu.init()
             self.log("Found DFU device. Please select an option")
             self.dfuDevice = dfu_devices[0]
-            self.setEnabled(True)
+            self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
 
@@ -63,7 +63,7 @@ class DFUModeUI(WidgetUI):
             self.log("Error parsing DFU file")
             return
         mass_erase = self.checkBox_massErase.isChecked()
-
+        self.groupbox_controls.setEnabled(False)
         if(mass_erase):
             self.fullErase()
         
@@ -77,6 +77,7 @@ class DFUModeUI(WidgetUI):
 
         pydfu.exit_dfu()
         self.log("Please reset")
+        self.groupbox_controls.setEnabled(True)
 
     def fullEraseClicked(self):
         msg = QMessageBox()
