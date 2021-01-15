@@ -6,7 +6,7 @@ DEFAULT_DEVICE="0x0483:0xdf11"
 
 # (Start,length) to skip eeprom emulation sectors
 flash_sectors_f4 = [
-(0x8000000,0x3fff),(0x800C000,0x33FFF) # multiple sectors combined
+(0x8000000,0x3fff),(0x800C000,-1) # multiple sectors combined. -1 size for rest
 ]
 
 def compute_crc(data):

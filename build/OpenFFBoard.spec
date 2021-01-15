@@ -10,7 +10,7 @@ delete = ["opengl32sw.dll","d3dcompiler_47.dll","libGLESv2.dll","Qt5Quick.dll","
 
 a = Analysis([os.path.join(folder,'main.py')],
              binaries=[],
-             datas=[(os.path.join(folder,'res'), 'res')],
+             datas=[(os.path.join(folder,'res'), 'res'),(os.path.join(folder,"libusb-1.0.dll"),".")],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

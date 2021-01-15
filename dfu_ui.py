@@ -19,12 +19,12 @@ class DFUModeUI(WidgetUI):
             self.devFound = False
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.initUi)
-            self.timer.start(250)
+            self.timer.start(1000)
 
 
     def initUi(self):
         self.log("Searching devices...")
-        dfu_devices = pydfu.get_dfu_devices()
+        dfu_devices = pydfu.get_dfu_devices(idVendor=0x0483, idProduct=0xdf11)
         if not dfu_devices:
             # No devices found
             self.log("No DFU device found. Retrying")
