@@ -52,7 +52,7 @@ class TMC4671Ui(WidgetUI):
     def updateCurrent(self,current):
    
         try:
-            current = float(abs(current))
+            current = abs(float(current))
             v = (2.5/0x7fff) * current
             amps = round((v / self.amp_gain) / self.shunt_ohm,3)
             self.label_Current.setText(str(amps)+"A")
