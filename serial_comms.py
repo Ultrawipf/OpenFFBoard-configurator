@@ -169,13 +169,6 @@ class SerialComms(QObject):
             self.main.log("Error: Serial closed")
             return None
         t=0
-        while len(self.serialQueue)>0:
-            if(timeout-t < 0):
-                print("Timeout")
-                return None
-            t+=10
-            time.sleep(0.01)
-            QApplication.processEvents()
 
         self.waitForRead = True
         self.serial.write(bytes(cmd,"utf-8"))
