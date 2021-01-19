@@ -25,15 +25,17 @@ class SerialChooser(WidgetUI):
         self.update()
 
     def serialLog(self,txt):
+        if(type(txt) == list):
+            txt = "\n".join(txt)
+        else:
+            txt = str(txt)
         self.serialLogBox.append(txt)
 
 
     def sendLine(self):
-        
         cmd = self.lineEdit_cmd.text()+"\n"
         self.serialLog(cmd)
-        #self.serial.write(bytes(cmd,"utf-8"))
-        self.serialLog(self.main.comms.serialGet(cmd))
+        self.main.comms.serialGetAsync(cmd,self.serialLog)
 
     def write(self,data):
         self.serial.write(data)

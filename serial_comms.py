@@ -86,7 +86,9 @@ class SerialComms(QObject):
         ####################################
         # Parse
         
-        split_reply = re.split(">|!",text) #replies
+        split_reply = text.split(">") #replies
+        if not split_reply:
+            split_reply = text.split("!") # try splitting by !
         
         n = 0
         # For all replies in buffer
@@ -97,9 +99,9 @@ class SerialComms(QObject):
                 self.main.serialchooser.serialLog(text)
                 continue
             reply = replytext.split("=",1)
-            
             cmd_reply = reply[0]
             reply_val = reply[1]
+            
             sendqueue_elem = None
             # For all pending commands in queue (Should always be the first!)
             for elem in enumerate(self.serialQueue):
@@ -126,8 +128,6 @@ class SerialComms(QObject):
         
     # Adds command to send and receive queue
     def addToQueue(self,cmdraw,callback,convert,persistent=False):
-        # num: amount of commands in raw cmd
-        
         if(not cmdraw.endswith(";") and not cmdraw.endswith("\n")):
             cmdraw = cmdraw+";"
         # try to split command base names
@@ -192,5 +192,4 @@ class SerialComms(QObject):
  
         if(lastSerial and lastSerial[-1] == "\n"):
             lastSerial=lastSerial[0:-1]
-        
         return lastSerial
