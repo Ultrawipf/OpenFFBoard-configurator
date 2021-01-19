@@ -8,23 +8,19 @@ import re
 cmd_reserved_re = '=|\?|!|;|\n'
 
 class SerialComms(QObject):
-    maxSendBytes = 64 # How many bytes to send before waiting for replies. Slows down communication a bit
-
+   
     def __init__(self,main,serialport):
         QObject.__init__(self)
         self.serial = serialport
         self.main=main
         self.serialQueue = []
-        self.sendQueue = deque()
         self.serial.readyRead.connect(self.serialReceive)
-        self.sentCommandSize=0 # tracks sent bytes so never more than 64 bytes are sent. Includes next command to send
         self.waitForRead = False
         self.serial.aboutToClose.connect(self.reset)
         self.cmdbuf = []
     
     def reset(self):
         self.serialQueue.clear()
-        self.sendQueue.clear()
         self.waitForRead = False
         self.cmdbuf = []
         
@@ -46,17 +42,6 @@ class SerialComms(QObject):
                 self.serial.readyRead.disconnect(self.serialReceive)
         except:
             pass
-
-    def trySend(self):
-        if(len(self.sendQueue) == 0 or not self.serial.isOpen()):
-            return
-        nextLen = len(self.sendQueue[0])
-        
-        if(self.sentCommandSize + nextLen < self.maxSendBytes):
-            cmd = self.sendQueue.popleft()
-            self.sentCommandSize += nextLen
-            self.serial.write(bytes(cmd,"utf-8"))
-            #self.trySend()
 
     def serialReceive(self):
         if(self.waitForRead):
@@ -106,7 +91,6 @@ class SerialComms(QObject):
                     sendqueue_elem["cmds"].remove(cmd_reply) # reply found. remove cmd so this entry is not found for additional replies of the same name if slow
                     if not (len(sendqueue_elem["replies"]) < sendqueue_elem["len"]):
                         # finished with all commands?
-                        self.sentCommandSize -= len(sendqueue_elem["cmdraw"])
                         process_cmd(sendqueue_elem)
                         if not sendqueue_elem["persistent"]:
                             del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
@@ -118,8 +102,6 @@ class SerialComms(QObject):
                 # Nothing found. Received a command nobody waits on.
                 self.main.serialchooser.serialLog(replytext+"\n")
 
-            self.trySend()
-
         
     # Adds command to send and receive queue
     def addToQueue(self,cmdraw,callback,convert,persistent=False):
@@ -127,7 +109,6 @@ class SerialComms(QObject):
             cmdraw = cmdraw+";"
         # try to split command base names
         cmds = [re.split(cmd_reserved_re,e)[0] for e in re.split(';|\n',cmdraw) if e]
-        length = len(cmdraw)
         entry = {"callback":callback,"cmdraw":cmdraw,"cmds":cmds,"convert":convert,"replies":[],"persistent":persistent,"len":len(cmds)}
 
         # check if exactly the same request is already present to prevent flooding if serial port is frozen
@@ -135,8 +116,7 @@ class SerialComms(QObject):
             return
 
         self.serialQueue.append(entry)
-        self.sendQueue.append(cmdraw)
-        self.trySend()
+        self.serial.write(bytes(cmdraw,"utf-8"))
 
     """
      Get asynchronous commands and pass the result to the callback. 
