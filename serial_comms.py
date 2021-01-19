@@ -2,14 +2,19 @@ import queue,time
 from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QApplication
 from collections import deque
+import re
+
+# Regex for splitting a command from a value (power=x) --> =
+cmd_reserved_re = '=|\?|!|;|\n'
+
 class SerialComms(QObject):
-    maxSendBytes = 64 # How many bytes to send before waiting for replies
+    maxSendBytes = 64 # How many bytes to send before waiting for replies. Slows down communication a bit
 
     def __init__(self,main,serialport):
         QObject.__init__(self)
         self.serial = serialport
         self.main=main
-        self.serialQueue = deque()
+        self.serialQueue = []
         self.sendQueue = deque()
         self.serial.readyRead.connect(self.serialReceive)
         self.sentCommandSize=0 # tracks sent bytes so never more than 64 bytes are sent. Includes next command to send
@@ -60,63 +65,77 @@ class SerialComms(QObject):
 
         data = self.serial.readAll()
         text = data.data().decode("utf-8")
-        if(len(self.serialQueue) == 0 or text[0]!=">"):
-            self.main.serialchooser.serialLog(text)
-            return
+        
 
         ################################
-        def process_cmd(reply,cur_queue): 
-
-            num = cur_queue[3] # commands per callback
-            
-            if(reply[0] != "!"):            
-                if(reply.startswith("Err")):
-                    self.main.log(reply)
-                    print(reply)
-                    reply = None
-                    return
+        def process_cmd(entry): 
+            for i,reply in enumerate(entry["replies"]):
+                if(entry["convert"]):
+                    entry["replies"][i] = entry["convert"](reply) #apply conversion
+            # else:
+            #     # Not a command. pass to log
+            #     self.main.serialchooser.serialLog(reply+"\n")
+            #     return
+  
+            if(entry["callback"]):
+                if(len(entry["replies"]) == 1):
+                    entry["callback"](entry["replies"][0])
                 else:
-                    if(cur_queue[2]):
-                        reply = cur_queue[2](reply) #apply conversion
-            else:
-                # Not a command. pass to log
-                self.main.serialchooser.serialLog(reply+"\n")
-                return
-            # Wait for more?
-            self.cmdbuf.append(reply)
-            if(len(self.cmdbuf) < num):
-                return
-
-            if(cur_queue[1]):
-                if(cur_queue[3] == 1):
-                    self.cmdbuf = self.cmdbuf[0]
-                cur_queue[1](self.cmdbuf)
-                self.cmdbuf = [] # reset
+                    entry["callback"](entry["replies"])
 
         ####################################
-        split_reply = text.split(">")
-        n = 0
-        self.cmdbuf = []
+        # Parse
         
-        cur_queue = self.serialQueue[0]
-        for reply in split_reply:
-            if reply=="":
+        split_reply = re.split(">|!",text) #replies
+        
+        n = 0
+        # For all replies in buffer
+        for replytext in split_reply:
+            if replytext=="" or len(replytext) < 2:
                 continue
-            if(len(self.cmdbuf) == 0):
-                cur_queue = self.serialQueue.popleft()
-            self.sentCommandSize -= len(cur_queue[0])
+            if(replytext[0] == "!" or len(self.serialQueue) == 0):
+                self.main.serialchooser.serialLog(text)
+                continue
+            reply = replytext.split("=",1)
             
-            process_cmd(reply,cur_queue)
+            cmd_reply = reply[0]
+            reply_val = reply[1]
+            sendqueue_elem = None
+            # For all pending commands in queue (Should always be the first!)
+            for elem in enumerate(self.serialQueue):
+                cmdnames = elem[1]["cmds"]
+                if(cmd_reply in cmdnames):
+                    sendqueue_elem = elem[1]
+                    sendqueue_elem["replies"].append(reply_val)
+                    if not (len(sendqueue_elem["replies"]) < len(sendqueue_elem["cmds"])):
+                        # finished with all commands?
+                        self.sentCommandSize -= len(sendqueue_elem["cmdraw"])
+                        process_cmd(sendqueue_elem)
+                        if not sendqueue_elem["persistent"]:
+                            del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
+                        else:
+                            sendqueue_elem["replies"].clear() # only clear replies instead
+                        break
+
+            if(sendqueue_elem == None):
+                # Nothing found. dump to log
+                self.main.serialchooser.serialLog(replytext+"\n")
+
             self.trySend()
 
         
     # Adds command to send and receive queue
-    def addToQueue(self,cmd,callback,convert,num):
+    def addToQueue(self,cmdraw,callback,convert,persistent=False):
+        # num: amount of commands in raw cmd
         
-        if(not cmd.endswith(";") and not cmd.endswith("\n")):
-            cmd = cmd+";"
-        self.serialQueue.append([cmd,callback,convert,num])
-        self.sendQueue.append(cmd)
+        if(not cmdraw.endswith(";") and not cmdraw.endswith("\n")):
+            cmdraw = cmdraw+";"
+        # try to split command base names
+        cmds = [re.split(cmd_reserved_re,e)[0] for e in re.split(';|\n',cmdraw) if e]
+        length = len(cmdraw)
+        entry = {"callback":callback,"cmdraw":cmdraw,"cmds":cmds,"convert":convert,"replies":[],"persistent":persistent}
+        self.serialQueue.append(entry)
+        self.sendQueue.append(cmdraw)
         self.trySend()
 
     """
@@ -129,21 +148,18 @@ class SerialComms(QObject):
      pass multiple commands and callbacks in lists
      You can also pass an additional conversion function to apply to all replies before sending to callbacks. (int or float for example)
     """
-    def serialGetAsync(self,cmds,callbacks,convert=None,num = 1):
+    def serialGetAsync(self,cmds,callbacks,convert=None):
         if(not self.serial.isOpen()):
             return False
         if(type(cmds) == list and type(callbacks) == list): # Multiple commands and callbacks
             for cmd,callback in zip(cmds,callbacks):
-                self.addToQueue(cmd,callback,convert,1)
+                self.addToQueue(cmd,callback,convert)
         elif(type(cmds) == list): # Multiple commands. One callback
             #for cmd in cmds:
-            num = len(cmds)
             cmd = ";".join(cmds)
-            self.addToQueue(cmd,callbacks,convert,num)
+            self.addToQueue(cmd,callbacks,convert)
         else: # One command and callback or direct
-            self.addToQueue(cmds,callbacks,convert,num)
-
-            
+            self.addToQueue(cmds,callbacks,convert)
 
 
     # get a synchronous reply with timeout. Not recommended
@@ -174,7 +190,12 @@ class SerialComms(QObject):
         data = self.serial.readAll()
 
         lastSerial = data.data().decode("utf-8")
-        lastSerial=lastSerial.replace(">","")
+        reply = lastSerial[1::].split("=",1)
+        checkcmd = re.split(cmd_reserved_re,cmd,maxsplit=1)[0]
+        if(checkcmd != reply[0]):
+            print("Error. incorrect reply received " + reply[0] + " expected " + checkcmd)
+            return None
+        lastSerial=reply[1]
  
         if(lastSerial and lastSerial[-1] == "\n"):
             lastSerial=lastSerial[0:-1]
