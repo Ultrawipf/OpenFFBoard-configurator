@@ -55,8 +55,11 @@ if __name__ == "__main__":
         if start_offset > len(data):
             break
         print("Appending %x - %x" % (page[0],page[0]+page[1]))
-        print("%x - %x" % (start_offset,min(start_offset+page[1]+1,len(data))))
-        target.append({'address': page[0], 'data': data[start_offset:min(start_offset+page[1]+1,len(data))]})
+        stop = min(start_offset+page[1]+1,len(data))
+        if page[1] == -1:
+            stop = len(data)
+        print("%x - %x" % (start_offset,stop))
+        target.append({'address': page[0], 'data': data[start_offset:stop]})
 
     print("Saving to", outfile)
     build(outfile,[target],DEFAULT_DEVICE)
