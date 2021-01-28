@@ -13,7 +13,7 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.2.0"
+version = "1.2.1"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
 min_fw = "1.2.0"
@@ -29,7 +29,6 @@ import midi_ui
 
 class MainUi(QMainWindow):
     serial = None
-    save = pyqtSignal()
     mainClassUi = None
     timeouting = False
     
@@ -64,8 +63,6 @@ class MainUi(QMainWindow):
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.serialConnected)
-        self.systemUi.pushButton_save.clicked.connect(self.saveClicked)
-        self.setSaveBtn(False)
 
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
@@ -113,14 +110,6 @@ class MainUi(QMainWindow):
     def log(self,s):
         self.logBox.append(s)
 
-
-    def setSaveBtn(self,enabled):
-        self.systemUi.pushButton_save.setEnabled(enabled)
-
-    def saveClicked(self):
-        self.log("Save")
-        self.save.emit()
-
     def tabChanged(self,id):
         pass
 
@@ -139,8 +128,8 @@ class MainUi(QMainWindow):
         return(name in names)
 
     def resetTabs(self):
-        self.setSaveBtn(False)
         self.activeClasses = {}
+        self.systemUi.setSaveBtn(False)
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
     
@@ -159,18 +148,22 @@ class MainUi(QMainWindow):
                 if name == "FFB Wheel":
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
+                    self.systemUi.setSaveBtn(True)
                 if name == "TMC4671":
                     c = tmc4671_ui.TMC4671Ui(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    self.systemUi.setSaveBtn(True)
                 if name == "PWM":
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    self.systemUi.setSaveBtn(True)
                 if name == "MIDI":
                     c = midi_ui.MidiUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
 
     def reconnect(self):

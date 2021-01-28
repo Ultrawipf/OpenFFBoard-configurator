@@ -28,9 +28,6 @@ class TMC4671Ui(WidgetUI):
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
         
-
-        self.main.setSaveBtn(True)
-        
         self.timer.timeout.connect(self.updateTimer)
         self.timer_status.timeout.connect(self.updateStatus)
 

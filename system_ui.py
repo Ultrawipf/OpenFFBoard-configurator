@@ -18,6 +18,7 @@ class SystemUI(WidgetUI):
         self.pushButton_reboot.clicked.connect(self.reboot)
         self.pushButton_dfu.clicked.connect(self.dfu)
         self.pushButton_reset.clicked.connect(self.factoryResetBtn)
+        self.pushButton_save.clicked.connect(self.saveClicked)
 
 
     def serialConnected(self,connected):
@@ -25,6 +26,14 @@ class SystemUI(WidgetUI):
             self.getMainClasses()
         else:
             self.setEnabled(False)
+
+    def saveClicked(self):
+        def f(res):
+            self.main.log("Save: "+ str(res))
+        self.main.comms.serialGetAsync("save\n",f)
+        
+    def setSaveBtn(self,on):
+        self.pushButton_save.setEnabled(on)
 
 
     def mainBtn(self):
