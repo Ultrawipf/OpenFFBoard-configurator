@@ -62,7 +62,7 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.serialConnected)
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
-        self.serialchooser.connected.connect(self.systemUi.serialConnected)
+        self.serialchooser.connected.connect(self.systemUi.setEnabled)
 
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
@@ -90,7 +90,7 @@ class MainUi(QMainWindow):
 
     def updateTimer(self):
         def f(i):
-            if i != self.systemUi.mainID:
+            if i != self.serialchooser.mainID:
                 self.resetPort()       
                 self.log("Communication error. Please reconnect")
             else:
