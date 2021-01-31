@@ -5,9 +5,13 @@ from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice,pyqtSignal
 import main
 from base_ui import WidgetUI
+from helper import classlistToIds
+from PyQt5.QtWidgets import QMessageBox
 
 class SerialChooser(WidgetUI):
     connected = pyqtSignal(bool)
+    classes = []
+    classIds = {}
     port = None
     def __init__(self,serial, main):
         WidgetUI.__init__(self, main,'serialchooser.ui')
@@ -18,6 +22,7 @@ class SerialChooser(WidgetUI):
         self.comboBox_port.currentIndexChanged.connect(self.selectPort)
         self.pushButton_send.clicked.connect(self.sendLine)
         self.lineEdit_cmd.returnPressed.connect(self.sendLine)
+        self.pushButton_ok.clicked.connect(self.mainBtn)
         
         self.getPorts()
 
@@ -49,6 +54,7 @@ class SerialChooser(WidgetUI):
             self.pushButton_send.setEnabled(True)
             self.lineEdit_cmd.setEnabled(True)
             self.connected.emit(True)
+            self.getMainClasses()
         else:
             self.pushButton_connect.setText("Connect")
             self.comboBox_port.setEnabled(True)
@@ -56,6 +62,7 @@ class SerialChooser(WidgetUI):
             self.pushButton_send.setEnabled(False)
             self.lineEdit_cmd.setEnabled(False)
             self.connected.emit(False)
+            self.groupBox_system.setEnabled(False)
 
 
     def serialConnect(self):
@@ -89,3 +96,32 @@ class SerialChooser(WidgetUI):
         if oldport in plist:
             self.comboBox_port.setCurrentIndex(plist.index(oldport))
         self.selectPort(self.comboBox_port.currentIndex())
+
+
+    def getMainClasses(self):
+        def updateMains(dat):
+            self.comboBox_main.clear()
+            self.classIds,self.classes = classlistToIds(dat)
+            
+            if(self.mainID == None):
+                #self.main.resetPort()
+                self.groupBox_system.setEnabled(False)
+                return
+            self.groupBox_system.setEnabled(True)
+            for c in self.classes:
+                self.comboBox_main.addItem(c[1])
+            self.comboBox_main.setCurrentIndex(self.classIds[self.mainID][0])
+            self.main.log("Detected mode: "+self.comboBox_main.currentText())
+            self.main.updateTabs()
+
+        def f(i):
+            self.mainID = i
+        self.main.comms.serialGetAsync("id?",f,int)
+        self.main.comms.serialGetAsync("lsmain",updateMains)
+
+    def mainBtn(self):
+        id = self.classes[self.comboBox_main.currentIndex()][0]
+        self.main.comms.serialWrite("main="+str(id)+"\n")
+        self.main.resetPort()
+        msg = QMessageBox(QMessageBox.Information,"Main class changed","Please reconnect.\n Depending on the main class the serial port may have changed.")
+        msg.exec_()
