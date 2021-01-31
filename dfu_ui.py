@@ -44,7 +44,7 @@ class DFUModeUI(WidgetUI):
 
     def fileClicked(self):
         dlg = QFileDialog()
-        dlg.setFileMode(QFileDialog.AnyFile)
+        dlg.setFileMode(QFileDialog.ExistingFile)
         dlg.setNameFilters(["DFU files (*.dfu)"])
         if dlg.exec_():
             filenames = dlg.selectedFiles()

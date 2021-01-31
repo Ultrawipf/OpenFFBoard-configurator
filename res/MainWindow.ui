@@ -89,6 +89,8 @@
     </widget>
     <addaction name="menuWizards"/>
     <addaction name="actionDFU_Uploader"/>
+    <addaction name="actionSave_chip_config"/>
+    <addaction name="actionRestore_chip_config"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -107,6 +109,22 @@
   <action name="actionDFU_Uploader">
    <property name="text">
     <string>DFU Uploader</string>
+   </property>
+  </action>
+  <action name="actionSave_chip_config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save chip config</string>
+   </property>
+  </action>
+  <action name="actionRestore_chip_config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load chip config</string>
    </property>
   </action>
  </widget>

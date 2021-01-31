@@ -7,7 +7,7 @@ from PyQt5.QtCore import QTimer,QThread
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
-
+import config 
 from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
@@ -63,9 +63,14 @@ class MainUi(QMainWindow):
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.setEnabled)
-
+        
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
+
+        self.actionSave_chip_config.triggered.connect(self.saveConfig)
+        self.actionRestore_chip_config.triggered.connect(self.loadConfig)
+        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
+        self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
 
         layout = QVBoxLayout()
         layout.addWidget(self.systemUi)
@@ -87,6 +92,19 @@ class MainUi(QMainWindow):
 
     def openAbout(self):
         AboutDialog(self).exec_()
+
+    def saveConfig(self):
+        self.comms.serialGetAsync("flashdump",config.saveDump)
+
+    def loadConfig(self):
+        dump = config.loadDump()
+        for e in dump["flash"]:
+            cmd = "flashraw?{}={}\n".format(e["addr"], e["val"])
+            self.comms.serialWrite(cmd)
+        # Message
+        msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
+        msg.exec_()
+
 
     def updateTimer(self):
         def f(i):
