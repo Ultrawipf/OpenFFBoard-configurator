@@ -63,7 +63,7 @@ class MainUi(QMainWindow):
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.setEnabled)
-        
+
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
 
@@ -122,6 +122,7 @@ class MainUi(QMainWindow):
             else:
                 self.timeouting = True
                 self.comms.serialGetAsync("id?",f,int)
+                self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
                 
             
 
@@ -183,6 +184,7 @@ class MainUi(QMainWindow):
                     self.addTab(c,name)
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
+        self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
 
     def reconnect(self):
         self.resetPort()

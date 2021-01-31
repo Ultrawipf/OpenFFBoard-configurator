@@ -4,6 +4,7 @@ from PyQt5 import uic
 from helper import res_path
 from PyQt5.QtCore import QTimer
 from base_ui import WidgetUI
+import re
 
 class SystemUI(WidgetUI):
     
@@ -17,6 +18,11 @@ class SystemUI(WidgetUI):
         self.pushButton_reset.clicked.connect(self.factoryResetBtn)
         self.pushButton_save.clicked.connect(self.saveClicked)
 
+    def updateRamUse(self,reply):
+        use,size = re.match(r"Usage:\W(\d+)\WSize:\W(\d+)",reply).groups()
+        if use:
+            use = round(int(use)/1000.0,2)
+            self.label_ramUse.setText("{}k".format(use))
 
     def saveClicked(self):
         def f(res):
