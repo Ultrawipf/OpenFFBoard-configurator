@@ -4,9 +4,6 @@ from PyQt5.QtWidgets import QApplication
 from collections import deque
 import re
 
-# Regex for splitting a command from a value (power=x) --> =
-cmd_reserved_re = '=|\?|!|;|\n'
-
 class SerialComms(QObject):
    
     def __init__(self,main,serialport):
@@ -77,7 +74,7 @@ class SerialComms(QObject):
             if(replytext[0] == "!" or len(self.serialQueue) == 0):
                 self.main.serialchooser.serialLog(text)
                 continue
-            reply = replytext.split("=",1)
+            reply = replytext.split(":",1)
             cmd_reply = reply[0]
             reply_val = reply[1]
             
@@ -96,7 +93,7 @@ class SerialComms(QObject):
                             del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
                         else:
                             sendqueue_elem["replies"].clear() # only clear replies instead
-                        break
+                    break
 
             if(sendqueue_elem == None):
                 # Nothing found. Received a command nobody waits on.
@@ -107,8 +104,8 @@ class SerialComms(QObject):
     def addToQueue(self,cmdraw,callback,convert,persistent=False):
         if(not cmdraw.endswith(";") and not cmdraw.endswith("\n")):
             cmdraw = cmdraw+";"
-        # try to split command base names
-        cmds = [re.split(cmd_reserved_re,e)[0] for e in re.split(';|\n',cmdraw) if e]
+        # try to split command names
+        cmds = [c for c in re.split(';|\n',cmdraw) if c]
         entry = {"callback":callback,"cmdraw":cmdraw,"cmds":cmds,"convert":convert,"replies":[],"persistent":persistent,"len":len(cmds)}
 
         # check if exactly the same request is already present to prevent flooding if serial port is frozen
@@ -162,8 +159,8 @@ class SerialComms(QObject):
         data = self.serial.readAll()
 
         lastSerial = data.data().decode("utf-8")
-        reply = lastSerial[1::].split("=",1)
-        checkcmd = re.split(cmd_reserved_re,cmd,maxsplit=1)[0]
+        reply = lastSerial[1::].split(":",1)
+        checkcmd = re.split(';|\n',cmd)[0]
         if(checkcmd != reply[0]):
             print("Error. incorrect reply received " + reply[0] + " expected " + checkcmd)
             return None

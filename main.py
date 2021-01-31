@@ -13,10 +13,10 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.2.1"
+version = "1.2.2"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.2.0"
+min_fw = "1.2.3"
 
 # UIs
 import system_ui

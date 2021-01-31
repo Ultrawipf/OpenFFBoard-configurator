@@ -25,6 +25,7 @@ class SerialChooser(WidgetUI):
         self.update()
 
     def serialLog(self,txt):
+        print(txt)
         if(type(txt) == list):
             txt = "\n".join(txt)
         else:
