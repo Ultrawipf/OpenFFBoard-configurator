@@ -13,6 +13,7 @@ class SerialChooser(WidgetUI):
     classes = []
     classIds = {}
     port = None
+    mainID = None
     def __init__(self,serial, main):
         WidgetUI.__init__(self, main,'serialchooser.ui')
         
