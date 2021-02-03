@@ -11,7 +11,7 @@ from base_ui import WidgetUI
 #for graph here, need pyqtgraph and numpy
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
-import numpy as np
+
 
 class TMC4671Ui(WidgetUI):
 
@@ -27,9 +27,6 @@ class TMC4671Ui(WidgetUI):
     
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
-        
-
-        self.main.setSaveBtn(True)
         
         self.timer.timeout.connect(self.updateTimer)
         self.timer_status.timeout.connect(self.updateStatus)
@@ -52,7 +49,7 @@ class TMC4671Ui(WidgetUI):
     def updateCurrent(self,current):
    
         try:
-            current = float(current)
+            current = abs(float(current))
             v = (2.5/0x7fff) * current
             amps = round((v / self.amp_gain) / self.shunt_ohm,3)
             self.label_Current.setText(str(amps)+"A")

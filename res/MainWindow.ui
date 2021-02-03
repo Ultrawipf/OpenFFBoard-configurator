@@ -58,49 +58,6 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetMaximumSize</enum>
       </property>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="title">
-         <string>Log</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QTextEdit" name="logBox">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>70</height>
-            </size>
-           </property>
-           <property name="lineWidth">
-            <number>8</number>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
@@ -131,6 +88,9 @@
      <addaction name="actionFFB_Wheel_TMC_wizard"/>
     </widget>
     <addaction name="menuWizards"/>
+    <addaction name="actionDFU_Uploader"/>
+    <addaction name="actionSave_chip_config"/>
+    <addaction name="actionRestore_chip_config"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -144,6 +104,27 @@
   <action name="actionFFB_Wheel_TMC_wizard">
    <property name="text">
     <string>FFB Wheel TMC</string>
+   </property>
+  </action>
+  <action name="actionDFU_Uploader">
+   <property name="text">
+    <string>DFU Uploader</string>
+   </property>
+  </action>
+  <action name="actionSave_chip_config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save chip config</string>
+   </property>
+  </action>
+  <action name="actionRestore_chip_config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load chip config</string>
    </property>
   </action>
  </widget>

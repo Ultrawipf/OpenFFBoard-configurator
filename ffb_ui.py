@@ -53,7 +53,6 @@ class FfbUI(WidgetUI):
 
         self.checkBox_invertX.stateChanged.connect(lambda val : self.main.comms.serialWrite("invertx="+("0" if val == 0 else "1")+"\n"))
 
-        self.main.save.connect(self.save)
         self.timer.timeout.connect(self.updateTimer)
         
         #self.comboBox_driver.currentIndexChanged.connect(self.driverChanged)
@@ -74,7 +73,6 @@ class FfbUI(WidgetUI):
 
     def initUi(self):
         try:
-            self.main.setSaveBtn(True)
             self.getMotorDriver()
             self.getEncoder()
             self.updateSliders()
@@ -164,9 +162,6 @@ class FfbUI(WidgetUI):
         self.encoderChanged(self.comboBox_encoder.currentIndex())
         self.main.comms.serialWrite("cpr="+str(val)+"\n")
 
-    def save(self):
-        self.main.comms.serialWrite("save\n")
-        
 
     def driverChanged(self,idx):
         if idx == -1:

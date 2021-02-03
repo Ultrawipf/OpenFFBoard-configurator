@@ -7,15 +7,16 @@ from PyQt5.QtCore import QTimer,QThread
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
-
+import config 
 from helper import res_path
 import serial_ui
+from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.1.3"
+version = "1.2.2"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.1.4"
+min_fw = "1.2.3"
 
 # UIs
 import system_ui
@@ -28,7 +29,6 @@ import midi_ui
 
 class MainUi(QMainWindow):
     serial = None
-    save = pyqtSignal()
     mainClassUi = None
     timeouting = False
     
@@ -62,11 +62,15 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.serialConnected)
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
-        self.serialchooser.connected.connect(self.systemUi.serialConnected)
-        self.systemUi.pushButton_save.clicked.connect(self.saveClicked)
-        self.setSaveBtn(False)
+        self.serialchooser.connected.connect(self.systemUi.setEnabled)
 
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
+        self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
+
+        self.actionSave_chip_config.triggered.connect(self.saveConfig)
+        self.actionRestore_chip_config.triggered.connect(self.loadConfig)
+        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
+        self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
 
         layout = QVBoxLayout()
         layout.addWidget(self.systemUi)
@@ -76,12 +80,35 @@ class MainUi(QMainWindow):
         msg = QMessageBox(QMessageBox.Information,"Wizard","Not implemented")
         msg.exec_()
 
+    def dfuUploader(self):
+        msg = QDialog()#QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
+        msg.setWindowTitle("DFU Mode")
+        dfu = DFUModeUI(msg)
+        l = QVBoxLayout()
+        l.addWidget(dfu)
+        msg.setLayout(l)
+        msg.exec_()
+        dfu.deleteLater()
+
     def openAbout(self):
         AboutDialog(self).exec_()
 
+    def saveConfig(self):
+        self.comms.serialGetAsync("flashdump",config.saveDump)
+
+    def loadConfig(self):
+        dump = config.loadDump()
+        for e in dump["flash"]:
+            cmd = "flashraw?{}={}\n".format(e["addr"], e["val"])
+            self.comms.serialWrite(cmd)
+        # Message
+        msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
+        msg.exec_()
+
+
     def updateTimer(self):
         def f(i):
-            if i != self.systemUi.mainID:
+            if i != self.serialchooser.mainID:
                 self.resetPort()       
                 self.log("Communication error. Please reconnect")
             else:
@@ -95,19 +122,12 @@ class MainUi(QMainWindow):
             else:
                 self.timeouting = True
                 self.comms.serialGetAsync("id?",f,int)
+                self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
                 
             
 
     def log(self,s):
-        self.logBox.append(s)
-
-
-    def setSaveBtn(self,enabled):
-        self.systemUi.pushButton_save.setEnabled(enabled)
-
-    def saveClicked(self):
-        self.log("Save")
-        self.save.emit()
+        self.systemUi.logBox_1.append(s)
 
     def tabChanged(self,id):
         pass
@@ -127,8 +147,8 @@ class MainUi(QMainWindow):
         return(name in names)
 
     def resetTabs(self):
-        self.setSaveBtn(False)
         self.activeClasses = {}
+        self.systemUi.setSaveBtn(False)
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
     
@@ -147,19 +167,24 @@ class MainUi(QMainWindow):
                 if name == "FFB Wheel":
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
+                    self.systemUi.setSaveBtn(True)
                 if name == "TMC4671":
                     c = tmc4671_ui.TMC4671Ui(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    self.systemUi.setSaveBtn(True)
                 if name == "PWM":
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    self.systemUi.setSaveBtn(True)
                 if name == "MIDI":
                     c = midi_ui.MidiUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,name)
+                    
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
+        self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
 
     def reconnect(self):
         self.resetPort()
