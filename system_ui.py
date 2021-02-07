@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QWidget,QDialog,QVBoxLayout
+from PyQt5.QtWidgets import QWidget,QDialog,QVBoxLayout,QMessageBox
 from PyQt5 import uic
 from helper import res_path
 from PyQt5.QtCore import QTimer
