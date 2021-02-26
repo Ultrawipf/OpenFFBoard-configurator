@@ -19,7 +19,8 @@ class SystemUI(WidgetUI):
         self.pushButton_save.clicked.connect(self.saveClicked)
 
     def updateRamUse(self,reply):
-        use,size = re.match(r"Usage:\W(\d+)\WSize:\W(\d+)",reply).groups()
+        #use,size = re.match(r"Usage:\W(\d+)\WSize:\W(\d+)",reply).groups()
+        use = int(reply)
         if use:
             use = round(int(use)/1000.0,2)
             self.label_ramUse.setText("{}k".format(use))

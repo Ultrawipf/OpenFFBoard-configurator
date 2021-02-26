@@ -122,7 +122,7 @@ class MainUi(QMainWindow):
             else:
                 self.timeouting = True
                 self.comms.serialGetAsync("id?",f,int)
-                self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
+                self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
                 
             
 
@@ -184,7 +184,7 @@ class MainUi(QMainWindow):
                     self.addTab(c,name)
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
-        self.comms.serialGetAsync("mallinfo",self.systemUi.updateRamUse)
+        self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
 
     def reconnect(self):
         self.resetPort()
