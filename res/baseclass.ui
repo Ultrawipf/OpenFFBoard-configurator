@@ -124,7 +124,7 @@
    <item row="0" column="4">
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>RAM use:</string>
+      <string>Free rtos RAM:</string>
      </property>
     </widget>
    </item>
