@@ -134,11 +134,14 @@ class TMC4671Ui(WidgetUI):
         return True
 
     def alignEnc(self):
+        self.pushButton_align.setEnabled(False)
         def f(res):
+            self.pushButton_align.setEnabled(True)
             if(res):
                 msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
                 msg.exec_()
         res = self.main.comms.serialGetAsync("encalign",f)
+        self.main.log("Started encoder alignment")
         
 
     def getMotor(self):
