@@ -63,16 +63,14 @@ class SerialComms(QObject):
         # Parse
         
         split_reply = text.split(">") #replies
-        if not split_reply:
-            split_reply = text.split("!") # try splitting by !
-        
+
         n = 0
         # For all replies in buffer
         for replytext in split_reply:
-            if replytext=="" or len(replytext) < 2:
+            if replytext=="" or len(replytext) < 3:
                 continue
             if(replytext[0] == "!" or len(self.serialQueue) == 0):
-                self.main.serialchooser.serialLog(text)
+                self.main.serialchooser.serialLog("Log: "+replytext[1::])
                 continue
             reply = replytext.split(":",1)
             cmd_reply = reply[0]

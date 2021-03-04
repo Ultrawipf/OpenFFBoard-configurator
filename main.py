@@ -13,10 +13,10 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.2.5"
+version = "1.2.6"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.2.5"
+min_fw = "1.2.6"
 
 # UIs
 import system_ui
@@ -231,17 +231,27 @@ class MainUi(QMainWindow):
             msg.exec_()
 
 
-
-
     def serialConnected(self,connected):
-        if(connected):
-            if(self.comms.serialGet("id?;")):
-                self.log("Connected")
-                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
-            else:
+        
+        def t():
+            if not self.connected:
                 self.log("Can't detect board")
                 self.resetPort()
+
+        def f(id):
+            if(id):
+                self.connected = True
+                serialTim.stop()
+                self.log("Connected")
+                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
+            
+        serialTim = QTimer()
+        if(connected):
+            serialTim.singleShot(500,t)
+            self.comms.serialGetAsync("id?",f)  
+
         else:
+            self.connected = False
             self.log("Disconnected")
             self.resetTabs()
 
