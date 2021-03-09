@@ -75,6 +75,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionErrors"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -125,6 +126,11 @@
    </property>
    <property name="text">
     <string>Load chip config</string>
+   </property>
+  </action>
+  <action name="actionErrors">
+   <property name="text">
+    <string>Errors</string>
    </property>
   </action>
  </widget>
