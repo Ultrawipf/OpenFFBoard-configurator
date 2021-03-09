@@ -75,6 +75,7 @@ class ErrorsUI(WidgetUI):
     def __init__(self, main=None,parent = None):
         WidgetUI.__init__(self, parent,'errors.ui')
         self.main = main
+        self.parent = parent
         main.comms.serialRegisterCallback("Err",self.errorCallback)
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearAll.clicked.connect(self.clearErrors)
@@ -88,15 +89,15 @@ class ErrorsUI(WidgetUI):
         self.main.comms.serialWrite("errorsclr\n")
         self.readErrors()
 
-    def showEvent(self, a0):
-        self.readErrors()
+    # def showEvent(self, a0):
+    #     self.readErrors()
 
     def readErrors(self):
         if(self.isEnabled):
             self.main.comms.serialGetAsync("errors",self.errorCallback)
 
     def errorCallback(self,errorstring):
-        self.show()
+        self.parent.show()
         errors = []
         for errorline in errorstring.split("\n"):
             e = errorline.split(":")
