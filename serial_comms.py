@@ -99,7 +99,7 @@ class SerialComms(QObject):
 
         
     # Adds command to send and receive queue
-    def addToQueue(self,cmdraw,callback,convert,persistent=False):
+    def addToQueue(self,cmdraw,callback,convert,persistent=False,send = True):
         if(not cmdraw.endswith(";") and not cmdraw.endswith("\n")):
             cmdraw = cmdraw+";"
         # try to split command names
@@ -111,7 +111,8 @@ class SerialComms(QObject):
             return
 
         self.serialQueue.append(entry)
-        self.serial.write(bytes(cmdraw,"utf-8"))
+        if(send or not persistent):
+            self.serial.write(bytes(cmdraw,"utf-8"))
 
     """
      Get asynchronous commands and pass the result to the callback. 
@@ -123,19 +124,21 @@ class SerialComms(QObject):
      pass multiple commands and callbacks in lists
      You can also pass an additional conversion function to apply to all replies before sending to callbacks. (int or float for example)
     """
-    def serialGetAsync(self,cmds,callbacks,convert=None):
+    def serialGetAsync(self,cmds,callbacks,convert=None,persistent = False):
         if(not self.serial.isOpen()):
             return False
         if(type(cmds) == list and type(callbacks) == list): # Multiple commands and callbacks
             for cmd,callback in zip(cmds,callbacks):
-                self.addToQueue(cmd,callback,convert)
+                self.addToQueue(cmd,callback,convert,persistent)
         elif(type(cmds) == list): # Multiple commands. One callback
             #for cmd in cmds:
             cmd = ";".join(cmds)
-            self.addToQueue(cmd,callbacks,convert)
+            self.addToQueue(cmd,callbacks,convert,False)
         else: # One command and callback or direct
-            self.addToQueue(cmds,callbacks,convert)
+            self.addToQueue(cmds,callbacks,convert,persistent)
 
+    def serialRegisterCallback(self,cmd,callback,convert = None):
+        self.addToQueue(cmd,callback,convert,True,False)
 
     # get a synchronous reply with timeout. Not recommended
     def serialGet(self,cmd,timeout=500):

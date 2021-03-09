@@ -25,6 +25,7 @@ import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
+import errors
 
 
 class MainUi(QMainWindow):
@@ -45,6 +46,8 @@ class MainUi(QMainWindow):
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
 
+        self.errorsDialog = errors.ErrorsDialog(self)
+
         self.setup()
 
         self.activeClasses = {}
@@ -64,10 +67,14 @@ class MainUi(QMainWindow):
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.setEnabled)
 
+        self.serialchooser.connected.connect(self.errorsDialog.setEnabled)
+        self.errorsDialog.setEnabled(False)
+
         self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
 
         self.actionSave_chip_config.triggered.connect(self.saveConfig)
+        self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
         self.actionRestore_chip_config.triggered.connect(self.loadConfig)
         self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
