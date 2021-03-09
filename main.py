@@ -13,10 +13,10 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.2.6"
+version = "1.2.7"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.2.6"
+min_fw = "1.2.7"
 
 # UIs
 import system_ui
@@ -80,6 +80,7 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.systemUi)
         self.groupBox_main.setLayout(layout)
 

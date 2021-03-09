@@ -70,7 +70,7 @@ class SerialComms(QObject):
         for replytext in split_reply:
             if replytext=="" or len(replytext) < 3:
                 continue
-            if(replytext[0] == "!" or len(self.serialQueue) == 0):
+            if(replytext[0] == "!"):
                 self.main.serialchooser.serialLog("Log: "+replytext[1::])
                 continue
             reply = replytext.split(":",1)

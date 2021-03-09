@@ -66,6 +66,7 @@ class ErrorsDialog(QDialog):
         self.main = main
         self.ui = ErrorsUI(main,self)
         self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0,0,0,0)
         self.layout.addWidget(self.ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Errors")
@@ -89,8 +90,9 @@ class ErrorsUI(WidgetUI):
         self.main.comms.serialWrite("errorsclr\n")
         self.readErrors()
 
-    # def showEvent(self, a0):
-    #     self.readErrors()
+    def showEvent(self, a0):
+        self.tableView.resizeColumnsToContents()
+        #self.readErrors()
 
     def readErrors(self):
         if(self.isEnabled):
