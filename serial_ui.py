@@ -122,6 +122,6 @@ class SerialChooser(WidgetUI):
     def mainBtn(self):
         id = self.classes[self.comboBox_main.currentIndex()][0]
         self.main.comms.serialWrite("main="+str(id)+"\n")
-        self.main.resetPort()
-        msg = QMessageBox(QMessageBox.Information,"Main class changed","Please reconnect.\n Depending on the main class the serial port may have changed.")
+        self.main.reconnect()
+        msg = QMessageBox(QMessageBox.Information,"Main class changed","Chip is rebooting. Please reconnect.")
         msg.exec_()
