@@ -45,28 +45,57 @@
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QSpinBox" name="spinBox_ffbAxes">
-              <property name="suffix">
-               <string> </string>
+             <widget class="QCheckBox" name="checkBox_axisX">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
-              <property name="prefix">
-               <string> </string>
+              <property name="toolTip">
+               <string>X axis always enabled</string>
               </property>
-              <property name="minimum">
-               <number>1</number>
+              <property name="layoutDirection">
+               <enum>Qt::RightToLeft</enum>
               </property>
-              <property name="maximum">
-               <number>2</number>
+              <property name="text">
+               <string>X</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Changing the number of axis may cause or require a reboot.</string>
+             <widget class="QCheckBox" name="checkBox_axisY">
+              <property name="layoutDirection">
+               <enum>Qt::RightToLeft</enum>
               </property>
-              <property name="wordWrap">
-               <bool>true</bool>
+              <property name="text">
+               <string>Y</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="checkBox_axisZ">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>Z Axis not yet implemented</string>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::RightToLeft</enum>
+              </property>
+              <property name="text">
+               <string>Z</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_changeAxes">
+              <property name="text">
+               <string>Change</string>
               </property>
              </widget>
             </item>

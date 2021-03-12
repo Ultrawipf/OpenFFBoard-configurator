@@ -31,7 +31,6 @@ class FfbUI(WidgetUI):
         WidgetUI.__init__(self, main,'ffbclass.ui')
     
         self.timer = QTimer(self)
-#        self.ffbAxis = QSpinBox(self)
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
 
@@ -41,7 +40,10 @@ class FfbUI(WidgetUI):
             tabId = self.main.addTab(self,"FFB Wheel")
             self.main.selectTab(tabId)
 
-        self.spinBox_ffbAxes.valueChanged.connect(self.ffbAxesSpinBoxChanged)
+        self.pushButton_changeAxes.clicked.connect(self.changeFFBAxesCount)
+        self.checkBox_axisY.stateChanged.connect(self.axisCheckBoxClicked)
+#        self.checkBox_axisZ.stateChanged.connect(self.axisCheckBoxClicked)
+
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
         
@@ -49,7 +51,7 @@ class FfbUI(WidgetUI):
 
     def initUi(self):
         try:
-            self.main.comms.serialGetAsync("axis?",self.spinBox_ffbAxes.setValue,int)
+            self.main.comms.serialGetAsync("axis?",self.setAxisCheckBoxes,int)
             self.getButtonSources()
             self.getAxisSources()
             
@@ -82,9 +84,36 @@ class FfbUI(WidgetUI):
         except:
             self.main.log("Update error")
     
-    # FFB Axis Spinbox
-    def ffbAxesSpinBoxChanged(self,val):
-        self.main.comms.serialWrite("axis="+str(val)+"\n")
+
+    def setAxisCheckBoxes(self,count):
+        self.checkBox_axisX.setChecked(True if (count>0) else False)
+        self.checkBox_axisY.setChecked(True if (count>1) else False)
+        self.checkBox_axisZ.setChecked(True if (count>2) else False)
+        self.pushButton_changeAxes.setEnabled(False)
+
+
+    def axisCheckBoxClicked(self, val):
+        self.pushButton_changeAxes.setEnabled(True)
+
+
+    def changeFFBAxesCount(self):
+        def f():
+            axisCount = 1
+            if self.checkBox_axisY.isChecked():
+                axisCount +=1
+            if self.checkBox_axisZ.isChecked():
+                axisCount +=1
+            self.main.comms.serialWrite("axis="+str(axisCount)+"\n")
+            self.main.updateTabs()
+
+        self.pushButton_changeAxes.setEnabled(False)
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Changing the number of axis may cause or require a reboot!")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.buttonClicked.connect(f)
+        msg.exec_()
+
 
     # Button selector
     def buttonsChanged(self,id):
