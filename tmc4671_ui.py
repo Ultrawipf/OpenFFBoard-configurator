@@ -147,6 +147,7 @@ class TMC4671Ui(WidgetUI):
             if(res):
                 msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
                 msg.exec_()
+
         res = self.serialGetAsync("encalign",f)
         self.main.log("Started encoder alignment")
         
