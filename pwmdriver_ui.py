@@ -10,7 +10,7 @@ from base_ui import WidgetUI
 
 class PwmDriverUI(WidgetUI):
     
-    def __init__(self, main=None):
+    def __init__(self, main=None, unique=1):
         WidgetUI.__init__(self, main,'pwmdriver_ui.ui')
         self.main = main #type: main.MainUi
 
