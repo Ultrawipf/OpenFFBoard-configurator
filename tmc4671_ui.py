@@ -18,10 +18,15 @@ class TMC4671Ui(WidgetUI):
     amp_gain = 60
     shunt_ohm = 0.0015
     max_datapoints = 1000
+
+    axis = 'x'
     
-    def __init__(self, main=None):
+    def __init__(self, main=None, unique='X'):
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         self.main = main #type: main.MainUi
+
+        self.axis = unique
+
         self.timer = QTimer(self)
         self.timer_status = QTimer(self)
     
@@ -74,40 +79,40 @@ class TMC4671Ui(WidgetUI):
         self.label_volt.setText(t)
 
     def updateTimer(self):
-        self.main.comms.serialGetAsync("acttrq",self.updateCurrent)
+        self.serialGetAsync("acttrq",self.updateCurrent)
         
     def updateStatus(self):
-        self.main.comms.serialGetAsync("tmctemp",self.updateTemp,float)
+        self.serialGetAsync("tmctemp",self.updateTemp,float)
         self.main.comms.serialGetAsync(["vint","vext"],self.updateVolt,float)
 
     def submitMotor(self):
         mtype = self.comboBox_mtype.currentIndex()
-        self.main.comms.serialWrite("mtype="+str(mtype))
+        self.serialWrite("mtype="+str(mtype))
 
         poles = self.spinBox_poles.value()
-        self.main.comms.serialWrite("poles="+str(poles))
+        self.serialWrite("poles="+str(poles))
 
-        self.main.comms.serialWrite("cprtmc="+str(self.spinBox_cpr.value()))
+        self.serialWrite("cprtmc="+str(self.spinBox_cpr.value()))
 
         enc = self.comboBox_enc.currentIndex()
-        self.main.comms.serialWrite("encsrc="+str(enc))
+        self.serialWrite("encsrc="+str(enc))
         
     def submitPid(self):
         # PIDs
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        self.main.comms.serialWrite("seqpi="+str(seq))
+        self.serialWrite("seqpi="+str(seq))
 
         tp = self.spinBox_tp.value()
-        self.main.comms.serialWrite("torqueP="+str(tp))
+        self.serialWrite("torqueP="+str(tp))
 
         ti = self.spinBox_ti.value()
-        self.main.comms.serialWrite("torqueI="+str(ti))
+        self.serialWrite("torqueI="+str(ti))
 
         fp = self.spinBox_fp.value()
-        self.main.comms.serialWrite("fluxP="+str(fp))
+        self.serialWrite("fluxP="+str(fp))
 
         fi = self.spinBox_fi.value()
-        self.main.comms.serialWrite("fluxI="+str(fi))
+        self.serialWrite("fluxI="+str(fi))
         
 
 
@@ -120,12 +125,14 @@ class TMC4671Ui(WidgetUI):
                 for s in encsrcs.split(","):
                     e = s.split("=")
                     self.comboBox_enc.addItem(e[0],e[1])
-            self.main.comms.serialGetAsync("encsrc!",encs)
+            self.serialGetAsync("encsrc!",encs)
 
             self.getMotor()
             self.getPids()
+            self.getTMCChan()
 
-            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.main.comms.serialWrite("fluxoffset="+str(v)+";"))
+            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.serialWrite("fluxoffset="+str(v)+";"))
+            self.spinBox_tmc.valueChanged.connect(lambda v : self.serialWrite("tmc="+str(v)+";"))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
         except Exception as e:
@@ -140,7 +147,8 @@ class TMC4671Ui(WidgetUI):
             if(res):
                 msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
                 msg.exec_()
-        res = self.main.comms.serialGetAsync("encalign",f)
+
+        res = self.serialGetAsync("encalign",f)
         self.main.log("Started encoder alignment")
         
 
@@ -150,7 +158,7 @@ class TMC4671Ui(WidgetUI):
         self.spinBox_poles.setValue,
         self.comboBox_enc.setCurrentIndex,
         self.spinBox_cpr.setValue]
-        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
+        self.serialGetAsync(commands,callbacks,convert=int)
                 
 
     def getPids(self):
@@ -162,6 +170,21 @@ class TMC4671Ui(WidgetUI):
         self.checkBox_advancedpid.setChecked]
 
         commands = ["torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
-        
-        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
+        self.serialGetAsync(commands,callbacks,convert=int)
+
+
+    def getTMCChan(self):
+        self.serialGetAsync("tmc?",self.spinBox_tmc.setValue,convert=int)
+
+    def serialWrite(self,cmd):
+        cmd = self.axis+"."+cmd
+        self.main.comms.serialWrite(cmd)
+
+
+    def serialGetAsync(self,cmds,callbacks,convert=None):
+        if(type(cmds) == list):
+            axis_cmds = list(map(lambda x: self.axis+"."+x, cmds)) # y.torqueP? etc
+        else:
+            axis_cmds = self.axis+"."+cmds
+        self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
 

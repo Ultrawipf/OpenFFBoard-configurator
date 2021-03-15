@@ -13,20 +13,20 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.2.7"
+version = "1.3.0"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.2.7"
+min_fw = "1.3.0"
 
 # UIs
 import system_ui
 import ffb_ui
+import axis_ui
 import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
 import errors
-
 
 class MainUi(QMainWindow):
     serial = None
@@ -163,33 +163,41 @@ class MainUi(QMainWindow):
     def updateTabs(self):
         def updateTabs_cb(active):
             lines = [l.split(":") for l in active.split("\n") if l]
-            newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
+
+            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"id":i[1],"unique":i[2],"ui":None} for i in lines}
             deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
             for c in deleteClasses:
                 self.delTab(c)
-            for name,c in newActiveClasses.items():
+            for name,cl in newActiveClasses.items():
                 if name in self.activeClasses:
                     continue
                 
-                if name == "FFB Wheel":
+                if cl["name"] == "FFB Wheel":
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
                     self.systemUi.setSaveBtn(True)
-                if name == "TMC4671":
-                    c = tmc4671_ui.TMC4671Ui(main = self)
+                elif  cl["name"] == "Axis":
+                    c = axis_ui.AxisUI(main = self,unique = cl["unique"])
+                    n = cl["name"]+':'+c.axis.upper()
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
+                    self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                if name == "PWM":
+                elif cl["name"] == "TMC4671":
+                    c = tmc4671_ui.TMC4671Ui(main = self,unique = cl["unique"])
+                    n = cl["name"]+':'+c.axis.upper()
+                    self.activeClasses[name] = c
+                    self.addTab(c,n)
+                    self.systemUi.setSaveBtn(True)
+                elif cl["name"] == "PWM":
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
+                    self.addTab(c,cl["name"])
                     self.systemUi.setSaveBtn(True)
-                if name == "MIDI":
+                elif cl["name"] == "MIDI":
                     c = midi_ui.MidiUI(main = self)
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
+                    self.addTab(c,cl["name"])
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
         self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
