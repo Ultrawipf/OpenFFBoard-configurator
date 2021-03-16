@@ -32,6 +32,7 @@ class MainUi(QMainWindow):
     serial = None
     mainClassUi = None
     timeouting = False
+    connected = False
     
     def __init__(self):
         super(MainUi, self).__init__()

@@ -26,7 +26,7 @@ class OptionsDialog(QDialog):
         okbtn = QPushButton("OK")
         okbtn.clicked.connect(self.ok)
         cancelButton = QPushButton("Cancel")
-        cancelButton.clicked.connect(self.close)
+        cancelButton.clicked.connect(self.reject)
         applyButton = QPushButton("Apply")
         applyButton.clicked.connect(self.apply)
 
@@ -40,14 +40,19 @@ class OptionsDialog(QDialog):
 
     def ok(self):
         self.apply()
-        self.close()
+        self.accept()
 
     def apply(self):
         self.conf_ui.apply()
 
-    def closeEvent(self, a0) -> None:
+    # def closeEvent(self, a0) -> None:
+    #     print("close")
+    #     self.onclose()
+    #     return super().closeEvent(a0)
+
+    def hideEvent(self, a0) -> None:
         self.onclose()
-        return super().closeEvent(a0)
+        return super().hideEvent(a0)
 
     def onclose(self):
         self.conf_ui.onclose()
