@@ -122,7 +122,6 @@ class AxisUI(WidgetUI):
             self.getMotorDriver()
             self.getEncoder()
             self.main.updateTabs()
-            self.updateSliders()
             
    
     def encoderChanged(self,idx):
@@ -133,7 +132,6 @@ class AxisUI(WidgetUI):
             self.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
             self.main.updateTabs()
-            self.updateSliders()
             self.encoderIndexChanged(id)
         
     
@@ -154,6 +152,7 @@ class AxisUI(WidgetUI):
         self.horizontalSlider_cffilter.setValue]
 
         self.serialGetAsync(commands,callbacks,convert=int)
+        self.power_changed(self.horizontalSlider_power.value())
 
 
     def getMotorDriver(self):
@@ -170,6 +169,7 @@ class AxisUI(WidgetUI):
 
             if(self.drvId in self.drvIds and self.comboBox_driver.currentIndex() != self.drvIds[self.drvId][0]):
                 self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
+            self.updateSliders()
         self.serialGetAsync(["drvtype!","drvtype?"],drvtypecb)
        
     def encoderIndexChanged(self,idx):
