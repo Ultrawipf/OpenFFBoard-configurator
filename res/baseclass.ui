@@ -100,7 +100,7 @@
       <bool>false</bool>
      </property>
      <property name="text">
-      <string>Save</string>
+      <string>Save to flash</string>
      </property>
      <property name="checkable">
       <bool>false</bool>
