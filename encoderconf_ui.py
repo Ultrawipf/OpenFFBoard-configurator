@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QGroupBox
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
+from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QHBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
 from PyQt5 import uic
 import main
 from PyQt5.QtCore import QObjectCleanupHandler
@@ -35,7 +35,11 @@ class EncoderOptions(QGroupBox):
             layout.addWidget(self.widget)
             self.applyBtn = QPushButton("Apply")
             self.applyBtn.clicked.connect(self.widget.apply)
-            layout.addWidget(self.applyBtn)
+            footer = QHBoxLayout()
+            footer.addStretch(5)
+            footer.addWidget(self.applyBtn)
+            footer.addStretch(5)
+            layout.addLayout(footer)
  
         self.setLayout(layout)
 
@@ -57,7 +61,7 @@ class LocalEncoderConf(EncoderOption):
 
         self.spinBox_cpr = QSpinBox()
         self.spinBox_cpr.setRange(0,0xffff)
-
+        layout.addWidget(QLabel("CPR = 4x PPR"))
         layout.addRow(QLabel("CPR"),self.spinBox_cpr)
         self.setLayout(layout)
 
