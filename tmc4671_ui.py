@@ -39,6 +39,11 @@ class TMC4671Ui(WidgetUI):
         self.curveAmp = self.graphWidget_Amps.plot(pen='y')
         self.curveAmpData = [0]
 
+        self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
+        self.lastPrecP = self.checkBox_P_Precision.isChecked()
+        self.lastPrecI = self.checkBox_I_Precision.isChecked()
+        self.buttonGroup_precision.buttonToggled.connect(self.changePrecision)
+
     def __del__(self):
         pass
 
@@ -113,8 +118,38 @@ class TMC4671Ui(WidgetUI):
 
         fi = self.spinBox_fi.value()
         self.serialWrite("fluxI="+str(fi))
-        
 
+        prec = self.checkBox_I_Precision.isChecked() | (self.checkBox_P_Precision.isChecked() << 1)
+        self.serialWrite("pidPrec="+str(prec))
+        
+    def changePrecision(self,button,checked):
+        rescale = (16 if checked else 1/16)
+        if(button == self.checkBox_I_Precision):
+            if(self.lastPrecI != checked):
+                self.spinBox_ti.setValue(self.spinBox_ti.value() * rescale)
+                self.spinBox_fi.setValue(self.spinBox_fi.value() * rescale)
+        if(button == self.checkBox_P_Precision):
+            if(self.lastPrecP != checked):
+                self.spinBox_tp.setValue(self.spinBox_tp.value() * rescale)
+                self.spinBox_fp.setValue(self.spinBox_fp.value() * rescale)
+
+        self.lastPrecP = self.checkBox_P_Precision.isChecked()
+        self.lastPrecI = self.checkBox_I_Precision.isChecked()
+
+    def precisionCb(self,val):
+        self.checkBox_I_Precision.setChecked(val & 0x1)
+        self.checkBox_P_Precision.setChecked(val & 0x2)
+
+    def advancedPidChanged(self,state):
+        self.checkBox_P_Precision.setEnabled(state)
+        self.checkBox_I_Precision.setEnabled(state)
+        if(state):
+            pass
+            #self.serialGetAsync("pidPrec?",self.precisionCb,int) #update checkbox
+        else:
+            self.checkBox_P_Precision.setChecked(False)
+            self.checkBox_I_Precision.setChecked(False)
+   
 
     def initUi(self):
         try:
@@ -162,14 +197,15 @@ class TMC4671Ui(WidgetUI):
                 
 
     def getPids(self):
-        callbacks = [self.spinBox_tp.setValue,
+        callbacks = [self.precisionCb,
+        self.spinBox_tp.setValue,
         self.spinBox_ti.setValue,
         self.spinBox_fp.setValue,
         self.spinBox_fi.setValue,
         self.spinBox_fluxoffset.setValue,
         self.checkBox_advancedpid.setChecked]
 
-        commands = ["torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
+        commands = ["pidPrec?","torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
         self.serialGetAsync(commands,callbacks,convert=int)
 
 
