@@ -424,7 +424,14 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
+         <item row="7" column="0">
+          <widget class="QPushButton" name="pushButton_submitpid">
+           <property name="text">
+            <string>Change pids</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
           <widget class="QCheckBox" name="checkBox_P_Precision">
            <property name="enabled">
             <bool>false</bool>
@@ -437,7 +444,7 @@
            </attribute>
           </widget>
          </item>
-         <item row="6" column="0">
+         <item row="6" column="0" colspan="2">
           <widget class="QCheckBox" name="checkBox_I_Precision">
            <property name="enabled">
             <bool>false</bool>
@@ -448,13 +455,6 @@
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup_precision</string>
            </attribute>
-          </widget>
-         </item>
-         <item row="7" column="0">
-          <widget class="QPushButton" name="pushButton_submitpid">
-           <property name="text">
-            <string>Change pids</string>
-           </property>
           </widget>
          </item>
         </layout>
