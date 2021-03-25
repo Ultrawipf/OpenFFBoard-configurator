@@ -44,6 +44,8 @@ class TMC4671Ui(WidgetUI):
         self.lastPrecI = self.checkBox_I_Precision.isChecked()
         self.buttonGroup_precision.buttonToggled.connect(self.changePrecision)
 
+        self.comboBox_mtype.currentIndexChanged.connect(self.motorselChanged)
+
     def __del__(self):
         pass
 
@@ -56,6 +58,12 @@ class TMC4671Ui(WidgetUI):
         self.timer.stop()
         self.timer_status.stop()
         
+    def motorselChanged(self,val):
+        if(val == 2 or val == 3): # stepper or bldc
+            self.spinBox_poles.setEnabled(True)
+        else:
+            self.spinBox_poles.setEnabled(False)
+
     def updateCurrent(self,current):
    
         try:
