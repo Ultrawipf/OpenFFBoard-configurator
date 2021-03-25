@@ -21,6 +21,8 @@ class DFUModeUI(WidgetUI):
             self.timer.timeout.connect(self.initUi)
             self.timer.start(1000)
 
+            self.checkBox_massErase.setEnabled(False) #TODO disable checkbox for now
+
 
     def initUi(self):
         self.log("Searching devices...")

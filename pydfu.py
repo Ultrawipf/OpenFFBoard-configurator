@@ -70,6 +70,8 @@ __dev = None
 
 __verbose = None
 
+__chunksize = 512
+
 # USB DFU interface
 __DFU_INTERFACE = 0
 
@@ -184,15 +186,15 @@ def write_memory(addr, buf, progress=None, progress_addr=0, progress_size=0):
             print ("Addr 0x%x %dKBs/%dKBs..." % (xfer_base + xfer_bytes,
                                                  xfer_bytes // 1024,
                                                  xfer_total // 1024))
-        if progress and xfer_count % 256 == 0:
+        if progress and xfer_count % 32 == 0:
             progress(progress_addr, xfer_base + xfer_bytes - progress_addr,
                      progress_size)
 
         # Set mem write address
         set_address(xfer_base+xfer_bytes)
 
-        # Send DNLOAD with fw data
-        chunk = min(64, xfer_total-xfer_bytes)
+        # Send DNLOAD with fw data (1024,64?)
+        chunk = min(__chunksize, xfer_total-xfer_bytes)
         __dev.ctrl_transfer(0x21, __DFU_DNLOAD, 2, __DFU_INTERFACE,
                             buf[xfer_bytes:xfer_bytes + chunk], __TIMEOUT)
 
