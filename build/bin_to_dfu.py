@@ -6,7 +6,7 @@ DEFAULT_DEVICE="0x0483:0xdf11"
 
 # (Start,length) to skip eeprom emulation sectors
 flash_sectors_f4 = [
-(0x8000000,0x3fff),(0x800C000,-1) # multiple sectors combined. -1 size for rest
+(0x8000000,0x4000),(0x800C000,-1) # multiple sectors combined. -1 size for rest
 ]
 
 def compute_crc(data):
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         if start_offset > len(data):
             break
         print("Appending %x - %x" % (page[0],page[0]+page[1]))
-        stop = min(start_offset+page[1]+1,len(data))
+        stop = min(start_offset+page[1],len(data))
         if page[1] == -1:
             stop = len(data)
         print("%x - %x" % (start_offset,stop))
