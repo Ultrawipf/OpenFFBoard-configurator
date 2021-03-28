@@ -16,7 +16,7 @@ from dfu_ui import DFUModeUI
 version = "1.3.3"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.3.1"
+min_fw = "1.3.4"
 
 # UIs
 import system_ui
