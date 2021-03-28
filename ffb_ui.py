@@ -34,8 +34,16 @@ class FfbUI(WidgetUI):
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
 
+        self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.comms.serialWrite("idlespring="+str(val)+"\n"))
+        self.horizontalSlider_spring.valueChanged.connect(lambda val : self.main.comms.serialWrite("spring="+str(val)+"\n"))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.main.comms.serialWrite("damper="+str(val)+"\n"))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
+        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.main.comms.serialWrite("inertia="+str(val)+"\n"))
+
         self.timer.timeout.connect(self.updateTimer)
         
+
         if(self.initUi()):
             tabId = self.main.addTab(self,"FFB Wheel")
             self.main.selectTab(tabId)
@@ -54,6 +62,7 @@ class FfbUI(WidgetUI):
             self.main.comms.serialGetAsync("axis?",self.setAxisCheckBoxes,int)
             self.getButtonSources()
             self.getAxisSources()
+            self.updateSliders()
             
         except:
             self.main.log("Error initializing FFB tab")
@@ -213,5 +222,28 @@ class FfbUI(WidgetUI):
             self.groupBox_analogaxes.setLayout(layout)
         self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
         
+
+    def cffilter_changed(self,v):
+        freq = max(min(v,500),0)
+        self.main.comms.serialWrite("ffbfiltercf="+str(freq)+"\n")
+        lbl = str(freq)+"Hz"
+        if(freq == 500):
+            lbl = "Off"
+        self.label_cffilter.setText(lbl)
+
+
+    def updateSliders(self):
+        commands = ["ffbfiltercf?","idlespring?","spring?","damper?","friction?","inertia?"]
+  
+        callbacks = [
+        self.horizontalSlider_cffilter.setValue,
+        self.horizontalSlider_idle.setValue,
+        self.horizontalSlider_spring.setValue,
+        self.horizontalSlider_damper.setValue,
+        self.horizontalSlider_friction.setValue,
+        self.horizontalSlider_inertia.setValue]
+
+        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
+
 
         

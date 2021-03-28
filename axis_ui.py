@@ -37,11 +37,8 @@ class AxisUI(WidgetUI):
 
         self.horizontalSlider_power.valueChanged.connect(self.power_changed)
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.serialWrite("degrees="+str(val)+"\n"))
-        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.serialWrite("friction="+str(val)+"\n"))
-        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.serialWrite("idlespring="+str(val)+"\n"))
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.serialWrite("esgain="+str(val)+"\n"))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
-        self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderIndexChanged)
 
@@ -78,14 +75,6 @@ class AxisUI(WidgetUI):
         self.timer.stop()
 
      
-    def cffilter_changed(self,v):
-        freq = max(min(v,500),0)
-        self.main.comms.serialWrite("ffbfiltercf="+str(freq)+"\n")
-        lbl = str(freq)+"Hz"
-        if(freq == 500):
-            lbl = "Off"
-        self.label_cffilter.setText(lbl)
-
     def power_changed(self,val):
         self.serialWrite("power="+str(val)+"\n")
         text = str(val)
@@ -136,7 +125,7 @@ class AxisUI(WidgetUI):
         
     
     def updateSliders(self):
-        commands = ["power?","degrees?","friction?","idlespring?","fxratio?","esgain?","ffbfiltercf?"]
+        commands = ["power?","degrees?","fxratio?","esgain?"]
   
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -145,11 +134,8 @@ class AxisUI(WidgetUI):
         callbacks = [
         self.horizontalSlider_power.setValue,
         self.horizontalSlider_degrees.setValue,
-        self.horizontalSlider_friction.setValue,
-        self.horizontalSlider_idle.setValue,
         self.horizontalSlider_fxratio.setValue,
-        self.horizontalSlider_esgain.setValue,
-        self.horizontalSlider_cffilter.setValue]
+        self.horizontalSlider_esgain.setValue]
 
         self.serialGetAsync(commands,callbacks,convert=int)
         self.power_changed(self.horizontalSlider_power.value())
