@@ -35,7 +35,6 @@ class FfbUI(WidgetUI):
         self.axisbtns.setExclusive(False)
 
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
-        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.main.comms.serialWrite("idlespring="+str(val)+"\n"))
         self.horizontalSlider_spring.valueChanged.connect(lambda val : self.main.comms.serialWrite("spring="+str(val)+"\n"))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.main.comms.serialWrite("damper="+str(val)+"\n"))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
@@ -233,11 +232,10 @@ class FfbUI(WidgetUI):
 
 
     def updateSliders(self):
-        commands = ["ffbfiltercf?","idlespring?","spring?","damper?","friction?","inertia?"]
+        commands = ["ffbfiltercf?","spring?","damper?","friction?","inertia?"]
   
         callbacks = [
         self.horizontalSlider_cffilter.setValue,
-        self.horizontalSlider_idle.setValue,
         self.horizontalSlider_spring.setValue,
         self.horizontalSlider_damper.setValue,
         self.horizontalSlider_friction.setValue,
