@@ -49,6 +49,20 @@ class EncoderOption(QWidget):
     def apply(self):
         pass
 
+    def hideEvent(self, a0) -> None:
+        self.onclose()
+        return super().hideEvent(a0)
+
+    def showEvent(self, a0) -> None:
+        self.onshown()
+        return super().showEvent(a0)
+
+    def onshown(self):
+        pass
+
+    def onclose(self):
+        pass
+
 class LocalEncoderConf(EncoderOption):
     def __init__(self,parent,main):
         self.main = main
@@ -65,10 +79,9 @@ class LocalEncoderConf(EncoderOption):
         layout.addRow(QLabel("CPR"),self.spinBox_cpr)
         self.setLayout(layout)
 
-    def readValues(self):
+    def onshown(self):
         self.main.comms.serialGetAsync("cpr",self.spinBox_cpr.setValue,int) 
 
     def apply(self):
-        print("apply")
         val = self.spinBox_cpr.value()
         self.main.comms.serialWrite("cpr="+str(val)+"\n")

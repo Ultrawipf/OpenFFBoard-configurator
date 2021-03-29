@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>607</width>
-    <height>549</height>
+    <height>448</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,53 +33,13 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox_hardware">
-        <property name="title">
-         <string>Hardware</string>
+      <item row="0" column="1">
+       <widget class="QStackedWidget" name="stackedWidget_encoder">
+        <property name="lineWidth">
+         <number>0</number>
         </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="1" column="2">
-          <widget class="QComboBox" name="comboBox_encoder"/>
-         </item>
-         <item row="2" column="0">
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="2" column="2">
-          <widget class="QPushButton" name="pushButton_submit_hw">
-           <property name="text">
-            <string>Apply</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QComboBox" name="comboBox_driver"/>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Motor driver</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Encoder source</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QWidget" name="page"/>
+        <widget class="QWidget" name="page_2"/>
        </widget>
       </item>
       <item row="1" column="0" rowspan="2" colspan="4">
@@ -245,7 +205,7 @@
          <item row="1" column="2">
           <widget class="QSpinBox" name="spinBox_range">
            <property name="suffix">
-            <string> </string>
+            <string/>
            </property>
            <property name="maximum">
             <number>1080</number>
@@ -255,10 +215,59 @@
          <item row="3" column="2">
           <widget class="QSpinBox" name="spinBox_esgain">
            <property name="suffix">
-            <string> </string>
+            <string/>
            </property>
            <property name="maximum">
             <number>255</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox_hardware">
+        <property name="title">
+         <string>Hardware</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="2" column="0">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="comboBox_encoder"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Encoder source</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="pushButton_submit_hw">
+           <property name="text">
+            <string>Apply</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_driver"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Motor driver</string>
            </property>
           </widget>
          </item>
@@ -300,17 +309,21 @@
         </layout>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QStackedWidget" name="stackedWidget_encoder">
-        <property name="lineWidth">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="page"/>
-        <widget class="QWidget" name="page_2"/>
-       </widget>
-      </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
