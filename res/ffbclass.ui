@@ -179,9 +179,16 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>Values</string>
+         <string>FFB effect parameters</string>
         </property>
         <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_cffilter">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_11">
            <property name="toolTip">
@@ -214,66 +221,7 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_cffilter">
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Idle spring</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
-          <widget class="QSlider" name="horizontalSlider_idle">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-           <property name="value">
-            <number>0</number>
-           </property>
-           <property name="sliderPosition">
-            <number>0</number>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QSpinBox" name="spinBox_i">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Spring Gain</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
           <widget class="QSlider" name="horizontalSlider_spring">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -292,30 +240,17 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QSpinBox" name="spinBox_spring">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_10">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_9">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Damper Gain</string>
+            <string>Spring Gain</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="2" column="1">
           <widget class="QSlider" name="horizontalSlider_damper">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -334,7 +269,40 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Damper Gain</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Friction Gain</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QSpinBox" name="spinBox_spring">
+           <property name="suffix">
+            <string/>
+           </property>
+           <property name="prefix">
+            <string/>
+           </property>
+           <property name="maximum">
+            <number>255</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
           <widget class="QSpinBox" name="spinBox_damper">
            <property name="suffix">
             <string/>
@@ -347,62 +315,7 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_12">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Friction Gain</string>
-           </property>
-          </widget>
-         </item>
          <item row="4" column="1">
-          <widget class="QSlider" name="horizontalSlider_friction">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="minimum">
-            <number>10</number>
-           </property>
-           <property name="maximum">
-            <number>500</number>
-           </property>
-           <property name="value">
-            <number>10</number>
-           </property>
-           <property name="sliderPosition">
-            <number>10</number>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
-          <widget class="QSpinBox" name="spinBox_friction">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Inertia Gain</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
           <widget class="QSlider" name="horizontalSlider_inertia">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -421,7 +334,20 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="2">
+         <item row="3" column="2">
+          <widget class="QSpinBox" name="spinBox_friction">
+           <property name="suffix">
+            <string/>
+           </property>
+           <property name="prefix">
+            <string/>
+           </property>
+           <property name="maximum">
+            <number>255</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
           <widget class="QSpinBox" name="spinBox_inertia">
            <property name="suffix">
             <string/>
@@ -431,6 +357,38 @@
            </property>
            <property name="maximum">
             <number>255</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Inertia Gain</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSlider" name="horizontalSlider_friction">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>255</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="sliderPosition">
+            <number>0</number>
+           </property>
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
@@ -582,38 +540,6 @@
     <hint type="destinationlabel">
      <x>648</x>
      <y>379</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_idle</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_i</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>618</x>
-     <y>361</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>676</x>
-     <y>364</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_i</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSlider_idle</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>674</x>
-     <y>354</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>649</x>
-     <y>353</y>
     </hint>
    </hints>
   </connection>

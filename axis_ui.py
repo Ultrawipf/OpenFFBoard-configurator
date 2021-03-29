@@ -39,6 +39,10 @@ class AxisUI(WidgetUI):
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.serialWrite("degrees="+str(val)+"\n"))
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.serialWrite("esgain="+str(val)+"\n"))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.serialWrite("idlespring="+str(val)+"\n"))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.serialWrite("axisdamper="+str(val)+"\n"))
+
+        self.spinBox_range.editingFinished.connect(self.rangeChanged) # don't update while typing
 
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderIndexChanged)
 
@@ -74,6 +78,8 @@ class AxisUI(WidgetUI):
     def hideEvent(self,event):
         self.timer.stop()
 
+    def rangeChanged(self):
+        self.horizontalSlider_degrees.setValue(self.spinBox_range.value())
      
     def power_changed(self,val):
         self.serialWrite("power="+str(val)+"\n")
@@ -125,7 +131,7 @@ class AxisUI(WidgetUI):
         
     
     def updateSliders(self):
-        commands = ["power?","degrees?","fxratio?","esgain?"]
+        commands = ["power?","degrees?","fxratio?","esgain?","idlespring?","axisdamper?"]
   
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
@@ -135,7 +141,9 @@ class AxisUI(WidgetUI):
         self.horizontalSlider_power.setValue,
         self.horizontalSlider_degrees.setValue,
         self.horizontalSlider_fxratio.setValue,
-        self.horizontalSlider_esgain.setValue]
+        self.horizontalSlider_esgain.setValue,
+        self.horizontalSlider_idle.setValue,
+        self.horizontalSlider_damper.setValue]
 
         self.serialGetAsync(commands,callbacks,convert=int)
         self.power_changed(self.horizontalSlider_power.value())
