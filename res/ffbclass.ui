@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>739</width>
-    <height>573</height>
+    <height>382</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -179,7 +179,7 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>FFB effect parameters</string>
+         <string>FFB effect parameters (Game effects)</string>
         </property>
         <layout class="QGridLayout" name="gridLayout">
          <item row="0" column="2">
