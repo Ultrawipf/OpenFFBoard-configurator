@@ -1,7 +1,7 @@
-# This file is part of the OpenMV project.
-#
+# Based on work by:
 # Copyright (c) 2013-2019 Ibrahim Abdelkader <iabdalkader@openmv.io>
 # Copyright (c) 2013-2019 Kwabena W. Agyeman <kwagyeman@openmv.io>
+# 2021 Yannick Richter, OpenFFBoard project
 #
 # This work is licensed under the MIT license, see the file LICENSE for details.
 #
@@ -19,6 +19,7 @@ import usb.util
 import zlib
 import os
 import time
+from intelhex import IntelHex # for hex support
 
 # VID/PID
 __VID = 0x0483
@@ -278,7 +279,6 @@ def compute_crc(data):
     """Computes the CRC32 value for the data passed in."""
     return 0xFFFFFFFF & -zlib.crc32(data) - 1
 
-
 def read_dfu_file(filename):
     """Reads a DFU file, and parses the individual elements from the file.
     Returns an array of elements. Each element is a dictionary with the
@@ -374,6 +374,23 @@ def read_dfu_file(filename):
 
     return elements
 
+def read_hex_file(filename):
+    """
+    -Richter 2021
+    Reads a hex file and generates flashable elements like with a dfu file
+    """
+    print("File: {}".format(filename))
+    ih = IntelHex()
+    ih.loadhex(filename)
+    segments = ih.segments()
+    
+    elements = []
+    for segId,segment in enumerate(segments):
+        size = segment[1]-segment[0]
+        dat = [ih[i] for i in range(segment[0],segment[1])]
+        elem = {"addr":segment[0],"size":size,"num":segId,"data":dat}
+        elements.append(elem)
+    return elements
 
 class FilterDFU(object):
     """Class for filtering USB devices to identify devices which are in DFU

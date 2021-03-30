@@ -47,7 +47,7 @@ class DFUModeUI(WidgetUI):
     def fileClicked(self):
         dlg = QFileDialog()
         dlg.setFileMode(QFileDialog.ExistingFile)
-        dlg.setNameFilters(["DFU files (*.dfu)"])
+        dlg.setNameFilters(["Firmware files (*.hex *.dfu)","DFU files (*.dfu)","Intel hex files (*.hex)"])
         if dlg.exec_():
             filenames = dlg.selectedFiles()
             self.selectFile(filenames[0])
@@ -60,9 +60,17 @@ class DFUModeUI(WidgetUI):
         self.label_filename.setText(self.selectedFile)
 
     def uploadClicked(self):
-        elements = pydfu.read_dfu_file(self.selectedFile)
+
+        if(self.selectedFile.endswith("dfu")):
+            elements = pydfu.read_dfu_file(self.selectedFile)
+        elif(self.selectedFile.endswith("hex")):
+            elements = pydfu.read_hex_file(self.selectedFile)
+        else:
+            self.log("Not a known firmware file")
+            return
+
         if not elements:
-            self.log("Error parsing DFU file")
+            self.log("Error parsing file")
             return
         mass_erase = self.checkBox_massErase.isChecked()
         self.groupbox_controls.setEnabled(False)
