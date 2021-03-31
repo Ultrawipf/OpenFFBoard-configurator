@@ -94,7 +94,7 @@ class SPIButtonsConf(OptionsDialogGroupBox):
         OptionsDialogGroupBox.__init__(self,name,main)
 
     def getPrefix(self):
-        return f"spi{self.id}_"
+        return f"{self.id}.spi_"
    
     def initUI(self):
         vbox = QVBoxLayout()
