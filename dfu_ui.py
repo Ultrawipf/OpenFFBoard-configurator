@@ -7,6 +7,7 @@ from PyQt5.QtWidgets  import QFileDialog,QMessageBox,QApplication
 class DFUModeUI(WidgetUI):
     selectedFile = None
     dfuDevice = None
+    firstFail = True
     def __init__(self, main=None,device = None):
             WidgetUI.__init__(self, main,'dfu.ui')
             self.groupbox_controls.setEnabled(False)
@@ -26,11 +27,14 @@ class DFUModeUI(WidgetUI):
 
     def initUi(self):
         self.log("Searching devices...")
+        
         dfu_devices = pydfu.get_dfu_devices(idVendor=0x0483, idProduct=0xdf11)
         if not dfu_devices:
             # No devices found
             self.log("No DFU device found. Retrying")
-
+            if self.firstFail:
+                self.log("Make sure the bootloader is detected and drivers installed. Short boot0 to force the bootloader when connecting")
+                self.firstFail = False
         elif len(dfu_devices) > 1:
             self.log("Found multiple DFU devices:" + str(dfu_devices))
             self.log("Please disconnect other DFU devices to avoid mistakes")
@@ -58,9 +62,6 @@ class DFUModeUI(WidgetUI):
     def selectFile(self,filename):
         self.selectedFile = filename
         self.label_filename.setText(self.selectedFile)
-
-    def uploadClicked(self):
-
         if(self.selectedFile.endswith("dfu")):
             elements = pydfu.read_dfu_file(self.selectedFile)
         elif(self.selectedFile.endswith("hex")):
@@ -72,12 +73,19 @@ class DFUModeUI(WidgetUI):
         if not elements:
             self.log("Error parsing file")
             return
+        size = sum([e["size"] for e in elements])
+        self.log("Loaded {} segments with {} bytes".format(len(elements), size))
+        self.elements = elements
+
+    def uploadClicked(self):
+
+        elements = self.elements
         mass_erase = self.checkBox_massErase.isChecked()
         self.groupbox_controls.setEnabled(False)
         if(mass_erase):
             self.fullErase()
         
-        self.log("Uploading... Do NOT close this window or disconnect!")
+        self.log("Uploading {} segments... Do NOT close this window or disconnect until done!".format(len(elements)))
         try:
             pydfu.write_elements(elements, mass_erase, progress=self.progress)
             self.log("Uploaded!")
@@ -86,7 +94,7 @@ class DFUModeUI(WidgetUI):
             self.log("USB Exception during flashing... Please reflash firmware!")
 
         pydfu.exit_dfu()
-        self.log("Please reset")
+        self.log("Done. Please reset")
         self.groupbox_controls.setEnabled(True)
 
     def fullEraseClicked(self):

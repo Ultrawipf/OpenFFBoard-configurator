@@ -383,7 +383,7 @@ def read_hex_file(filename):
     ih = IntelHex()
     ih.loadhex(filename)
     segments = ih.segments()
-    
+    print("Segments:",segments)
     elements = []
     for segId,segment in enumerate(segments):
         size = segment[1]-segment[0]
@@ -470,7 +470,7 @@ def write_elements(elements, mass_erase_used, progress=None):
     """Writes the indicated elements into the target memory,
     erasing as needed.
     """
-
+    erased = []
     mem_layout = get_memory_layout(__dev)
     for elem in elements:
         addr = elem['addr']
@@ -484,15 +484,16 @@ def write_elements(elements, mass_erase_used, progress=None):
             write_size = size
             if not mass_erase_used:
                 for segment in mem_layout:
-                    if addr >= segment['addr'] and \
-                       addr <= segment['last_addr']:
+                    page_size = segment['page_size']
+                    page_addr = addr & ~(page_size - 1)
+                    if addr >= segment['addr'] and addr <= segment['last_addr'] and (page_addr not in erased):
                         # We found the page containing the address we want to
-                        # write, erase it
-                        page_size = segment['page_size']
-                        page_addr = addr & ~(page_size - 1)
+                        # write, erase it if not already erased by a different element
+                        # Save if page was erased
                         if addr + write_size > page_addr + page_size:
                             write_size = page_addr + page_size - addr
                         page_erase(page_addr)
+                        erased.append(page_addr)
                         break
             write_memory(addr, data[:write_size], progress,
                          elem_addr, elem_size)
