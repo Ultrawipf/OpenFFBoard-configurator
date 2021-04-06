@@ -50,7 +50,7 @@ class SerialComms(QObject):
         text = data.data().decode("utf-8")
 
         ################################
-        def process_cmd(entry): 
+        def process_cmd(entry):
             for i,reply in enumerate(entry["replies"]):
                 if(entry["convert"]):
                     entry["replies"][i] = entry["convert"](reply) #apply conversion
@@ -80,16 +80,20 @@ class SerialComms(QObject):
             sendqueue_elem = None
             # For all pending commands in queue (Should always be the first!)
             for elem in enumerate(self.serialQueue):
-                cmdnames = elem[1]["cmds"]
-                if(cmd_reply in cmdnames):
-                    sendqueue_elem = elem[1]
-                    sendqueue_elem["replies"].append(reply_val)
-                    sendqueue_elem["cmds"].remove(cmd_reply) # reply found. remove cmd so this entry is not found for additional replies of the same name if slow
-                    if not (len(sendqueue_elem["replies"]) < sendqueue_elem["len"]):
-                        # finished with all commands?
-                        process_cmd(sendqueue_elem)
-                        del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
-                    break
+                try:
+                    cmdnames = elem[1]["cmds"]
+                    if(cmd_reply in cmdnames):
+                        sendqueue_elem = elem[1]
+                        sendqueue_elem["replies"].append(reply_val)
+                        sendqueue_elem["cmds"].remove(cmd_reply) # reply found. remove cmd so this entry is not found for additional replies of the same name if slow
+                        if not (len(sendqueue_elem["replies"]) < sendqueue_elem["len"]):
+                            # finished with all commands?
+                            process_cmd(sendqueue_elem)
+                            del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
+                        break
+                except:
+                     self.main.serialchooser.serialLog("Error while processing reply {}".format(cmd_reply))
+
             
             # Persistent callbacks
             for elem in self.persistentCallbacks:

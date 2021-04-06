@@ -175,7 +175,7 @@ class TMC4671Ui(WidgetUI):
             self.getTMCChan()
 
             self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.serialWrite("fluxoffset="+str(v)+";"))
-            self.spinBox_tmc.valueChanged.connect(lambda v : self.serialWrite("tmc="+str(v)+";"))
+            self.spinBox_tmc.valueChanged.connect(lambda v : self.serialWrite("tmccs="+str(v)+";"))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
         except Exception as e:
@@ -218,7 +218,7 @@ class TMC4671Ui(WidgetUI):
 
 
     def getTMCChan(self):
-        self.serialGetAsync("tmc?",self.spinBox_tmc.setValue,convert=int)
+        self.serialGetAsync("tmccs?",self.spinBox_tmc.setValue,convert=int)
 
     def serialWrite(self,cmd):
         cmd = self.axis+"."+cmd
