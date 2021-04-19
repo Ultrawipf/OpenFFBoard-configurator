@@ -12,9 +12,7 @@ from base_ui import WidgetUI
 from encoderconf_ui import EncoderOptions
 
 class AxisUI(WidgetUI):
-
-    amp_gain = 60
-    shunt_ohm = 0.0015
+    adc_to_amps = 0
     
     drvClasses = {}
     drvIds = []
@@ -80,14 +78,18 @@ class AxisUI(WidgetUI):
 
     def rangeChanged(self):
         self.horizontalSlider_degrees.setValue(self.spinBox_range.value())
-     
+    
+    def setCurrentScaler(self,x):
+        if(x):
+            self.adc_to_amps = x
+            self.power_changed(self.horizontalSlider_power.value())
+
     def power_changed(self,val):
         self.serialWrite("power="+str(val)+"\n")
         text = str(val)
         # If tmc is used show a current estimate
-        if(self.drvId == 1):
-            v = (2.5/0x7fff) * val
-            current = (v / self.amp_gain) / self.shunt_ohm
+        if(self.drvId == 1 and self.adc_to_amps != 0):
+            current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
      
         self.label_power.setText(text)
@@ -135,6 +137,7 @@ class AxisUI(WidgetUI):
   
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
+            self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
         callbacks = [
