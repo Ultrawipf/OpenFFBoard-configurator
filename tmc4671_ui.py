@@ -15,9 +15,8 @@ import pyqtgraph as pg
 
 class TMC4671Ui(WidgetUI):
 
-    amp_gain = 60
-    shunt_ohm = 0.0015
     max_datapoints = 1000
+    adc_to_amps = 2.5 / (0x7fff * 60.0 * 0.0015)
 
     axis = 'x'
     
@@ -68,8 +67,7 @@ class TMC4671Ui(WidgetUI):
    
         try:
             current = abs(float(current))
-            v = (2.5/0x7fff) * current
-            amps = round((v / self.amp_gain) / self.shunt_ohm,3)
+            amps = round(current * self.adc_to_amps,3)
             self.label_Current.setText(str(amps)+"A")
 
             self.progressBar_power.setValue(current)
@@ -216,8 +214,12 @@ class TMC4671Ui(WidgetUI):
         commands = ["pidPrec?","torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
         self.serialGetAsync(commands,callbacks,convert=int)
 
+    def setCurrentScaler(self,x):
+        if(x):
+            self.adc_to_amps = x
 
     def getTMCChan(self):
+        self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
         self.serialGetAsync("tmccs?",self.spinBox_tmc.setValue,convert=int)
 
     def serialWrite(self,cmd):
