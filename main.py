@@ -184,7 +184,7 @@ class MainUi(QMainWindow):
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                elif cl["name"] == "TMC4671":
+                elif cl["name"].startswith("TMC4671"):
                     c = tmc4671_ui.TMC4671Ui(main = self,unique = cl["unique"])
                     n = cl["name"]+':'+c.axis.upper()
                     self.activeClasses[name] = c

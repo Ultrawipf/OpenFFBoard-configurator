@@ -81,63 +81,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QGroupBox" name="groupBox_5">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="title">
-         <string>TMC Driver SPI Address</string>
-        </property>
-        <widget class="QSpinBox" name="spinBox_tmc">
-         <property name="geometry">
-          <rect>
-           <x>130</x>
-           <y>100</y>
-           <width>98</width>
-           <height>20</height>
-          </rect>
-         </property>
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="suffix">
-          <string/>
-         </property>
-         <property name="prefix">
-          <string>SPI Addr </string>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>3</number>
-         </property>
-        </widget>
-        <widget class="QLabel" name="label_14">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>20</y>
-           <width>231</width>
-           <height>61</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Select the physical TMC Driver board that this configuration refers to. The SPI address (1-3)  is configured by a solder-link on the bottom layer of the driver circuit board.</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </widget>
-      </item>
       <item row="4" column="2">
        <widget class="QGroupBox" name="groupBox_4">
         <property name="maximumSize">
