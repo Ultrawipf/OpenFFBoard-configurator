@@ -47,6 +47,7 @@ class AxisUI(WidgetUI):
         self.checkBox_invert.stateChanged.connect(lambda val : self.serialWrite("invert="+("0" if val == 0 else "1")+"\n"))
 
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
+        self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
         if(self.initUi()):
             tabId = self.main.addTab(self,"FFB Axis")
@@ -102,11 +103,12 @@ class AxisUI(WidgetUI):
         text = str(round(100*ratio,1)) + "%"
         self.label_fxratio.setText(text)
 
+    def submitEnc(self):
+        self.encoderChanged(self.comboBox_encoder.currentIndex())
 
     def submitHw(self):
         #val = self.spinBox_cpr.value()
         self.driverChanged(self.comboBox_driver.currentIndex())
-        self.encoderChanged(self.comboBox_encoder.currentIndex())
         #self.serialWrite("cpr="+str(val)+"\n")
 
 
@@ -195,6 +197,11 @@ class AxisUI(WidgetUI):
         self.serialGetAsync("enctype!",f)
         
         def encid_f(id):
+            if(id == 255):
+                self.groupBox_encoder.setVisible(False)
+                return
+            else:
+                self.groupBox_encoder.setVisible(True)
             if(id == None):
                 self.main.log("Error getting encoder")
                 return
