@@ -101,7 +101,7 @@ class SPIButtonsConf(OptionsDialogGroupBox):
         vbox.addWidget(QLabel("Buttons"))
         self.numBtnBox = QSpinBox()
         self.numBtnBox.setMinimum(0)
-        self.numBtnBox.setMaximum(32)
+        self.numBtnBox.setMaximum(64)
         vbox.addWidget(self.numBtnBox)
 
         vbox.addWidget(QLabel("Mode"))

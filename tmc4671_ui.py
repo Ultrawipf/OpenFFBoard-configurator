@@ -49,6 +49,7 @@ class TMC4671Ui(WidgetUI):
         pass
 
     def showEvent(self,event):
+        self.initUi()
         self.timer.start(50)
         self.timer_status.start(250)
 
