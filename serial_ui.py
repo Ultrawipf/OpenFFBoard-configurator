@@ -5,7 +5,7 @@ from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo
 from PyQt5.QtCore import QIODevice,pyqtSignal
 import main
 from base_ui import WidgetUI
-from helper import classlistToIds
+from helper import classlistToIds,updateClassComboBox
 from PyQt5.QtWidgets import QMessageBox
 
 class SerialChooser(WidgetUI):
@@ -108,9 +108,9 @@ class SerialChooser(WidgetUI):
                 self.groupBox_system.setEnabled(False)
                 return
             self.groupBox_system.setEnabled(True)
-            for c in self.classes:
-                self.comboBox_main.addItem(c[1])
-            self.comboBox_main.setCurrentIndex(self.classIds[self.mainID][0])
+
+            updateClassComboBox(self.comboBox_main,self.classIds,self.classes,self.mainID)
+
             self.main.log("Detected mode: "+self.comboBox_main.currentText())
             self.main.updateTabs()
 

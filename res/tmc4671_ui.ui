@@ -110,7 +110,7 @@
          <item row="1" column="0" colspan="2">
           <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Can increase max speed.&lt;/p&gt;&lt;p&gt;Caution! Too high will cause&lt;br/&gt;overshoot or even runaway!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Can increase max speed on steppers.&lt;/p&gt;&lt;p&gt;Caution! Too high will cause&lt;br/&gt;instability or oscillation!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>

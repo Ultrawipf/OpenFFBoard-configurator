@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QToolButton 
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
 from PyQt5 import uic
-from helper import res_path,classlistToIds
+from helper import res_path,classlistToIds,updateClassComboBox
 from PyQt5.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
@@ -12,7 +12,7 @@ from base_ui import WidgetUI
 from encoderconf_ui import EncoderOptions
 
 class AxisUI(WidgetUI):
-    adc_to_amps = 0
+    adc_to_amps = 0.0
     
     drvClasses = {}
     drvIds = []
@@ -71,6 +71,7 @@ class AxisUI(WidgetUI):
 
     # Tab is currently shown
     def showEvent(self,event):
+        self.initUi() # update everything
         self.timer.start(500)
 
     # Tab is hidden
@@ -136,10 +137,9 @@ class AxisUI(WidgetUI):
     
     def updateSliders(self):
         commands = ["power?","degrees?","fxratio?","esgain?","idlespring?","axisdamper?"]
-  
         if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
-            self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
+            self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)       
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
         callbacks = [
@@ -157,17 +157,15 @@ class AxisUI(WidgetUI):
     def getMotorDriver(self):
         def drvtypecb(dat):
             l,i = dat
-            self.comboBox_driver.clear()
             self.drvIds,self.drvClasses = classlistToIds(l)
+            self.drvId = int(i)
+
             if(i == None):
                 self.main.log("Error getting driver")
                 return
-            self.drvId = int(i)
-            for c in self.drvClasses:
-                self.comboBox_driver.addItem(c[1])
 
-            if(self.drvId in self.drvIds and self.comboBox_driver.currentIndex() != self.drvIds[self.drvId][0]):
-                self.comboBox_driver.setCurrentIndex(self.drvIds[self.drvId][0])
+            updateClassComboBox(self.comboBox_driver,self.drvIds,self.drvClasses,self.drvId)
+
             self.updateSliders()
         self.serialGetAsync(["drvtype!","drvtype?"],drvtypecb)
        
@@ -178,10 +176,7 @@ class AxisUI(WidgetUI):
         self.stackedWidget_encoder.setCurrentWidget(self.encWidgets[id])
 
     def getEncoder(self):
-        #self.comboBox_encoder.currentIndexChanged.disconnect()
-        #self.spinBox_cpr.setEnabled(True)
-
-        
+       
         def f(dat):
             self.comboBox_encoder.clear()
             self.encWidgets.clear()
@@ -190,6 +185,9 @@ class AxisUI(WidgetUI):
             for c in self.encClasses:
                 self.comboBox_encoder.addItem(c[1],c[0])
                 id = c[0]
+                creatable = c[2]
+                self.comboBox_encoder.model().item(self.encIds[c[0]][0]).setEnabled(creatable)
+
                 if(id not in self.encWidgets or self.stackedWidget_encoder.indexOf(self.encWidgets[id]) == -1):
                     self.encWidgets[id] = EncoderOptions(self.main,id)
                     self.stackedWidget_encoder.addWidget(self.encWidgets[id])

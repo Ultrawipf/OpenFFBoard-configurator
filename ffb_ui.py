@@ -169,14 +169,20 @@ class FfbUI(WidgetUI):
                 enabled = types & (1<<c[0]) != 0
                 btn.setChecked(enabled)
 
+                creatable = c[2]
+                btn.setEnabled(creatable)
+
                 confbutton = QToolButton(self)
                 confbutton.setText(">")
                 layout.addWidget(confbutton,row,1)
                 self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
                 confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
-                confbutton.setEnabled(enabled)
+                confbutton.setEnabled(enabled and creatable)
                 self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
                 row+=1
+
+                
+
 
             self.groupBox_buttons.setLayout(layout)
         self.main.comms.serialGetAsync(["lsbtn","btntypes?"],cb_buttonSources)
@@ -203,6 +209,7 @@ class FfbUI(WidgetUI):
             #add buttons
             row = 0
             for c in self.axisClasses:
+                creatable = c[2]
                 btn=QCheckBox(str(c[1]),self.groupBox_buttons)
                 self.axisbtns.addButton(btn,c[0])
                 layout.addWidget(btn,row,0)
@@ -217,6 +224,9 @@ class FfbUI(WidgetUI):
                 confbutton.setEnabled(enabled)
                 self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
                 row+=1
+       
+                confbutton.setEnabled(creatable)
+                btn.setEnabled(creatable)
 
             self.groupBox_analogaxes.setLayout(layout)
         self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
