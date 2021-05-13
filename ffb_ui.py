@@ -35,6 +35,9 @@ class FfbUI(WidgetUI):
         self.axisbtns.setExclusive(False)
 
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
+        self.horizontalSlider_CFq.valueChanged.connect(self.cffilterQ_changedSlider)
+        self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(val * 100))
+
         self.horizontalSlider_spring.valueChanged.connect(lambda val : self.main.comms.serialWrite("spring="+str(val)+"\n"))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.main.comms.serialWrite("damper="+str(val)+"\n"))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
@@ -236,15 +239,29 @@ class FfbUI(WidgetUI):
         freq = max(min(v,500),0)
         self.main.comms.serialWrite("ffbfiltercf="+str(freq)+"\n")
         lbl = str(freq)+"Hz"
+        
+        qOn = True
         if(freq == 500):
             lbl = "Off"
+            qOn = False
+            
+        self.horizontalSlider_CFq.setEnabled(qOn)
+        self.doubleSpinBox_CFq.setEnabled(qOn)
         self.label_cffilter.setText(lbl)
+
+    def cffilterQ_changedSlider(self,qInt):
+        # 0 to 127
+        qF = qInt * 0.01
+        if(self.doubleSpinBox_CFq.value != qF):
+            self.doubleSpinBox_CFq.setValue(qF)
+        self.main.comms.serialWrite("ffbfiltercf_q="+str(qInt)+"\n")
 
 
     def updateSliders(self):
-        commands = ["ffbfiltercf?","spring?","damper?","friction?","inertia?"]
+        commands = ["ffbfiltercf_q?","ffbfiltercf?","spring?","damper?","friction?","inertia?"]
   
         callbacks = [
+        self.horizontalSlider_CFq.setValue,
         self.horizontalSlider_cffilter.setValue,
         self.horizontalSlider_spring.setValue,
         self.horizontalSlider_damper.setValue,
