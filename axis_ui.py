@@ -84,17 +84,19 @@ class AxisUI(WidgetUI):
     def setCurrentScaler(self,x):
         if(x):
             self.adc_to_amps = x
-            self.power_changed(self.horizontalSlider_power.value())
+            self.updatePowerLabel(self.horizontalSlider_power.value())
 
-    def power_changed(self,val):
-        self.serialWrite("power="+str(val)+"\n")
+    def updatePowerLabel(self,val):
         text = str(val)
         # If tmc is used show a current estimate
         if(self.drvId == 1 and self.adc_to_amps != 0):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
-     
         self.label_power.setText(text)
+
+    def power_changed(self,val):
+        self.serialWrite("power="+str(val)+"\n")
+        self.updatePowerLabel(val)
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
@@ -151,7 +153,7 @@ class AxisUI(WidgetUI):
         self.horizontalSlider_damper.setValue]
 
         self.serialGetAsync(commands,callbacks,convert=int)
-        self.power_changed(self.horizontalSlider_power.value())
+        self.updatePowerLabel(self.horizontalSlider_power.value())
 
 
     def getMotorDriver(self):
