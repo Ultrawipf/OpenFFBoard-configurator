@@ -71,7 +71,6 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.errorsDialog.setEnabled)
         self.errorsDialog.setEnabled(False)
 
-        self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
 
         self.actionSave_chip_config.triggered.connect(self.saveConfig)
@@ -85,9 +84,6 @@ class MainUi(QMainWindow):
         layout.addWidget(self.systemUi)
         self.groupBox_main.setLayout(layout)
 
-    def ffbwizard(self):
-        msg = QMessageBox(QMessageBox.Information,"Wizard","Not implemented")
-        msg.exec_()
 
     def dfuUploader(self):
         msg = QDialog()#QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
