@@ -82,13 +82,6 @@
     <property name="title">
      <string>Extras</string>
     </property>
-    <widget class="QMenu" name="menuWizards">
-     <property name="title">
-      <string>Wizards</string>
-     </property>
-     <addaction name="actionFFB_Wheel_TMC_wizard"/>
-    </widget>
-    <addaction name="menuWizards"/>
     <addaction name="actionDFU_Uploader"/>
     <addaction name="actionSave_chip_config"/>
     <addaction name="actionRestore_chip_config"/>

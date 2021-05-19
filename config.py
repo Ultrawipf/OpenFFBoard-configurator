@@ -26,6 +26,5 @@ def loadDump():
         with open(fname,"r") as f:
             dump = json.load(f)
         return dump
-
     else:
         return None
