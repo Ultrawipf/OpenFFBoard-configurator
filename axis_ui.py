@@ -49,9 +49,7 @@ class AxisUI(WidgetUI):
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
-        if(self.initUi()):
-            tabId = self.main.addTab(self,"FFB Axis")
-            self.main.selectTab(tabId)
+        tabId = self.main.addTab(self,"FFB Axis")
 
         self.pushButton_center.clicked.connect(lambda : self.serialWrite("zeroenc\n"))
 

@@ -5,7 +5,7 @@ from collections import deque
 import re
 
 class SerialComms(QObject):
-   
+    replytext = ""
     def __init__(self,main,serialport):
         QObject.__init__(self)
         self.serial = serialport
@@ -45,9 +45,16 @@ class SerialComms(QObject):
         if(self.waitForRead):
             self.waitForRead=False
             return
-
         data = self.serial.readAll()
-        text = data.data().decode("utf-8")
+        newReply = data.data().decode("utf-8")
+        self.replytext += newReply # Buffer replies until newline found at end of buffer
+        if(self.replytext.endswith("\n")):
+            self.processReplies()
+
+    def processReplies(self):
+
+        text = self.replytext
+        self.replytext = ""
 
         ################################
         def process_cmd(entry):
@@ -74,6 +81,9 @@ class SerialComms(QObject):
                 self.main.serialchooser.serialLog("Log: "+replytext[1::])
                 continue
             reply = replytext.split(":",1)
+            if(len(reply) != 2):
+                #print(reply)
+                continue
             cmd_reply = reply[0]
             reply_val = reply[1]
             
@@ -91,8 +101,11 @@ class SerialComms(QObject):
                             process_cmd(sendqueue_elem)
                             del self.serialQueue[elem[0]] # delete only when all replies received and not persistent entry
                         break
-                except:
-                     self.main.serialchooser.serialLog("Error while processing reply {}".format(cmd_reply))
+                except Exception as e:
+                  
+                    raise e
+                    
+                    self.main.serialchooser.serialLog("Error while processing reply {}.\nError:{}\n".format(cmd_reply,e))
 
             
             # Persistent callbacks
