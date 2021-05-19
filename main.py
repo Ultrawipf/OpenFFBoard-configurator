@@ -107,6 +107,8 @@ class MainUi(QMainWindow):
 
     def loadConfig(self):
         dump = config.loadDump()
+        if not dump:
+            return
         for e in dump["flash"]:
             cmd = "flashraw?{}={}\n".format(e["addr"], e["val"])
             self.comms.serialWrite(cmd)
