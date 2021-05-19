@@ -8,31 +8,22 @@ def saveDump(buf):
             break
         addr,val = l.split(":")
         dump["flash"].append({"addr":addr,"val":val})
-    
-    dlg = QFileDialog()
-    dlg.setFileMode(QFileDialog.AnyFile)
-    dlg.setNameFilters(["Json files (*.json)"])
-    if dlg.exec_():
-        filenames = dlg.selectedFiles()
-        try:
-            with open(filenames[0],"w") as f:
-                json.dump(dump,f)
-            msg = QMessageBox(QMessageBox.Information,"Save flash dump","Saved successfully.")
-            msg.exec_()
-        except Exception as e:
-            msg = QMessageBox(QMessageBox.Warning,"Save flash dump","Error while saving flash dump:\n"+str(e))
-            msg.exec_()
-    else:
-        return
+    fname,_ = QFileDialog.getSaveFileName( directory = 'dump.json' ,filter  = "Json files (*.json)")
+    try:
+        with open(fname,"w") as f:
+            json.dump(dump,f)
+        msg = QMessageBox(QMessageBox.Information,"Save flash dump","Saved successfully.")
+        msg.exec_()
+    except Exception as e:
+        msg = QMessageBox(QMessageBox.Warning,"Save flash dump","Error while saving flash dump:\n"+str(e))
+        msg.exec_()
+
 
 def loadDump():
-    dlg = QFileDialog()
-    dlg.setFileMode(QFileDialog.ExistingFile)
-    dlg.setNameFilters(["Json files (*.json)"])
-    if dlg.exec_():
+    fname,_ = QFileDialog.getOpenFileName(directory = 'dump.json' ,filter  = "Json files (*.json)")
+    if fname:
         dump = {}
-        filenames = dlg.selectedFiles()
-        with open(filenames[0],"r") as f:
+        with open(fname,"r") as f:
             dump = json.load(f)
         return dump
 
