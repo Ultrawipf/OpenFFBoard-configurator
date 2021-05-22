@@ -23,3 +23,4 @@ Dependencies:
 PyQt5
 pyqtgraph (For TMC graph)
 pyusb and libusb-1.0.dll for DFU
+intelhex for uploading hex files
