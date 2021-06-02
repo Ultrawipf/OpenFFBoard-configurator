@@ -173,7 +173,7 @@ class FfbUI(WidgetUI):
                 btn.setChecked(enabled)
 
                 creatable = c[2]
-                btn.setEnabled(creatable)
+                btn.setEnabled(creatable or enabled)
 
                 confbutton = QToolButton(self)
                 confbutton.setText(">")
@@ -228,8 +228,8 @@ class FfbUI(WidgetUI):
                 self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
                 row+=1
        
-                confbutton.setEnabled(creatable)
-                btn.setEnabled(creatable)
+                confbutton.setEnabled(creatable or enabled)
+                btn.setEnabled(creatable or enabled)
 
             self.groupBox_analogaxes.setLayout(layout)
         self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
