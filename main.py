@@ -27,6 +27,7 @@ import pwmdriver_ui
 import serial_comms
 import midi_ui
 import errors
+import tmcdebug_ui
 
 class MainUi(QMainWindow):
     serial = None
@@ -195,6 +196,10 @@ class MainUi(QMainWindow):
                     self.systemUi.setSaveBtn(True)
                 elif cl["name"] == "MIDI":
                     c = midi_ui.MidiUI(main = self)
+                    self.activeClasses[name] = c
+                    self.addTab(c,cl["name"])
+                elif cl["name"] == "TMC Debug Bridge":
+                    c = tmcdebug_ui.TMCDebugUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
                     
