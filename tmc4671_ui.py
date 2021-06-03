@@ -157,7 +157,6 @@ class TMC4671Ui(WidgetUI):
             self.checkBox_P_Precision.setChecked(False)
             self.checkBox_I_Precision.setChecked(False)
    
-
     def initUi(self):
         try:
             # Fill encoder source types
@@ -168,6 +167,7 @@ class TMC4671Ui(WidgetUI):
                     e = s.split("=")
                     self.comboBox_enc.addItem(e[0],e[1])
             self.serialGetAsync("encsrc!",encs)
+            self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)
 
             self.getMotor()
             self.getPids()
