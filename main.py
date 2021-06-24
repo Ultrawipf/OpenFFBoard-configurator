@@ -203,7 +203,7 @@ class MainUi(QMainWindow):
                     c = tmcdebug_ui.TMCDebugUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
-                elif cl["name"].startswith("Odrive"):
+                elif cl["name"].startswith("ODrive"):
                     c = odrive_ui.OdriveUI(main = self,unique = cl["unique"])
                     n = cl["name"]
                     self.activeClasses[name] = c

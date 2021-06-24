@@ -17,6 +17,7 @@ class OdriveUI(WidgetUI):
         self.timer = QTimer(self)
         self.initUi()
         self.pushButton_apply.clicked.connect(self.apply)
+        #self.pushButton_anticogging.clicked.connect(self.antigoggingBtn) #TODO test first
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
         
@@ -34,6 +35,19 @@ class OdriveUI(WidgetUI):
         self.main.comms.serialGetAsync("odriveCanSpd?",self.updateCanSpd,int,self.prefix)
         self.main.comms.serialGetAsync("odriveMaxTorque?",self.updateTorque,int,self.prefix)
     
+    # def antigoggingBtn(self):
+    #     def anticogging( btn):
+    #         cmd = btn.text()
+    #         if(cmd=="OK"):
+    #             self.main.comms.serialWrite("odriveAnticogging=1\n")
+
+    #     msg = QMessageBox()
+    #     msg.setIcon(QMessageBox.Warning)
+    #     msg.setText("Start Anticogging calibration?\nThis can take a very long time or may not work if the position controller is not tuned!")
+    #     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    #     msg.buttonClicked.connect(anticogging)
+    #     msg.exec_()
+
     def updateCanSpd(self,preset):
         self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
 
