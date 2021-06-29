@@ -36,7 +36,9 @@ class TMC4671Ui(WidgetUI):
         self.timer_status.timeout.connect(self.updateStatus)
 
         self.curveAmp = self.graphWidget_Amps.plot(pen='y')
+        self.curveTemp = self.graphWidget_Amps.plot(pen='r')
         self.curveAmpData = [0]
+        self.curveTempData = [0]
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
@@ -77,6 +79,9 @@ class TMC4671Ui(WidgetUI):
             self.curveAmpData.append(amps)
             self.curveAmp.setData(self.curveAmpData)
 
+
+
+
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
 
@@ -84,6 +89,10 @@ class TMC4671Ui(WidgetUI):
         if(t > 150 or t < -20):
             return
         self.label_Temp.setText(str(round(t,2)) + "°C")
+
+        self.curveTempData = self.curveTempData[max(len(self.curveTempData) - self.max_datapoints, 0):]
+        self.curveTempData.append(t*0.1) # 40°C to 4.0
+        self.curveTemp.setData(self.curveTempData)
     
     def updateVolt(self,v):
         t = "Mot: {:2.2f}V".format(v[0]/1000)
