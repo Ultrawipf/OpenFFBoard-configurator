@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
 from PyQt5 import uic
 from helper import res_path,classlistToIds
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QTime
 import main
 from base_ui import WidgetUI
 
@@ -15,7 +15,11 @@ import pyqtgraph as pg
 
 class TMC4671Ui(WidgetUI):
 
-    max_datapoints = 1000
+    max_datapoints_current = 1000
+    max_datapoints_temp = 245
+    # Temp data have lower refresh rate, so it will appear longer on the graph (if using same max_datapoint),
+    # maybe change max data point to max time?
+
     adc_to_amps = 2.5 / (0x7fff * 60.0 * 0.0015)
 
     axis = 'x'
@@ -28,6 +32,10 @@ class TMC4671Ui(WidgetUI):
 
         self.timer = QTimer(self)
         self.timer_status = QTimer(self)
+
+        # Internal timestamp for x-axis
+        self.timestamp = QTime()
+        self.timestamp.start()
     
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.initUi()
@@ -35,10 +43,14 @@ class TMC4671Ui(WidgetUI):
         self.timer.timeout.connect(self.updateTimer)
         self.timer_status.timeout.connect(self.updateStatus)
 
+
+        self.graphWidget_Amps.setLabel('left', "Current / Tempreture×10", units='A / °C')
+        self.graphWidget_Amps.setLabel('bottom', "Time", units='Sec')
+        self.graphWidget_Amps.showGrid(x=True, y=True, alpha=0.5)
         self.curveAmp = self.graphWidget_Amps.plot(pen='y')
         self.curveTemp = self.graphWidget_Amps.plot(pen='r')
-        self.curveAmpData = [0]
-        self.curveTempData = [0]
+        self.curveAmpData = [{'x':0,'y':0}]
+        self.curveTempData = [{'x':0,'y':0}]
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
@@ -67,7 +79,7 @@ class TMC4671Ui(WidgetUI):
             self.spinBox_poles.setEnabled(False)
 
     def updateCurrent(self,current):
-   
+
         try:
             current = abs(float(current))
             amps = round(current * self.adc_to_amps,3)
@@ -75,8 +87,9 @@ class TMC4671Ui(WidgetUI):
 
             self.progressBar_power.setValue(current)
 
-            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData)-self.max_datapoints,0):]
-            self.curveAmpData.append(amps)
+            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData) - self.max_datapoints_current, 0):]
+            self.ElaspsedTimeInSec=self.timestamp.elapsed()*0.001
+            self.curveAmpData.append({'x': self.ElaspsedTimeInSec, 'y': amps})
             self.curveAmp.setData(self.curveAmpData)
 
 
@@ -90,9 +103,10 @@ class TMC4671Ui(WidgetUI):
             return
         self.label_Temp.setText(str(round(t,2)) + "°C")
 
-        self.curveTempData = self.curveTempData[max(len(self.curveTempData) - self.max_datapoints, 0):]
-        self.curveTempData.append(t*0.1) # 40°C to 4.0
+        self.curveTempData = self.curveTempData[max(len(self.curveTempData) - self.max_datapoints_temp, 0):]
+        self.curveTempData.append({'x': self.ElaspsedTimeInSec, 'y': t*0.1}) # 40°C to 4.0
         self.curveTemp.setData(self.curveTempData)
+
     
     def updateVolt(self,v):
         t = "Mot: {:2.2f}V".format(v[0]/1000)
