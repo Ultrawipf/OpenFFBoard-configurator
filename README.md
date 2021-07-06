@@ -16,7 +16,10 @@ On older windows versions CDC drivers may not load automatically.
 Then you need to manually install for example the STM VCP driver for the device. (We will provide an installer later)
 
 
-![FFB Window](screenshots/FFBwheel.png?raw=true)
+![FFB Window](screenshots/FFBwheel_multiaxis.png?raw=true)
+
+
+![Axis Window](screenshots/Axispage.png?raw=true)
 
 Dependencies:
 

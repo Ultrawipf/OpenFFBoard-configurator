@@ -28,7 +28,9 @@ class SerialComms(QObject):
         else:
             self.main.log(reply)
 
-    def serialWrite(self,cmd):
+    def serialWrite(self,cmd,prefix=None):
+        if(prefix != None):
+            cmd=prefix+"."+cmd
         if(self.serial.isOpen()):
             self.serialGetAsync(cmd,self.checkOk)
 
@@ -147,7 +149,13 @@ class SerialComms(QObject):
      pass multiple commands and callbacks in lists
      You can also pass an additional conversion function to apply to all replies before sending to callbacks. (int or float for example)
     """
-    def serialGetAsync(self,cmds,callbacks,convert=None):
+    def serialGetAsync(self,cmds,callbacks,convert=None,prefix=None):
+        if(prefix != None):
+            if(type(cmds) == list):
+                for i in range(len(cmds)):
+                    cmds[i]=prefix+"."+cmds[i]
+            elif (type(cmds) == str):
+                cmds=prefix+"."+cmds
         if(not self.serial.isOpen()):
             return False
         if(type(cmds) == list and type(callbacks) == list): # Multiple commands and callbacks

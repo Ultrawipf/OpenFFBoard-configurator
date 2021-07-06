@@ -13,10 +13,10 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.3.10"
+version = "1.3.11"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.3.12"
+min_fw = "1.3.13"
 
 # UIs
 import system_ui
@@ -28,6 +28,7 @@ import serial_comms
 import midi_ui
 import errors
 import tmcdebug_ui
+import odrive_ui
 
 class MainUi(QMainWindow):
     serial = None
@@ -202,6 +203,13 @@ class MainUi(QMainWindow):
                     c = tmcdebug_ui.TMCDebugUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
+                elif cl["name"].startswith("ODrive"):
+                    c = odrive_ui.OdriveUI(main = self,unique = cl["unique"])
+                    n = cl["name"]
+                    self.activeClasses[name] = c
+                    self.addTab(c,n)
+                    self.systemUi.setSaveBtn(True)
+
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
         self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
