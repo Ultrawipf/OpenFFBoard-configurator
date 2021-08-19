@@ -56,12 +56,14 @@ class OdriveUI(WidgetUI):
         self.doubleSpinBox_torque.setValue(torque/100)
 
     def shorErrors(self,codes):
-        errString = ""
+        errs = []
         if(codes == 0):
-            errString = "None"
+            errs = ["None"]
+
         for i,name in enumerate(self.odriveErrors):
             if(codes & 1 << i) != 0:
-                errString += name + "\n"
+                errs.append(name)
+        errString = "\n".join(errs)
 
         self.label_errornames.setText(errString)
 
