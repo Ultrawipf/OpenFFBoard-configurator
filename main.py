@@ -29,6 +29,7 @@ import midi_ui
 import errors
 import tmcdebug_ui
 import odrive_ui
+import vesc_ui
 
 class MainUi(QMainWindow):
     serial = None
@@ -209,6 +210,13 @@ class MainUi(QMainWindow):
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
+                elif cl["name"].startswith("VESC"):
+                    c = vesc_ui.VescUI(main = self,unique = cl["unique"])
+                    n = cl["name"]
+                    self.activeClasses[name] = c
+                    self.addTab(c,n)
+                    self.systemUi.setSaveBtn(True)
+
 
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
