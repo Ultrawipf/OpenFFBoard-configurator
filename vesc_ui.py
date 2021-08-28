@@ -17,8 +17,7 @@ class VescUI(WidgetUI):
         self.timer = QTimer(self)
         self.initUi()
         self.pushButton_apply.clicked.connect(self.apply)
-        self.pushButton_startEnc.clicked.connect(self.applyStartEnc)
-        self.pushButton_stopEnc.clicked.connect(self.applyStopEnc)
+        self.pushButton_manualRead.clicked.connect(self.manualEncPosRead)
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
 
@@ -65,7 +64,7 @@ class VescUI(WidgetUI):
         self.label_state.setText(vesc_state_label)
         self.label_errors.setText(remote_state)
         self.label_encoder_rate.setText(str(dat[2]))
-        self.label_pos.setText(str(dat[3]/10000))
+        self.label_pos.setText(str((360*dat[3])/1000000000))
         self.label_torque.setText(str(dat[4]/100)) # not divide by 10000 but by 100 to display it in %
 
     def updateTimer(self):
@@ -78,11 +77,6 @@ class VescUI(WidgetUI):
         self.main.comms.serialWrite(self.prefix+"."+"vescCanId="+canId+";")
         self.initUi() # Update UI
     
-    def applyStartEnc(self):
-        self.main.comms.serialWrite(self.prefix+"."+"vescEncState=1"+";")
-        self.initUi() # Update UI
-    
-    def applyStopEnc(self):
-        self.main.comms.serialWrite(self.prefix+"."+"vescEncState=0"+";")
-        self.initUi() # Update UI
+    def manualEncPosRead(self):
+        self.main.comms.serialWrite(self.prefix+"."+"vescPosReadForce=1;")
 
