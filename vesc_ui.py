@@ -7,6 +7,7 @@ from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
 import main
 from base_ui import WidgetUI
+import math
 
 class VescUI(WidgetUI):
     prefix = None
@@ -61,11 +62,24 @@ class VescUI(WidgetUI):
         else:
             remote_state = "Error code " + str(dat[1]) + ", (use vesctool)" 
 
+        vesc_encoder_rate = dat[2]
+        vesc_encoder_position = ( 360 * dat[3] ) / 1000000000
+        vesc_torque = math.ceil(dat[4] / 100)
+
         self.label_state.setText(vesc_state_label)
         self.label_errors.setText(remote_state)
-        self.label_encoder_rate.setText(str(dat[2]))
-        self.label_pos.setText(str((360*dat[3])/1000000000))
-        self.label_torque.setText(str(dat[4]/100)) # not divide by 10000 but by 100 to display it in %
+        self.label_encoder_rate.setText(str(vesc_encoder_rate))
+        self.label_pos.setText("{:.2f}".format(vesc_encoder_position))
+        self.label_torque.setText(str(vesc_torque)) # not divide by 10000 but by 100 to display it in %
+
+        self.horizontalSlider_pos.setValue(vesc_encoder_position)
+
+        if vesc_torque >= 0:
+            self.progressBar_torqueneg.setValue(0)
+            self.progressBar_torquepos.setValue(vesc_torque)
+        else:
+            self.progressBar_torqueneg.setValue(-vesc_torque)
+            self.progressBar_torquepos.setValue(0)
 
     def updateTimer(self):
         self.main.comms.serialGetAsync(["vescState?","vescErrorFlag?","vescEncRate?","vescPos?","vescTorque?"],self.statusUpdateCb,int,self.prefix)
