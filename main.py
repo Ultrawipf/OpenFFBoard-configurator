@@ -13,7 +13,9 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.3.11"
+
+version = "1.4.0"
+
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
 min_fw = "1.3.13"
@@ -30,6 +32,7 @@ import errors
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
+
 
 class MainUi(QMainWindow):
     serial = None
@@ -216,7 +219,6 @@ class MainUi(QMainWindow):
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-
 
                     
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
