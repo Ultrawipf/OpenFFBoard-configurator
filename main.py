@@ -13,12 +13,11 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-
 version = "1.4.0"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.3.13"
+min_fw = "1.4.0"
 
 # UIs
 import system_ui
@@ -241,15 +240,14 @@ class MainUi(QMainWindow):
         self.resetTabs()
         
 
-    def versionCheck(self,versions):
-        ver,minVerGuiStr = versions
+    def versionCheck(self,ver):
+        
         self.fwverstr = ver.replace("\n","")
         if not self.fwverstr:
             self.log("Communication error")
             self.resetPort()
         
-        minVerGui = [int(i) for i in minVerGuiStr.split(".")]
-
+        #minVerGui = [int(i) for i in minVerGuiStr.split(".")]
         fwver = [int(i) for i in self.fwverstr.split(".")]
         min_fw_t = [int(i) for i in min_fw.split(".")]
         guiVersion = [int(i) for i in version.split(".")]
@@ -257,28 +255,30 @@ class MainUi(QMainWindow):
         self.log("FW v" + self.fwverstr)
         fwoutdated = False
         guioutdated = False
-        #guioutdated = minVerGui#fwver[0] > min_fw_t[0] or fwver[1] > min_fw_t[1]
 
-        for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
-            if(v[0] < v[1]): # Newer
-                break
-            # If same higher version then check minor version
-            if(v[0] > v[1]):
-                fwoutdated = True
-                break
-        for v in itertools.zip_longest(minVerGui,guiVersion,fillvalue=0):
-            if(v[0] < v[1]): # Newer
-                break
-            # If same higher version then check minor version
-            if(v[0] > v[1]):
-                guioutdated = True
-                break
+        fwoutdated = min_fw_t[0] > fwver[0] or min_fw_t[1] > fwver[1] or min_fw_t[2] > fwver[2]
+        guioutdated = min_fw_t[0] < fwver[0] or min_fw_t[1] < fwver[1]
+
+        # for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
+        #     if(v[0] < v[1]): # Newer
+        #         break
+        #     # If same higher version then check minor version
+        #     if(v[0] > v[1]):
+        #         fwoutdated = True
+        #         break
+        # for v in itertools.zip_longest(minVerGui,guiVersion,fillvalue=0):
+        #     if(v[0] < v[1]): # Newer
+        #         break
+        #     # If same higher version then check minor version
+        #     if(v[0] > v[1]):
+        #         guioutdated = True
+        #         break
 
         if guioutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\n("+minVerGuiStr+" required)\nPlease make sure both firmware and GUI are up to date.")
+            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
             msg.exec_()
         elif fwoutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\n("+min_fw+" required)\nPlease make sure both firmware and GUI are up to date.")
+            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\n("+min_fw+" required)\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
             msg.exec_()
 
 
@@ -294,7 +294,7 @@ class MainUi(QMainWindow):
                 self.connected = True
                 serialTim.stop()
                 self.log("Connected")
-                self.fwverstr = self.comms.serialGetAsync(["swver","minVerGui"],self.versionCheck)
+                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
             
         serialTim = QTimer()
         if(connected):
