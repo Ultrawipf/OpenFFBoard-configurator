@@ -27,6 +27,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="1" column="0">
+
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Axis state:</string>
@@ -37,6 +38,7 @@
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>Voltage:</string>
+
         </property>
        </widget>
       </item>
@@ -45,6 +47,7 @@
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
+
         <property name="text">
          <string>0</string>
         </property>
@@ -55,11 +58,13 @@
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
+
         <property name="text">
          <string>0</string>
         </property>
        </widget>
       </item>
+
       <item row="2" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
@@ -80,6 +85,7 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+
         </property>
        </widget>
       </item>
