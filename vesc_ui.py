@@ -19,8 +19,13 @@ class VescUI(WidgetUI):
         self.initUi()
         self.pushButton_apply.clicked.connect(self.apply)
         self.pushButton_manualRead.clicked.connect(self.manualEncPosRead)
+        self.pushButton_eraseOffset.clicked.connect(self.eraseOffset)
+        self.pushButton_refresh.clicked.connect(self.initUi)
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
+
+        self.checkBox_useEncoder.stateChanged.connect(lambda val : self.main.comms.serialWrite("vescUseEncoder="+("0" if val == 0 else "1")+"\n"))
+
 
     def vescstate(self,i):
         _result = "Invalid state"
@@ -44,10 +49,30 @@ class VescUI(WidgetUI):
     def hideEvent(self,event):
         self.timer.stop()
 
+    def updateEncoderUI(self, dat):
+        self.checkBox_useEncoder.setChecked(dat)
+        visible = dat==1
+        self.label_6.setVisible(visible)
+        self.label_encoder_rate.setVisible(visible)
+        self.label_pos.setVisible(visible)
+        self.label_7.setVisible(visible)
+        self.horizontalSlider_pos.setVisible(visible)
+        self.line.setVisible(visible)
+        self.label_9.setVisible(visible)
+        self.doubleSpinBox_encoderOffset.setVisible(visible)
+        self.pushButton_manualRead.setVisible(visible)
+        self.pushButton_eraseOffset.setVisible(visible)
+
+
     def initUi(self):
         self.main.comms.serialGetAsync("vescCanId?",self.spinBox_id.setValue,int,self.prefix)
         self.main.comms.serialGetAsync("vescCanSpd?",self.updateCanSpd,int,self.prefix)
+        self.main.comms.serialGetAsync("vescUseEncoder?",self.updateEncoderUI,int)
+        self.main.comms.serialGetAsync("vescOffset?",self.updateOffset,int)
     
+    def updateOffset(self, preset):
+        self.doubleSpinBox_encoderOffset.setValue(preset / 10000)
+
     def updateCanSpd(self,preset):
         self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
 
@@ -94,3 +119,6 @@ class VescUI(WidgetUI):
     def manualEncPosRead(self):
         self.main.comms.serialWrite(self.prefix+"."+"vescPosReadForce=1;")
 
+    def eraseOffset(self):
+        self.main.comms.serialWrite(self.prefix+"."+"vescOffset=0;")
+        self.initUi()
