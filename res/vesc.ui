@@ -283,6 +283,26 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Input voltage</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="label_voltage">
+        <property name="styleSheet">
+         <string notr="true">QLabel {
+	background : #FFFFFF;
+	border: 1px solid #DDDDDD;
+}</string>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
