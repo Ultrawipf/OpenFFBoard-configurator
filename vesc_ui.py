@@ -90,12 +90,14 @@ class VescUI(WidgetUI):
         vesc_encoder_rate = dat[2]
         vesc_encoder_position = ( 360 * dat[3] ) / 1000000000
         vesc_torque = math.ceil(dat[4] / 100)
+        vesc_voltage = dat[5] / 100
 
         self.label_state.setText(vesc_state_label)
         self.label_errors.setText(remote_state)
         self.label_encoder_rate.setText(str(vesc_encoder_rate))
         self.label_pos.setText("{:.2f}".format(vesc_encoder_position))
         self.label_torque.setText(str(vesc_torque)) # not divide by 10000 but by 100 to display it in %
+        self.label_voltage.setText(str(vesc_voltage))
 
         self.horizontalSlider_pos.setValue(vesc_encoder_position)
 
@@ -107,7 +109,7 @@ class VescUI(WidgetUI):
             self.progressBar_torquepos.setValue(0)
 
     def updateTimer(self):
-        self.main.comms.serialGetAsync(["vescState?","vescErrorFlag?","vescEncRate?","vescPos?","vescTorque?"],self.statusUpdateCb,int,self.prefix)
+        self.main.comms.serialGetAsync(["vescState?","vescErrorFlag?","vescEncRate?","vescPos?","vescTorque?","vescVoltage?"],self.statusUpdateCb,int,self.prefix)
  
     def apply(self):
         spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
