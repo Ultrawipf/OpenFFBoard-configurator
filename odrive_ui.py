@@ -65,6 +65,8 @@ class OdriveUI(WidgetUI):
         for i,name in enumerate(self.odriveErrors):
             if(codes & 1 << i) != 0:
                 errs.append(name)
+        if len(errs) == 0:
+            errs = [str(codes)]
         errString = "\n".join(errs)
 
         self.label_errornames.setText(errString)
