@@ -11,7 +11,9 @@ from base_ui import WidgetUI
 class OdriveUI(WidgetUI):
     prefix = None
     odriveStates = ["AXIS_STATE_UNDEFINED","AXIS_STATE_IDLE","AXIS_STATE_STARTUP_SEQUENCE","AXIS_STATE_FULL_CALIBRATION_SEQUENCE","AXIS_STATE_MOTOR_CALIBRATION","-","AXIS_STATE_ENCODER_INDEX_SEARCH","AXIS_STATE_ENCODER_OFFSET_CALIBRATION","AXIS_STATE_CLOSED_LOOP_CONTROL","AXIS_STATE_LOCKIN_SPIN","AXIS_STATE_ENCODER_DIR_FIND","AXIS_STATE_HOMING","AXIS_STATE_ENCODER_HALL_POLARITY_CALIBRATION","AXIS_STATE_ENCODER_HALL_PHASE_CALIBRATION"]
-    odriveErrors = ["ODRIVE_ERROR_CONTROL_ITERATION_MISSED","ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE","ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE","ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT","ODRIVE_ERROR_DC_BUS_OVER_CURRENT","ODRIVE_ERROR_BRAKE_DEADTIME_VIOLATION","ODRIVE_ERROR_BRAKE_DUTY_CYCLE_NAN","ODRIVE_ERROR_INVALID_BRAKE_RESISTANCE"]
+    #odriveErrors = #["ODRIVE_ERROR_CONTROL_ITERATION_MISSED","ODRIVE_ERROR_DC_BUS_UNDER_VOLTAGE","ODRIVE_ERROR_DC_BUS_OVER_VOLTAGE","ODRIVE_ERROR_DC_BUS_OVER_REGEN_CURRENT","ODRIVE_ERROR_DC_BUS_OVER_CURRENT","ODRIVE_ERROR_BRAKE_DEADTIME_VIOLATION","ODRIVE_ERROR_BRAKE_DUTY_CYCLE_NAN","ODRIVE_ERROR_INVALID_BRAKE_RESISTANCE"]
+    odriveErrors = {"AXIS_ERROR_NONE" : 0x00000000,"AXIS_ERROR_INVALID_STATE" : 0x00000001, "AXIS_ERROR_WATCHDOG_TIMER_EXPIRED" : 0x00000800,"AXIS_ERROR_MIN_ENDSTOP_PRESSED" : 0x00001000, "AXIS_ERROR_MAX_ENDSTOP_PRESSED" : 0x00002000,"AXIS_ERROR_ESTOP_REQUESTED" : 0x00004000,"AXIS_ERROR_HOMING_WITHOUT_ENDSTOP" : 0x00020000,"AXIS_ERROR_OVER_TEMP": 0x00040000,"AXIS_ERROR_UNKNOWN_POSITION" : 0x00080000}
+
 
     def __init__(self, main=None, unique=None):
         WidgetUI.__init__(self, main,'odrive.ui')
@@ -62,8 +64,8 @@ class OdriveUI(WidgetUI):
         if(codes == 0):
             errs = ["None"]
 
-        for i,name in enumerate(self.odriveErrors):
-            if(codes & 1 << i) != 0:
+        for name,i in (self.odriveErrors.items()):
+            if(codes & i != 0):
                 errs.append(name)
         if len(errs) == 0:
             errs = [str(codes)]
@@ -75,7 +77,10 @@ class OdriveUI(WidgetUI):
         self.label_voltage.setText("{}V".format(dat[0]/1000))
         #self.label_errors.setText("{:02x}".format(dat[1]))
         self.showErrors(dat[1])
-        self.label_state.setText(self.odriveStates[dat[2]])
+        if(dat[2] < len(self.odriveStates)):
+            self.label_state.setText(self.odriveStates[dat[2]])
+        else:
+            self.label_state.setText(str(dat[2]))
 
 
     def updateTimer(self):
