@@ -32,10 +32,14 @@ class VescUI(WidgetUI):
         if i == 0 :
             _result = "No connection"
         elif i == 1 :
-            _result = "Comm ok"
+            _result = "vesc FW incompatible"
         elif i == 2 :
-            _result = "ready"
+            _result = "Comm ok"
         elif i == 3 :
+            _result = "vesc compatible"
+        elif i == 4 :
+            _result = "ready"
+        elif i == 5 :
             _result = "error"
         
         return _result
