@@ -43,6 +43,8 @@ class FfbUI(WidgetUI):
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.main.comms.serialWrite("inertia="+str(val)+"\n"))
 
+        self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.main.comms.serialWrite("hidsendspd="+str(val)+"\n"))
+
         self.timer.timeout.connect(self.updateTimer)
         
 
@@ -65,6 +67,7 @@ class FfbUI(WidgetUI):
             self.getButtonSources()
             self.getAxisSources()
             self.updateSliders()
+            self.main.comms.serialGetAsync("hidsendspd!",self.hidreportrate_cb)
             
         except:
             self.main.log("Error initializing FFB tab")
@@ -125,6 +128,14 @@ class FfbUI(WidgetUI):
         msg.buttonClicked.connect(f)
         msg.exec_()
 
+    def hidreportrate_cb(self,modes):
+        self.comboBox_reportrate.blockSignals(True)
+        self.comboBox_reportrate.clear()
+        modes = [m.split(":") for m in modes.split(",") if m]
+        for m in modes:
+            self.comboBox_reportrate.addItem(m[0],m[1])
+        self.main.comms.serialGetAsync("hidsendspd?",self.comboBox_reportrate.setCurrentIndex,int)
+        self.comboBox_reportrate.blockSignals(False)
 
     # Button selector
     def buttonsChanged(self,id):
