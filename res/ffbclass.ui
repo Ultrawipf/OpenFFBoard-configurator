@@ -346,32 +346,6 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QSpinBox" name="spinBox_spring">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QSpinBox" name="spinBox_damper">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="1">
           <widget class="QSlider" name="horizontalSlider_inertia">
            <property name="toolTip">
@@ -423,32 +397,6 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="2">
-          <widget class="QSpinBox" name="spinBox_friction">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="2">
-          <widget class="QSpinBox" name="spinBox_inertia">
-           <property name="suffix">
-            <string/>
-           </property>
-           <property name="prefix">
-            <string/>
-           </property>
-           <property name="maximum">
-            <number>255</number>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
           <widget class="QSlider" name="horizontalSlider_CFq">
            <property name="minimum">
@@ -488,6 +436,49 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="2">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_spring">
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>4.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_damper">
+           <property name="maximum">
+            <double>2.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_friction">
+           <property name="maximum">
+            <double>2.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia">
+           <property name="maximum">
+            <double>2.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -510,134 +501,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>horizontalSlider_inertia</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_inertia</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>655</x>
-     <y>473</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>683</x>
-     <y>472</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_inertia</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSlider_inertia</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>689</x>
-     <y>463</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>654</x>
-     <y>478</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_friction</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_friction</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>607</x>
-     <y>439</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>676</x>
-     <y>438</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_friction</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSlider_friction</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>671</x>
-     <y>446</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>653</x>
-     <y>448</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_damper</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_damper</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>630</x>
-     <y>415</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>671</x>
-     <y>419</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_damper</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSlider_damper</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>674</x>
-     <y>413</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>654</x>
-     <y>413</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>horizontalSlider_spring</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_spring</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>634</x>
-     <y>384</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>672</x>
-     <y>391</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBox_spring</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>horizontalSlider_spring</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>675</x>
-     <y>383</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>648</x>
-     <y>379</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
