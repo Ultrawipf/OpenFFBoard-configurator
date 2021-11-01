@@ -35,14 +35,22 @@ class FfbUI(WidgetUI):
         self.axisbtns.setExclusive(False)
 
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
-        self.horizontalSlider_CFq.valueChanged.connect(self.cffilterQ_changedSlider)
+
+        self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"ffbfiltercf_q"))
         self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(val * 100))
 
-        self.horizontalSlider_spring.valueChanged.connect(lambda val : self.main.comms.serialWrite("spring="+str(val)+"\n"))
-        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.main.comms.serialWrite("damper="+str(val)+"\n"))
-        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.main.comms.serialWrite("friction="+str(val)+"\n"))
-        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.main.comms.serialWrite("inertia="+str(val)+"\n"))
+        self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(val * 64))
+        self.horizontalSlider_spring.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_spring,4/255,"spring"))
 
+        self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(val * 128))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_damper,2/255,"damper"))
+
+        self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 128))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,2/255,"friction"))
+
+        self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 128))
+        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,2/255,"inertia"))
+        
         self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.main.comms.serialWrite("hidsendspd="+str(val)+"\n"))
 
         self.timer.timeout.connect(self.updateTimer)
@@ -98,6 +106,15 @@ class FfbUI(WidgetUI):
         except:
             self.main.log("Update error")
     
+    # Helper function to sync spinboxes and sliders
+    # Should be called by the sliders update event while the spinbox should update the slider directly
+    def sliderChangedUpdateSpinbox(self,val,spinbox,factor,command):
+        newVal = val * factor
+        if(spinbox.value != newVal):
+            spinbox.blockSignals(True)
+            spinbox.setValue(newVal)
+            spinbox.blockSignals(False)
+        self.main.comms.serialWrite(f"{command}="+str(val)+"\n")
 
     def setAxisCheckBoxes(self,count):
         self.checkBox_axisX.setChecked(True if (count>0) else False)
@@ -195,8 +212,6 @@ class FfbUI(WidgetUI):
                 self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
                 row+=1
 
-                
-
 
             self.groupBox_buttons.setLayout(layout)
         self.main.comms.serialGetAsync(["lsbtn","btntypes?"],cb_buttonSources)
@@ -260,14 +275,7 @@ class FfbUI(WidgetUI):
         self.doubleSpinBox_CFq.setEnabled(qOn)
         self.label_cffilter.setText(lbl)
 
-    def cffilterQ_changedSlider(self,qInt):
-        # 0 to 127
-        qF = qInt * 0.01
-        if(self.doubleSpinBox_CFq.value != qF):
-            self.doubleSpinBox_CFq.setValue(qF)
-        self.main.comms.serialWrite("ffbfiltercf_q="+str(qInt)+"\n")
-
-
+    
     def updateSliders(self):
         commands = ["ffbfiltercf_q?","ffbfiltercf?","spring?","damper?","friction?","inertia?"]
   
