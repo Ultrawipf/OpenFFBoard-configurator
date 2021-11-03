@@ -26,6 +26,9 @@ class EncoderOptions(QGroupBox):
         elif(id == 1): # tmc
             layout.addWidget(QLabel("Configure in TMC tab"))
             found = False
+        elif(id == 4): # MT SPI
+            self.widget = (MtEncoderConf(self,self.main))
+            self.setTitle("SPI Settings")
         else:
             layout.addWidget(QLabel("No settings"))
 
@@ -85,3 +88,27 @@ class LocalEncoderConf(EncoderOption):
     def apply(self):
         val = self.spinBox_cpr.value()
         self.main.comms.serialWrite("cpr="+str(val)+"\n")
+
+
+class MtEncoderConf(EncoderOption):
+    def __init__(self,parent,main):
+        self.main = main
+        super().__init__(parent)
+        self.initUI()
+        
+
+    def initUI(self):
+        layout = QFormLayout()
+
+        self.spinBox_cs = QSpinBox()
+        self.spinBox_cs.setRange(1,3)
+        layout.addWidget(QLabel("SPI3 extension port"))
+        layout.addRow(QLabel("CS pin"),self.spinBox_cs)
+        self.setLayout(layout)
+
+    def onshown(self):
+        self.main.comms.serialGetAsync("mtenc_cs",self.spinBox_cs.setValue,int) 
+
+    def apply(self):
+        val = self.spinBox_cs.value()
+        self.main.comms.serialWrite("mtenc_cs="+str(val)+"\n")
