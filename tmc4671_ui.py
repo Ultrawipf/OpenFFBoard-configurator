@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QLabel, QMainWindow
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
@@ -7,7 +7,8 @@ from helper import res_path,classlistToIds
 from PyQt5.QtCore import QTimer
 import main
 from base_ui import WidgetUI
-
+from optionsdialog import OptionsDialog,OptionsDialogGroupBox
+from PyQt5.QtWidgets import QWidget,QGroupBox,QComboBox
 #for graph here, need pyqtgraph and numpy
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
@@ -16,9 +17,12 @@ import pyqtgraph as pg
 class TMC4671Ui(WidgetUI):
 
     max_datapoints = 1000
-    adc_to_amps = 2.5 / (0x7fff * 60.0 * 0.0015)
+    adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
 
     axis = 'x'
+    hwversion = 0
+    hwversions = []
+    versionWarningShow = True
     
     def __init__(self, main=None, unique='X'):
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
@@ -30,7 +34,7 @@ class TMC4671Ui(WidgetUI):
         self.timer_status = QTimer(self)
     
         self.pushButton_align.clicked.connect(self.alignEnc)
-        self.initUi()
+        #self.initUi()
         
         self.timer.timeout.connect(self.updateTimer)
         self.timer_status.timeout.connect(self.updateStatus)
@@ -42,6 +46,8 @@ class TMC4671Ui(WidgetUI):
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
         self.lastPrecI = self.checkBox_I_Precision.isChecked()
         self.buttonGroup_precision.buttonToggled.connect(self.changePrecision)
+
+        self.pushButton_hwversion.clicked.connect(self.showVersionSelectorPopup)
 
         self.comboBox_mtype.currentIndexChanged.connect(self.motorselChanged)
 
@@ -68,8 +74,12 @@ class TMC4671Ui(WidgetUI):
    
         try:
             current = abs(float(current))
-            amps = round(current * self.adc_to_amps,3)
-            self.label_Current.setText(str(amps)+"A")
+            if self.adc_to_amps != 0:
+                amps = round(current * self.adc_to_amps,3)
+                self.label_Current.setText(str(amps)+"A")
+            else:
+                amps = round(100*current / 0x7fff,3) # percent
+                self.label_Current.setText(str(amps)+"%")
 
             self.progressBar_power.setValue(current)
 
@@ -157,6 +167,26 @@ class TMC4671Ui(WidgetUI):
             self.checkBox_P_Precision.setChecked(False)
             self.checkBox_I_Precision.setChecked(False)
    
+    def showVersionSelectorPopup(self):
+        selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self),self.main)
+        selectorPopup.exec()
+        self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
+    
+    def hwtcb(self,t):
+        self.hwversion = int(t[0])
+        entriesList = t[1].split("\n")
+        entriesList = [m.split(":") for m in entriesList if m]
+        self.hwversions = {int(entry[0]):entry[1] for entry in entriesList}
+        self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
+        # change scaler
+        self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
+        if self.hwversion == 0 and self.versionWarningShow:
+            # no version set. ask user to select version
+            self.showVersionSelectorPopup()
+            self.versionWarningShow = False
+        else:
+            self.versionWarningShow = False
+
     def initUi(self):
         try:
             # Fill encoder source types
@@ -167,10 +197,10 @@ class TMC4671Ui(WidgetUI):
                     e = s.split("=")
                     self.comboBox_enc.addItem(e[0],e[1])
             self.serialGetAsync("encsrc!",encs)
-            self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)
-
+            self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)  
             self.getMotor()
             self.getPids()
+            self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
             self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
 
             self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.serialWrite("fluxoffset="+str(v)+";"))
@@ -215,9 +245,9 @@ class TMC4671Ui(WidgetUI):
         self.serialGetAsync(commands,callbacks,convert=int)
 
     def setCurrentScaler(self,x):
-        if(x):
-            self.adc_to_amps = x
-
+        if(x != self.adc_to_amps):
+            self.curveAmpData.clear()
+        self.adc_to_amps = x
 
     def serialWrite(self,cmd):
         cmd = self.axis+"."+cmd
@@ -231,3 +261,35 @@ class TMC4671Ui(WidgetUI):
             axis_cmds = self.axis+"."+cmds
         self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
 
+
+
+class TMC_HW_Version_Selector(OptionsDialogGroupBox):
+
+    def __init__(self,name,main):
+        self.main = main
+        OptionsDialogGroupBox.__init__(self,name,main)
+        self.typeBox = QGroupBox("Hardware Version")
+        self.typeBoxLayout = QVBoxLayout()
+        self.typeBox.setLayout(self.typeBoxLayout)
+
+    def initUI(self):
+        vbox = QVBoxLayout()
+        self.infolabel = QLabel("Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.\nSeveral calibration constants and safety features depend on the correct selection.")
+        vbox.addWidget(self.infolabel)
+        self.combobox = QComboBox()
+        vbox.addWidget(self.combobox)
+        self.setLayout(vbox)
+
+ 
+    def apply(self):
+        self.main.serialWrite(f"tmcHwType={self.combobox.currentIndex()}")
+    
+    def typeCb(self,entries):
+        entriesList = entries.split("\n")
+        entriesList = [m.split(":") for m in entriesList if m]
+        for m in entriesList:
+            self.combobox.addItem(m[1],m[0])
+        self.main.serialGetAsync("tmcHwType?",self.combobox.setCurrentIndex,int)
+
+    def readValues(self):
+        self.main.serialGetAsync("tmcHwType!",self.typeCb)

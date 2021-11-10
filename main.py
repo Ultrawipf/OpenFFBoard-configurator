@@ -13,11 +13,11 @@ import serial_ui
 from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.4.3"
+version = "1.4.4"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.4.3"
+min_fw = "1.4.6"
 
 # UIs
 import system_ui
@@ -28,6 +28,7 @@ import pwmdriver_ui
 import serial_comms
 import midi_ui
 import errors
+import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
@@ -53,6 +54,7 @@ class MainUi(QMainWindow):
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
 
         self.errorsDialog = errors.ErrorsDialog(self)
+        self.activeClassDialog = activelist.ActiveClassDialog(self)
 
         self.setup()
 
@@ -76,13 +78,24 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.errorsDialog.setEnabled)
         self.errorsDialog.setEnabled(False)
 
+        # Toolbar menu items
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
 
-        self.actionSave_chip_config.triggered.connect(self.saveConfig)
         self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
+        self.serialchooser.connected.connect(self.actionErrors.setEnabled)
+
+        self.actionActive_features.triggered.connect(self.activeClassDialog.show) # Open active classes list
+        self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
+
         self.actionRestore_chip_config.triggered.connect(self.loadConfig)
-        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
+
+        self.actionSave_chip_config.triggered.connect(self.saveConfig)
+        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
+        
+
+        
+        
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
@@ -168,7 +181,7 @@ class MainUi(QMainWindow):
         def updateTabs_cb(active):
             lines = [l.split(":") for l in active.split("\n") if l]
 
-            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"id":i[1],"unique":i[2],"ui":None} for i in lines}
+            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"id":i[1],"unique":i[2],"ui":None,"cmdaddr":[3]} for i in lines}
             deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
             for c in deleteClasses:

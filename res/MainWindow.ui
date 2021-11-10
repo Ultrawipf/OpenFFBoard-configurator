@@ -76,6 +76,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionErrors"/>
+    <addaction name="actionActive_features"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -122,8 +123,19 @@
    </property>
   </action>
   <action name="actionErrors">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Errors</string>
+   </property>
+  </action>
+  <action name="actionActive_features">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Active features</string>
    </property>
   </action>
  </widget>
