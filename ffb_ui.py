@@ -3,14 +3,14 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QToolButton 
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt5 import uic
-from helper import res_path,classlistToIds
+from helper import res_path,classlistToIds,splitListReply
 from PyQt5.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
 import analogconf_ui
-from base_ui import WidgetUI
+from base_ui import WidgetUI,CommunicationHandler
 
-class FfbUI(WidgetUI):
+class FfbUI(WidgetUI,CommunicationHandler):
 
     btnClasses = {}
     btnIds = []
@@ -19,7 +19,6 @@ class FfbUI(WidgetUI):
     axisIds = []
 
     
-
     buttonbtns = QButtonGroup()
     buttonconfbuttons = []
 
@@ -27,9 +26,13 @@ class FfbUI(WidgetUI):
     axisconfbuttons = []
 
 
+    #values
+    active = 0
+    rate = 0
+
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'ffbclass.ui')
-    
+        CommunicationHandler.__init__(main.comms)
         self.timer = QTimer(self)
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
@@ -51,9 +54,28 @@ class FfbUI(WidgetUI):
         self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 128))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,2/255,"inertia"))
         
-        self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.main.comms.serialWrite("hidsendspd="+str(val)+"\n"))
+        self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.sendValue("main","hidsendspd",str(val)))
 
         self.timer.timeout.connect(self.updateTimer)
+
+        self.registerCallback("main","axes",self.setAxisCheckBoxes,0,int)
+        self.registerCallback("main","hidsendspd",self.hidreportrate_cb,0,typechar='!')
+        self.registerCallback("main","hidsendspd",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
+        self.registerCallback("main","hidrate",self.ffbActiveCB,0,int)
+        self.registerCallback("main","hidsendspd",self.ffbRateCB,0,int)
+
+        self.registerCallback("main","lsbtn",self.updateButtonClassesCB,0)
+        self.registerCallback("main","btntypes",self.updateButtonSources,0,int)
+        self.registerCallback("main","lsain",self.updateAnalogClassesCB,0)
+        self.registerCallback("main","aintypes",self.updateAnalogSources,0,int)
+
+
+        self.registerCallback("fx","filterCfQ",self.horizontalSlider_CFq.setValue,0,int)
+        self.registerCallback("fx","filterCfFreq",self.horizontalSlider_cffilter.setValue,0,int)
+        self.registerCallback("fx","spring",self.horizontalSlider_spring.setValue,0,int)
+        self.registerCallback("fx","damper",self.horizontalSlider_damper.setValue,0,int)
+        self.registerCallback("fx","friction",self.horizontalSlider_friction.setValue,0,int)
+        self.registerCallback("fx","inertia",self.horizontalSlider_inertia.setValue,0,int)
         
 
         if(self.initUi()):
@@ -71,11 +93,18 @@ class FfbUI(WidgetUI):
 
     def initUi(self):
         try:
-            self.main.comms.serialGetAsync("axis?",self.setAxisCheckBoxes,int)
-            self.getButtonSources()
-            self.getAxisSources()
+            self.sendCommand("main","axes",0,'?') # get axes
+            #self.serialGetAsync("axis?",self.setAxisCheckBoxes,int)
+
+            self.sendCommand("main","lsbtn",0,'?') # get button types
+            self.sendCommand("main","btntypes",0,'?') # get active buttons
+
+            self.sendCommand("main","lsain",0,'?') # get analog types
+            self.sendCommand("main","aintypes",0,'?') # get active analog
+
+            #self.getAxisSources()
             self.updateSliders()
-            self.main.comms.serialGetAsync("hidsendspd!",self.hidreportrate_cb)
+            self.sendCommand("main","hidsendspd",0,'!') # get speed
             
         except:
             self.main.log("Error initializing FFB tab")
@@ -90,19 +119,27 @@ class FfbUI(WidgetUI):
     def hideEvent(self,event):
         self.timer.stop()
 
+    def updateFfbRateLabel(self):
+        if self.active == 1:
+            act = "FFB ON"
+        elif self.active == -1:
+            act = "EMERGENCY STOP"
+        else:
+            act = "FFB OFF"
+        self.label_HIDrate.setText(str(self.rate)+"Hz" + " (" + act + ")")
+
+    def ffbActiveCB(self,active):
+        self.active = active
+        self.updateFfbRateLabel()
+        
+    def ffbRateCB(self,rate):
+        self.rate = rate
+        self.updateFfbRateLabel()
  
     def updateTimer(self):
         try:
-            def f(d):
-                rate,active = d
-                if active == 1:
-                    act = "FFB ON"
-                elif active == -1:
-                    act = "EMERGENCY STOP"
-                else:
-                    act = "FFB OFF"
-                self.label_HIDrate.setText(str(rate)+"Hz" + " (" + act + ")")
-            self.main.comms.serialGetAsync(["hidrate","ffbactive"],f,int)
+            pass
+            #self.serialGetAsync(["hidrate","ffbactive"],f,int)
         except:
             self.main.log("Update error")
     
@@ -114,7 +151,7 @@ class FfbUI(WidgetUI):
             spinbox.blockSignals(True)
             spinbox.setValue(newVal)
             spinbox.blockSignals(False)
-        self.main.comms.serialWrite(f"{command}="+str(val)+"\n")
+        self.sendValue("fx",command,val)
 
     def setAxisCheckBoxes(self,count):
         self.checkBox_axisX.setChecked(True if (count>0) else False)
@@ -134,7 +171,7 @@ class FfbUI(WidgetUI):
                 axisCount +=1
             if self.checkBox_axisZ.isChecked():
                 axisCount +=1
-            self.main.comms.serialWrite("axis="+str(axisCount)+"\n")
+            self.sendValue("main","axes",axisCount)
             self.main.updateTabs()
 
         self.pushButton_changeAxes.setEnabled(False)
@@ -151,7 +188,7 @@ class FfbUI(WidgetUI):
         modes = [m.split(":") for m in modes.split(",") if m]
         for m in modes:
             self.comboBox_reportrate.addItem(m[0],m[1])
-        self.main.comms.serialGetAsync("hidsendspd?",self.comboBox_reportrate.setCurrentIndex,int)
+        self.sendCommand("main","hidsendspd",0,'?') # get speed
         self.comboBox_reportrate.blockSignals(False)
 
     # Button selector
@@ -161,7 +198,7 @@ class FfbUI(WidgetUI):
             if(b.isChecked()):
                 mask |= 1 << self.buttonbtns.id(b)
 
-        self.main.comms.serialWrite("btntypes="+str(mask)+"\n")
+        self.sendValue("main","btntypes",str(mask))
 
     # Axis selector
     def axesChanged(self,id):
@@ -170,100 +207,148 @@ class FfbUI(WidgetUI):
             if(b.isChecked()):
                 mask |= 1 << self.axisbtns.id(b)
 
-        self.main.comms.serialWrite("aintypes="+str(mask)+"\n")
+        self.sendValue("main","aintypes",str(mask))
+        
+    def updateButtonClassesCB(self,reply):
+        print("Button",reply)
+        self.btnIds,self.btnClasses = classlistToIds(reply)
+
+    def updateButtonSources(self,types):
+        # btns = dat[0]
+        # types = int(dat[1])
+        if not self.btnClasses:
+            self.sendCommand("main","lsbtn",0,'?')
+            print("Buttons missing")
+            return
+        
+        # self.btnIds,self.btnClasses = classlistToIds(btns)
+        if(types == None):
+            self.main.log("Error getting buttons")
+            return
+        types = int(types)
+        layout = QGridLayout()
+        #clear
+        for b in self.buttonconfbuttons:
+            del b
+        for b in self.buttonbtns.buttons():
+            self.buttonbtns.removeButton(b)
+            del b
+        #add buttons
+        row = 0
+        for c in self.btnClasses:
+            btn=QCheckBox(str(c[1]),self.groupBox_buttons)
+            self.buttonbtns.addButton(btn,c[0])
+            layout.addWidget(btn,row,0)
+            enabled = types & (1<<c[0]) != 0
+            btn.setChecked(enabled)
+
+            creatable = c[2]
+            btn.setEnabled(creatable or enabled)
+
+            confbutton = QToolButton(self)
+            confbutton.setText(">")
+            layout.addWidget(confbutton,row,1)
+            self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
+            confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
+            confbutton.setEnabled(enabled and creatable)
+            self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+            row+=1
+        self.groupBox_buttons.setLayout(layout)
+
+    def updateAnalogClassesCB(self,reply):
+        self.axisIds,self.axisClasses = classlistToIds(reply)
+
+    def updateAnalogSources(self,types):
+ 
+        if not self.axisClasses:
+            self.sendCommand("main","lsain",0,'?')
+            print("Analog missing")
+            return
+        
+        if(types == None):
+            self.main.log("Error getting analog")
+            return
+
+        types = int(types)
+        layout = QGridLayout()
+        #clear
+        for b in self.axisconfbuttons:
+            del b
+        for b in self.axisbtns.buttons():
+            self.axisbtns.removeButton(b)
+            del b
+        #add buttons
+        row = 0
+        for c in self.axisClasses:
+            creatable = c[2]
+            btn=QCheckBox(str(c[1]),self.groupBox_analogaxes)
+            self.axisbtns.addButton(btn,c[0])
+            layout.addWidget(btn,row,0)
+            enabled = types & (1<<c[0]) != 0
+            btn.setChecked(enabled)
+
+            confbutton = QToolButton(self)
+            confbutton.setText(">")
+            layout.addWidget(confbutton,row,1)
+            self.axisconfbuttons.append((confbutton,analogconf_ui.AnalogOptionsDialog(str(c[1]),c[0],self.main)))
+            confbutton.clicked.connect(self.axisconfbuttons[row][1].exec)
+            confbutton.setEnabled(enabled)
+            self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+            row+=1
+    
+            confbutton.setEnabled(creatable or enabled)
+            btn.setEnabled(creatable or enabled)
+
+        self.groupBox_analogaxes.setLayout(layout)
         
 
-    def getButtonSources(self):
+    # def getAxisSources(self):
         
-        def cb_buttonSources(dat):
-            btns = dat[0]
-            types = int(dat[1])
+    #     def cb_axisSources(dat):
+    #         btns = dat[0]
+    #         types = int(dat[1])
             
-            self.btnIds,self.btnClasses = classlistToIds(btns)
-            if(types == None):
-                self.main.log("Error getting buttons")
-                return
-            types = int(types)
-            layout = QGridLayout()
-            #clear
-            for b in self.buttonconfbuttons:
-                del b
-            for b in self.buttonbtns.buttons():
-                self.buttonbtns.removeButton(b)
-                del b
-            #add buttons
-            row = 0
-            for c in self.btnClasses:
-                btn=QCheckBox(str(c[1]),self.groupBox_buttons)
-                self.buttonbtns.addButton(btn,c[0])
-                layout.addWidget(btn,row,0)
-                enabled = types & (1<<c[0]) != 0
-                btn.setChecked(enabled)
+    #         self.axisIds,self.axisClasses = classlistToIds(btns)
+    #         if(types == None):
+    #             self.main.log("Error getting buttons")
+    #             return
+    #         types = int(types)
+    #         layout = QGridLayout()
+    #         #clear
+    #         for b in self.axisconfbuttons:
+    #             del b
+    #         for b in self.axisbtns.buttons():
+    #             self.axisbtns.removeButton(b)
+    #             del b
+    #         #add buttons
+    #         row = 0
+    #         for c in self.axisClasses:
+    #             creatable = c[2]
+    #             btn=QCheckBox(str(c[1]),self.groupBox_buttons)
+    #             self.axisbtns.addButton(btn,c[0])
+    #             layout.addWidget(btn,row,0)
+    #             enabled = types & (1<<c[0]) != 0
+    #             btn.setChecked(enabled)
 
-                creatable = c[2]
-                btn.setEnabled(creatable or enabled)
-
-                confbutton = QToolButton(self)
-                confbutton.setText(">")
-                layout.addWidget(confbutton,row,1)
-                self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
-                confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
-                confbutton.setEnabled(enabled and creatable)
-                self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
-                row+=1
-
-
-            self.groupBox_buttons.setLayout(layout)
-        self.main.comms.serialGetAsync(["lsbtn","btntypes?"],cb_buttonSources)
-
-
-    def getAxisSources(self):
-        
-        def cb_axisSources(dat):
-            btns = dat[0]
-            types = int(dat[1])
-            
-            self.axisIds,self.axisClasses = classlistToIds(btns)
-            if(types == None):
-                self.main.log("Error getting buttons")
-                return
-            types = int(types)
-            layout = QGridLayout()
-            #clear
-            for b in self.axisconfbuttons:
-                del b
-            for b in self.axisbtns.buttons():
-                self.axisbtns.removeButton(b)
-                del b
-            #add buttons
-            row = 0
-            for c in self.axisClasses:
-                creatable = c[2]
-                btn=QCheckBox(str(c[1]),self.groupBox_buttons)
-                self.axisbtns.addButton(btn,c[0])
-                layout.addWidget(btn,row,0)
-                enabled = types & (1<<c[0]) != 0
-                btn.setChecked(enabled)
-
-                confbutton = QToolButton(self)
-                confbutton.setText(">")
-                layout.addWidget(confbutton,row,1)
-                self.axisconfbuttons.append((confbutton,analogconf_ui.AnalogOptionsDialog(str(c[1]),c[0],self.main)))
-                confbutton.clicked.connect(self.axisconfbuttons[row][1].exec)
-                confbutton.setEnabled(enabled)
-                self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
-                row+=1
+    #             confbutton = QToolButton(self)
+    #             confbutton.setText(">")
+    #             layout.addWidget(confbutton,row,1)
+    #             self.axisconfbuttons.append((confbutton,analogconf_ui.AnalogOptionsDialog(str(c[1]),c[0],self.main)))
+    #             confbutton.clicked.connect(self.axisconfbuttons[row][1].exec)
+    #             confbutton.setEnabled(enabled)
+    #             self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
+    #             row+=1
        
-                confbutton.setEnabled(creatable or enabled)
-                btn.setEnabled(creatable or enabled)
+    #             confbutton.setEnabled(creatable or enabled)
+    #             btn.setEnabled(creatable or enabled)
 
-            self.groupBox_analogaxes.setLayout(layout)
-        self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
+    #         self.groupBox_analogaxes.setLayout(layout)
+    #     self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
         
 
     def cffilter_changed(self,v):
         freq = max(min(v,500),0)
-        self.main.comms.serialWrite("ffbfiltercf="+str(freq)+"\n")
+        self.sendValue("fx","filterCfFreq",(freq))
         lbl = str(freq)+"Hz"
         
         qOn = True
@@ -277,17 +362,14 @@ class FfbUI(WidgetUI):
 
     
     def updateSliders(self):
-        commands = ["ffbfiltercf_q?","ffbfiltercf?","spring?","damper?","friction?","inertia?"]
-  
-        callbacks = [
-        self.horizontalSlider_CFq.setValue,
-        self.horizontalSlider_cffilter.setValue,
-        self.horizontalSlider_spring.setValue,
-        self.horizontalSlider_damper.setValue,
-        self.horizontalSlider_friction.setValue,
-        self.horizontalSlider_inertia.setValue]
-
-        self.main.comms.serialGetAsync(commands,callbacks,convert=int)
+        #commands = ["ffbfiltercf_q?","ffbfiltercf?","spring?","damper?","friction?","inertia?"]
+        self.sendCommands("fx",["filterCfQ","filterCfFreq","spring","damper","friction","inertia"],0)
+        # self.sendCommand("fx","filterCfQ")
+        # self.sendCommand("fx","filterCfFreq")
+        # self.sendCommand("fx","spring")
+        # self.sendCommand("fx","damper")
+        # self.sendCommand("fx","friction")
+        # self.sendCommand("fx","inertia")
 
 
         

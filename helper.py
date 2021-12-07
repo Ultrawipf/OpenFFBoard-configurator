@@ -33,3 +33,7 @@ def updateClassComboBox(combobox,ids,classes,selected = None):
     
     if(selected in ids and combobox.currentIndex() != ids[selected][0]):
         combobox.setCurrentIndex(ids[selected][0])
+
+def splitListReply(reply,itemdelim = ':', entrydelim = '\n'):
+    #for line in reply.split(entrydelim):
+    return [ line.split(itemdelim) for line in reply.split(entrydelim) ]

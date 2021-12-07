@@ -4,19 +4,21 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 from PyQt5.QtCore import QIODevice,pyqtSignal
 import main
-from base_ui import WidgetUI
+from base_ui import WidgetUI,CommunicationHandler
 from helper import classlistToIds,updateClassComboBox
 from PyQt5.QtWidgets import QMessageBox
 
-class SerialChooser(WidgetUI):
+
+class SerialChooser(WidgetUI,CommunicationHandler):
     connected = pyqtSignal(bool)
     classes = []
     classIds = {}
     port = None
     mainID = None
+    
     def __init__(self,serial, main):
         WidgetUI.__init__(self, main,'serialchooser.ui')
-        
+        CommunicationHandler.__init__(main.comms)
         self.serial = serial
         self.pushButton_refresh.clicked.connect(self.getPorts)
         self.pushButton_connect.clicked.connect(self.serialConnect)
@@ -30,6 +32,13 @@ class SerialChooser(WidgetUI):
         self.ports = []
         self.update()
 
+    def showEvent(self,event):
+        self.main.comms.rawReply.connect(self.serialLog)
+
+    # Tab is hidden
+    def hideEvent(self,event):
+        self.main.comms.rawReply.disconnect(self.serialLog)
+
     def serialLog(self,txt):
         if(type(txt) == list):
             txt = "\n".join(txt)
@@ -41,7 +50,8 @@ class SerialChooser(WidgetUI):
     def sendLine(self):
         cmd = self.lineEdit_cmd.text()+"\n"
         self.serialLog(cmd)
-        self.main.comms.serialGetAsync(cmd,self.serialLog)
+        self.main.comms.serialWriteRaw(cmd)
+        #self.main.comms.serialGetAsync(cmd,self.serialLog)
 
     def write(self,data):
         self.serial.write(data)
@@ -71,6 +81,7 @@ class SerialChooser(WidgetUI):
         if(not self.serial.isOpen() and self.port != None):
             self.main.log("Connecting...")
             self.serial.setPort(self.port)
+            self.serial.setBaudRate(115200)
             self.serial.open(QIODevice.ReadWrite)
         else:
             self.serial.close()
@@ -97,27 +108,28 @@ class SerialChooser(WidgetUI):
             self.comboBox_port.setCurrentIndex(plist.index(oldport))
         self.selectPort(self.comboBox_port.currentIndex())
 
+    def updateMains(self,dat):
+        self.comboBox_main.clear()
+        self.classIds,self.classes = classlistToIds(dat)
+        
+        if(self.mainID == None):
+            #self.main.resetPort()
+            self.groupBox_system.setEnabled(False)
+            return
+        self.groupBox_system.setEnabled(True)
+
+        updateClassComboBox(self.comboBox_main,self.classIds,self.classes,self.mainID)
+
+        self.main.log("Detected mode: "+self.comboBox_main.currentText())
+        self.main.updateTabs()
 
     def getMainClasses(self):
-        def updateMains(dat):
-            self.comboBox_main.clear()
-            self.classIds,self.classes = classlistToIds(dat)
-            
-            if(self.mainID == None):
-                #self.main.resetPort()
-                self.groupBox_system.setEnabled(False)
-                return
-            self.groupBox_system.setEnabled(True)
-
-            updateClassComboBox(self.comboBox_main,self.classIds,self.classes,self.mainID)
-
-            self.main.log("Detected mode: "+self.comboBox_main.currentText())
-            self.main.updateTabs()
+        
 
         def f(i):
             self.mainID = i
-        self.main.comms.serialGetAsync("id?",f,int)
-        self.main.comms.serialGetAsync("lsmain",updateMains)
+        self.getValueAsync("main","id",f,conversion=int,delete=True)
+        self.getValueAsync("sys","lsmain",self.updateMains,delete=True)
 
     def mainBtn(self):
         id = self.classes[self.comboBox_main.currentIndex()][0]

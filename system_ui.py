@@ -28,18 +28,18 @@ class SystemUI(WidgetUI):
     def saveClicked(self):
         def f(res):
             self.main.log("Save: "+ str(res))
-        self.main.comms.serialGetAsync("save\n",f)
+        self.main.comms.getValueAsync("sys","save",callback=f)
         
     def setSaveBtn(self,on):
         self.pushButton_save.setEnabled(on)
 
 
     def reboot(self):
-        self.main.comms.serialWrite("reboot\n")
+        self.main.comms.sendCommand("sys","reboot")
         self.main.reconnect()
     
     def dfu(self):
-        self.main.comms.serialWrite("dfu\n")
+        self.main.comms.sendCommand("sys","dfu")
         self.main.log("Entering DFU...")
         self.main.resetPort()
         self.main.dfuUploader()
@@ -47,8 +47,8 @@ class SystemUI(WidgetUI):
     def factoryReset(self, btn):
         cmd = btn.text()
         if(cmd=="OK"):
-            self.main.comms.serialWrite("format=1\n")
-            self.main.comms.serialWrite("reboot\n")
+            self.main.comms.sendValue("sys","format",1)
+            self.main.comms.sendCommand("sys","reboot")
             self.main.resetPort()
 
     def factoryResetBtn(self):
