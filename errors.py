@@ -2,7 +2,7 @@ from base_ui import WidgetUI
 from PyQt5.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
 from PyQt5.QtCore import QAbstractTableModel,Qt,QModelIndex
-
+from base_ui import CommunicationHandler
 
 class ErrorsModel(QAbstractTableModel):
     def __init__(self,parent):
@@ -71,13 +71,14 @@ class ErrorsDialog(QDialog):
         self.setLayout(self.layout)
         self.setWindowTitle("Errors")
 
-class ErrorsUI(WidgetUI):
+class ErrorsUI(WidgetUI,CommunicationHandler):
     
     def __init__(self, main=None,parent = None):
         WidgetUI.__init__(self, parent,'errors.ui')
+        CommunicationHandler.__init__(self)
         self.main = main
         self.parent = parent
-        main.comms.serialRegisterCallback("Err",self.errorCallback)
+        self.registerCallback("err","error",self.errorCallback)
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearAll.clicked.connect(self.clearErrors)
         self.errors = ErrorsModel(self.tableView)
@@ -87,7 +88,7 @@ class ErrorsUI(WidgetUI):
 
 
     def clearErrors(self):
-        self.main.comms.serialWrite("errorsclr\n")
+        self.sendCommand("sys","errorsclr")
         self.readErrors()
 
     def showEvent(self, a0):
@@ -96,7 +97,7 @@ class ErrorsUI(WidgetUI):
 
     def readErrors(self):
         if(self.isEnabled):
-            self.main.comms.serialGetAsync("errors",self.errorCallback)
+            self.getValueAsync("sys","errors",self.errorCallback)
 
     def errorCallback(self,errorstring):
         self.parent.show()
