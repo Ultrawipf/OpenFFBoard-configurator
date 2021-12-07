@@ -11,6 +11,7 @@ import config
 from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
+from base_ui import CommunicationHandler
 
 # This GUIs version
 version = "1.4.4"
@@ -32,22 +33,26 @@ import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
+import gc
 
-
-class MainUi(QMainWindow):
+class MainUi(QMainWindow,CommunicationHandler):
     serial = None
     mainClassUi = None
     timeouting = False
     connected = False
     
     def __init__(self):
-        super(MainUi, self).__init__()
+        QMainWindow.__init__(self)
         uic.loadUi(res_path('MainWindow.ui'), self)
+        
         #self.serialThread = QThread()
+        global serialport
         self.serial = QSerialPort()
+        serialport = self.serial
+        CommunicationHandler.comms = serial_comms.SerialComms(self,self.serial)
         #self.serial.moveToThread(self.serialThread)
 
-        self.comms = serial_comms.SerialComms(self,self.serial)
+        
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
@@ -55,11 +60,8 @@ class MainUi(QMainWindow):
 
         self.errorsDialog = errors.ErrorsDialog(self)
         self.activeClassDialog = activelist.ActiveClassDialog(self)
-
         self.setup()
-
         self.activeClasses = {}
-
         self.fwverstr = None
         
         
@@ -117,27 +119,29 @@ class MainUi(QMainWindow):
         AboutDialog(self).exec_()
 
     def saveConfig(self):
-        self.comms.serialGetAsync("flashdump",config.saveDump)
+        self.getValueAsync("sys","flashdump",config.saveDump)
 
     def loadConfig(self):
         dump = config.loadDump()
         if not dump:
             return
         for e in dump["flash"]:
-            cmd = "flashraw?{}={}\n".format(e["addr"], e["val"])
-            self.comms.serialWrite(cmd)
+            cmd = "sys.flashraw?{}={}\n".format(e["addr"], e["val"])
+            self.comms.serialWriteRaw(cmd)
         # Message
         msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
         msg.exec_()
 
 
+    def timeoutChecCB(self,i):
+        print("Timeoutcheck",i)
+        if i != self.serialchooser.mainID:
+            self.resetPort()       
+            self.log("Communication error. Please reconnect")
+        else:
+            self.timeouting = False
+
     def updateTimer(self):
-        def f(i):
-            if i != self.serialchooser.mainID:
-                self.resetPort()       
-                self.log("Communication error. Please reconnect")
-            else:
-                self.timeouting = False
         if(self.serial.isOpen()):
             if self.timeouting:
                 self.timeouting = False
@@ -146,8 +150,9 @@ class MainUi(QMainWindow):
                 return
             else:
                 self.timeouting = True
-                self.comms.serialGetAsync("id?",f,int)
-                self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
+                print("Timeouting")
+                self.getValueAsync("main","id",self.timeoutChecCB,conversion=int)
+                self.getValueAsync("sys","heapfree",self.systemUi.updateRamUse)
                 
             
 
@@ -161,8 +166,12 @@ class MainUi(QMainWindow):
         return self.tabWidget_main.addTab(widget,name)
 
     def delTab(self,widget):
+        print("DEL",widget)
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
+        if(isinstance(widget,CommunicationHandler)):
+            widget.removeCallbacks()
         del widget
+        
 
     def selectTab(self,idx):
         self.tabWidget_main.setCurrentIndex(idx)
@@ -179,9 +188,11 @@ class MainUi(QMainWindow):
     
     def updateTabs(self):
         def updateTabs_cb(active):
+            #print(f"tabs:{active}")
             lines = [l.split(":") for l in active.split("\n") if l]
+            #print(lines)
 
-            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"id":i[1],"unique":i[2],"ui":None,"cmdaddr":[3]} for i in lines}
+            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"clsname":i[1],"id":int(i[2]),"unique":int(i[3]),"ui":None,"cmdaddr":[4]} for i in lines}
             deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
             for c in deleteClasses:
@@ -190,42 +201,42 @@ class MainUi(QMainWindow):
                 if name in self.activeClasses:
                     continue
                 
-                if cl["name"] == "FFB Wheel":
+                if cl["id"] == 1:
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
                     self.systemUi.setSaveBtn(True)
-                elif  cl["name"] == "Axis":
+                elif  cl["id"] == 0xA01:
                     c = axis_ui.AxisUI(main = self,unique = cl["unique"])
-                    n = cl["name"]+':'+c.axis.upper()
+                    n = cl["name"]+':'+chr(c.axis+ord('0'))
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                elif cl["name"].startswith("TMC4671"):
+                elif cl["id"] == 0x81 or cl["id"] == 0x82 or cl["id"] == 0x83:
                     c = tmc4671_ui.TMC4671Ui(main = self,unique = cl["unique"])
-                    n = cl["name"]+':'+c.axis.upper()
+                    n = cl["name"]+':'+chr(c.axis+ord('0'))
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                elif cl["name"] == "PWM":
+                elif cl["id"] == 0x84:
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
                     self.systemUi.setSaveBtn(True)
-                elif cl["name"] == "MIDI":
+                elif cl["id"] == 0xD:
                     c = midi_ui.MidiUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
-                elif cl["name"] == "TMC Debug Bridge":
+                elif cl["id"] == 0xB:
                     c = tmcdebug_ui.TMCDebugUI(main = self)
                     self.activeClasses[name] = c
                     self.addTab(c,cl["name"])
-                elif cl["name"].startswith("ODrive"):
+                elif cl["id"] == 0x85 or cl["id"] == 0x86:
                     c = odrive_ui.OdriveUI(main = self,unique = cl["unique"])
                     n = cl["name"]
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                elif cl["name"].startswith("VESC"):
+                elif cl["id"] == 0x87:
                     c = vesc_ui.VescUI(main = self,unique = cl["unique"])
                     n = cl["name"]
                     self.activeClasses[name] = c
@@ -233,8 +244,8 @@ class MainUi(QMainWindow):
                     self.systemUi.setSaveBtn(True)
 
                     
-        self.comms.serialGetAsync("lsactive",updateTabs_cb)
-        self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
+        self.getValueAsync("sys","lsactive",updateTabs_cb,delete=True)
+        self.getValueAsync("sys","heapfree",self.systemUi.updateRamUse,delete=True)
 
     def reconnect(self):
         self.resetPort()
@@ -254,7 +265,6 @@ class MainUi(QMainWindow):
         
 
     def versionCheck(self,ver):
-        
         self.fwverstr = ver.replace("\n","")
         if not self.fwverstr:
             self.log("Communication error")
@@ -307,12 +317,13 @@ class MainUi(QMainWindow):
                 self.connected = True
                 serialTim.stop()
                 self.log("Connected")
-                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
+                self.getValueAsync("sys","swver",self.versionCheck)
             
         serialTim = QTimer()
         if(connected):
             serialTim.singleShot(500,t)
-            self.comms.serialGetAsync("id?",f)  
+            self.getValueAsync("main","id",f,0)
+            #self.comms.serialGetAsync("id?",f)  
 
         else:
             self.connected = False
@@ -331,7 +342,6 @@ class AboutDialog(QDialog):
         self.version.setText(verstr)
         
             
-
 if __name__ == '__main__':
     #appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
 
@@ -339,6 +349,8 @@ if __name__ == '__main__':
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
+    global mainapp
+    mainapp = window
     #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
     #sys.exit(exit_code)
     sys.exit(app.exec_())

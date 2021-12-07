@@ -8,10 +8,10 @@ from PyQt5.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
 import analogconf_ui
-from base_ui import WidgetUI
+from base_ui import WidgetUI,CommunicationHandler
 from encoderconf_ui import EncoderOptions
 
-class AxisUI(WidgetUI):
+class AxisUI(WidgetUI,CommunicationHandler):
     adc_to_amps = 0.0
     
     drvClasses = {}
@@ -28,6 +28,7 @@ class AxisUI(WidgetUI):
 
     def __init__(self, main=None, unique='X'):
         WidgetUI.__init__(self, main, 'axis_ui.ui')
+        CommunicationHandler.__init__(self)
 
         self.axis = unique
 
