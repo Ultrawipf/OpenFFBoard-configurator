@@ -6,6 +6,7 @@ from PyQt5 import uic
 import main
 from helper import res_path,classlistToIds
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
+from base_ui import CommunicationHandler
 
 class AnalogOptionsDialog(OptionsDialog):
     def __init__(self,name,id, main):
@@ -18,12 +19,13 @@ class AnalogOptionsDialog(OptionsDialog):
         OptionsDialog.__init__(self, self.dialog,main)
 
 
-class AnalogInputConf(OptionsDialogGroupBox):
+class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
     analogbtns = QButtonGroup()
     axes = 0
     def __init__(self,name,main):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
+        CommunicationHandler.__init__(self)
         self.analogbtns.setExclusive(False)
         self.buttonBox = QGroupBox("Pins")
         self.buttonBoxLayout = QVBoxLayout()
@@ -37,13 +39,15 @@ class AnalogInputConf(OptionsDialogGroupBox):
         self.setLayout(layout)
         
     def readValues(self):
-        self.main.comms.serialGetAsync("local_ain_num?",self.createAinButtons,int)
-        self.main.comms.serialGetAsync("local_ain_acal?",self.autorangeBox.setChecked,int)
+        self.getValueAsync("apin","pins",self.createAinButtons,0,conversion=int)
+        self.getValueAsync("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
+        #self.main.comms.serialGetAsync("local_ain_num?",self.createAinButtons,int)
+        #self.main.comms.serialGetAsync("local_ain_acal?",self.autorangeBox.setChecked,int)
         
 
     def createAinButtons(self,axes):
         self.axes = axes
-        
+        print(axes)
         # remove buttons
         for i in range(self.buttonBoxLayout.count()):
             b = self.buttonBoxLayout.takeAt(0)
@@ -61,12 +65,14 @@ class AnalogInputConf(OptionsDialogGroupBox):
         def f(axismask):
             for i in range(self.axes):
                 self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        self.main.comms.serialGetAsync("local_ain_mask?",f,int)
+        #self.main.comms.serialGetAsync("local_ain_mask?",f,int)
+        self.getValueAsync("apin","mask",f,0,conversion=int)
 
     def apply(self):
         mask = 0
         for i in range(self.axes):
             if (self.analogbtns.button(i).isChecked()):
                 mask |= 1 << i
-        self.main.comms.serialWrite("local_ain_mask="+str(mask))
-        self.main.comms.serialWrite("local_ain_acal="+ ("1" if self.autorangeBox.isChecked() else "0"))
+
+        self.sendValue("apin","mask",mask)
+        self.sendValue("apin","autocal",1 if self.autorangeBox.isChecked() else 0)

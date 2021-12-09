@@ -14,26 +14,28 @@ class WidgetUI(QWidget):
 
     def initUi(self):
         return True
+        
 
 
 class CommunicationHandler():
     comms: SerialComms = None
     def __init__(self):
         #self.comms = comms
-        print("Newclass")
+        #print("Newclass")
+        pass
 
     def __del__(self):
         # remove callbacks
-        print("Delclass")
+        #print("Delclass")
         self.removeCallbacks()
         
     # deletes all callbacks to this class
     def removeCallbacks(self):
-        self.comms.removeCallbacks(self)
+        SerialComms.removeCallbacks(self)
 
     # Helper function to register a callback that can be deleted automatically later
     def registerCallback(self,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
-        self.comms.registerCallback(self,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,delete=delete,typechar=typechar)
+        SerialComms.registerCallback(self,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,delete=delete,typechar=typechar)
 
     def getValueAsync(self,cls,cmd,callback,instance=0,conversion=None,adr=None,typechar='?',delete=True):
         self.comms.getValueAsync(self,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,typechar=typechar,delete=delete)

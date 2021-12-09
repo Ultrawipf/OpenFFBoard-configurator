@@ -6,6 +6,7 @@ from PyQt5 import uic
 import main
 from PyQt5.QtCore import QObjectCleanupHandler
 from helper import res_path,classlistToIds
+from base_ui import CommunicationHandler
 
 class EncoderOptions(QGroupBox):
     widget = None
@@ -66,10 +67,11 @@ class EncoderOption(QWidget):
     def onclose(self):
         pass
 
-class LocalEncoderConf(EncoderOption):
+class LocalEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
         self.main = main
-        super().__init__(parent)
+        EncoderOption.__init__(self,parent)
+        CommunicationHandler.__init__(self)
         self.initUI()
         
 
@@ -83,17 +85,18 @@ class LocalEncoderConf(EncoderOption):
         self.setLayout(layout)
 
     def onshown(self):
-        self.main.comms.serialGetAsync("cpr",self.spinBox_cpr.setValue,int) 
+        self.getValueAsync("localenc","cpr",self.spinBox_cpr.setValue,int)
 
     def apply(self):
         val = self.spinBox_cpr.value()
-        self.main.comms.serialWrite("cpr="+str(val)+"\n")
+        self.sendValue("localenc","cpr",val=val)
 
 
-class MtEncoderConf(EncoderOption):
+class MtEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
         self.main = main
-        super().__init__(parent)
+        EncoderOption.__init__(self,parent)
+        CommunicationHandler.__init__(self)
         self.initUI()
         
 
@@ -107,8 +110,8 @@ class MtEncoderConf(EncoderOption):
         self.setLayout(layout)
 
     def onshown(self):
-        self.main.comms.serialGetAsync("mtenc_cs",self.spinBox_cs.setValue,int) 
+        self.getValueAsync("mtenc","cs",self.spinBox_cs.setValue,int)
 
     def apply(self):
         val = self.spinBox_cs.value()
-        self.main.comms.serialWrite("mtenc_cs="+str(val)+"\n")
+        self.sendValue("mtenc","cs",val=val)
