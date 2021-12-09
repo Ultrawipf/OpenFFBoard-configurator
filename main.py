@@ -14,11 +14,11 @@ from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 
 # This GUIs version
-version = "1.4.4"
+version = "1.5.0"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.4.6"
+min_fw = "1.5.0"
 
 # UIs
 import system_ui
@@ -33,7 +33,6 @@ import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
-import gc
 
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None
@@ -95,10 +94,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.actionSave_chip_config.triggered.connect(self.saveConfig)
         self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
         
-
-        
-        
-
         layout = QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.systemUi)
@@ -133,8 +128,8 @@ class MainUi(QMainWindow,CommunicationHandler):
         msg.exec_()
 
 
-    def timeoutChecCB(self,i):
-        print("Timeoutcheck",i)
+    def timeoutCheckCB(self,i):
+        #print("Timeoutcheck",i)
         if i != self.serialchooser.mainID:
             self.resetPort()       
             self.log("Communication error. Please reconnect")
@@ -150,8 +145,8 @@ class MainUi(QMainWindow,CommunicationHandler):
                 return
             else:
                 self.timeouting = True
-                print("Timeouting")
-                self.getValueAsync("main","id",self.timeoutChecCB,conversion=int)
+                #print("Timeouting")
+                self.getValueAsync("main","id",self.timeoutCheckCB,conversion=int)
                 self.getValueAsync("sys","heapfree",self.systemUi.updateRamUse)
                 
             
@@ -163,13 +158,13 @@ class MainUi(QMainWindow,CommunicationHandler):
         pass
 
     def addTab(self,widget,name):
+        #print("Newtab!!",name)
         return self.tabWidget_main.addTab(widget,name)
 
     def delTab(self,widget):
-        print("DEL",widget)
+        #print("DEL",widget)
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
-        if(isinstance(widget,CommunicationHandler)):
-            widget.removeCallbacks()
+        CommunicationHandler.removeCallbacks(widget)
         del widget
         
 
@@ -185,18 +180,18 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.systemUi.setSaveBtn(False)
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
+        self.comms.removeAllCallbacks()
     
     def updateTabs(self):
         def updateTabs_cb(active):
             #print(f"tabs:{active}")
             lines = [l.split(":") for l in active.split("\n") if l]
-            #print(lines)
-
-            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"clsname":i[1],"id":int(i[2]),"unique":int(i[3]),"ui":None,"cmdaddr":[4]} for i in lines}
-            deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
+            newActiveClasses = {i[1]+":"+i[2]:{"name":i[0],"clsname":i[1],"id":int(i[2]),"unique":int(i[3]),"ui":None,"cmdaddr":[4]} for i in lines}
+            deleteClasses = [(c,name) for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
-            for c in deleteClasses:
+            for c,name in deleteClasses:
                 self.delTab(c)
+                del self.activeClasses[name]
             for name,cl in newActiveClasses.items():
                 if name in self.activeClasses:
                     continue
@@ -282,21 +277,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         fwoutdated = min_fw_t[0] > fwver[0] or min_fw_t[1] > fwver[1] or min_fw_t[2] > fwver[2]
         guioutdated = min_fw_t[0] < fwver[0] or min_fw_t[1] < fwver[1]
 
-        # for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
-        #     if(v[0] < v[1]): # Newer
-        #         break
-        #     # If same higher version then check minor version
-        #     if(v[0] > v[1]):
-        #         fwoutdated = True
-        #         break
-        # for v in itertools.zip_longest(minVerGui,guiVersion,fillvalue=0):
-        #     if(v[0] < v[1]): # Newer
-        #         break
-        #     # If same higher version then check minor version
-        #     if(v[0] > v[1]):
-        #         guioutdated = True
-        #         break
-
         if guioutdated:
             msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
             msg.exec_()
@@ -306,7 +286,7 @@ class MainUi(QMainWindow,CommunicationHandler):
 
 
     def serialConnected(self,connected):
-        
+        self.serialTim = QTimer()
         def t():
             if not self.connected:
                 self.log("Can't detect board")
@@ -315,13 +295,10 @@ class MainUi(QMainWindow,CommunicationHandler):
         def f(id):
             if(id):
                 self.connected = True
-                serialTim.stop()
-                self.log("Connected")
-                self.getValueAsync("sys","swver",self.versionCheck)
-            
-        serialTim = QTimer()
+                self.serialTim.stop()
+                  
         if(connected):
-            serialTim.singleShot(500,t)
+            self.serialTim.singleShot(500,t)
             self.getValueAsync("main","id",f,0)
             #self.comms.serialGetAsync("id?",f)  
 
@@ -329,6 +306,8 @@ class MainUi(QMainWindow,CommunicationHandler):
             self.connected = False
             self.log("Disconnected")
             self.resetTabs()
+ 
+        self.getValueAsync("sys","swver",self.versionCheck)
 
 
 class AboutDialog(QDialog):

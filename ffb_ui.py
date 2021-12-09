@@ -9,6 +9,7 @@ import main
 import buttonconf_ui
 import analogconf_ui
 from base_ui import WidgetUI,CommunicationHandler
+from serial_comms import SerialComms
 
 class FfbUI(WidgetUI,CommunicationHandler):
 
@@ -61,8 +62,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.registerCallback("main","axes",self.setAxisCheckBoxes,0,int)
         self.registerCallback("main","hidsendspd",self.hidreportrate_cb,0,typechar='!')
         self.registerCallback("main","hidsendspd",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
-        self.registerCallback("main","hidrate",self.ffbActiveCB,0,int)
-        self.registerCallback("main","hidsendspd",self.ffbRateCB,0,int)
+        self.registerCallback("main","hidrate",self.ffbRateCB,0,int)
+        self.registerCallback("main","ffbactive",self.ffbActiveCB,0,int)
 
         self.registerCallback("main","lsbtn",self.updateButtonClassesCB,0)
         self.registerCallback("main","btntypes",self.updateButtonSources,0,int)
@@ -94,7 +95,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def initUi(self):
         try:
             self.sendCommand("main","axes",0,'?') # get axes
-            #self.serialGetAsync("axis?",self.setAxisCheckBoxes,int)
+            self.sendCommands("main",["hidrate","ffbactive"],0)
 
             self.sendCommand("main","lsbtn",0,'?') # get button types
             self.sendCommand("main","btntypes",0,'?') # get active buttons
@@ -134,12 +135,11 @@ class FfbUI(WidgetUI,CommunicationHandler):
         
     def ffbRateCB(self,rate):
         self.rate = rate
-        self.updateFfbRateLabel()
+        #self.updateFfbRateLabel()
  
     def updateTimer(self):
         try:
-            pass
-            #self.serialGetAsync(["hidrate","ffbactive"],f,int)
+            self.sendCommands("main",["hidrate","ffbactive"],0)
         except:
             self.main.log("Update error")
     
@@ -210,7 +210,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.sendValue("main","aintypes",str(mask))
         
     def updateButtonClassesCB(self,reply):
-        print("Button",reply)
         self.btnIds,self.btnClasses = classlistToIds(reply)
 
     def updateButtonSources(self,types):
@@ -218,7 +217,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         # types = int(dat[1])
         if not self.btnClasses:
             self.sendCommand("main","lsbtn",0,'?')
-            print("Buttons missing")
+            #print("Buttons missing")
             return
         
         # self.btnIds,self.btnClasses = classlistToIds(btns)
@@ -229,6 +228,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         layout = QGridLayout()
         #clear
         for b in self.buttonconfbuttons:
+            SerialComms.removeCallbacks(b[1])
             del b
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
@@ -250,7 +250,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             layout.addWidget(confbutton,row,1)
             self.buttonconfbuttons.append((confbutton,buttonconf_ui.ButtonOptionsDialog(str(c[1]),c[0],self.main)))
             confbutton.clicked.connect(self.buttonconfbuttons[row][1].exec)
-            confbutton.setEnabled(enabled and creatable)
+            confbutton.setEnabled(enabled)
             self.buttonbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
             row+=1
         self.groupBox_buttons.setLayout(layout)
@@ -273,6 +273,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         layout = QGridLayout()
         #clear
         for b in self.axisconfbuttons:
+            SerialComms.removeCallbacks(b[1])
             del b
         for b in self.axisbtns.buttons():
             self.axisbtns.removeButton(b)
@@ -296,7 +297,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
             row+=1
     
-            confbutton.setEnabled(creatable or enabled)
+            #confbutton.setEnabled(creatable or enabled)
             btn.setEnabled(creatable or enabled)
 
         self.groupBox_analogaxes.setLayout(layout)
