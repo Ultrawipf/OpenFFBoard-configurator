@@ -3,15 +3,16 @@ from PyQt5.QtWidgets import QWidget,QDialog,QVBoxLayout,QMessageBox
 from PyQt5 import uic
 from helper import res_path
 from PyQt5.QtCore import QTimer
-from base_ui import WidgetUI
+from base_ui import WidgetUI,CommunicationHandler
 import re
 
-class SystemUI(WidgetUI):
+class SystemUI(WidgetUI,CommunicationHandler):
     
     mainID = None
     def __init__(self, main=None):
 
         WidgetUI.__init__(self, main,'baseclass.ui')
+        CommunicationHandler.__init__(self)
         self.setEnabled(False)
         self.pushButton_reboot.clicked.connect(self.reboot)
         self.pushButton_dfu.clicked.connect(self.dfu)
@@ -28,18 +29,18 @@ class SystemUI(WidgetUI):
     def saveClicked(self):
         def f(res):
             self.main.log("Save: "+ str(res))
-        self.main.comms.getValueAsync("sys","save",callback=f)
+        self.getValueAsync("sys","save",callback=f)
         
     def setSaveBtn(self,on):
         self.pushButton_save.setEnabled(on)
 
 
     def reboot(self):
-        self.main.comms.sendCommand("sys","reboot")
+        self.sendCommand("sys","reboot")
         self.main.reconnect()
     
     def dfu(self):
-        self.main.comms.sendCommand("sys","dfu")
+        self.sendCommand("sys","dfu")
         self.main.log("Entering DFU...")
         self.main.resetPort()
         self.main.dfuUploader()
@@ -47,8 +48,8 @@ class SystemUI(WidgetUI):
     def factoryReset(self, btn):
         cmd = btn.text()
         if(cmd=="OK"):
-            self.main.comms.sendValue("sys","format",1)
-            self.main.comms.sendCommand("sys","reboot")
+            self.sendValue("sys","format",1)
+            self.sendCommand("sys","reboot")
             self.main.resetPort()
 
     def factoryResetBtn(self):

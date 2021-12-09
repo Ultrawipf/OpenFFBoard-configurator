@@ -12,20 +12,24 @@ from PyQt5.QtWidgets import QWidget,QGroupBox,QComboBox
 #for graph here, need pyqtgraph and numpy
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
+from base_ui import CommunicationHandler
 
 
-class TMC4671Ui(WidgetUI):
+class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     max_datapoints = 1000
     adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
 
-    axis = 'x'
     hwversion = 0
     hwversions = []
     versionWarningShow = True
+    vext = 0
+    vint = 0
     
-    def __init__(self, main=None, unique='X'):
+    def __init__(self, main=None, unique=0):
+        self.axis = 0
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
+        CommunicationHandler.__init__(self)
         self.main = main #type: main.MainUi
 
         self.axis = unique
@@ -51,8 +55,31 @@ class TMC4671Ui(WidgetUI):
 
         self.comboBox_mtype.currentIndexChanged.connect(self.motorselChanged)
 
-    def __del__(self):
-        pass
+        # Callbacks
+        self.registerCallback("tmc","temp",self.updateTemp,self.axis,int)
+        self.registerCallback("sys","vint",self.vintCb,0,int)
+        self.registerCallback("sys","vext",self.vextCb,0,int)
+        self.registerCallback("tmc","acttrq",self.updateCurrent,self.axis,int)
+
+        self.registerCallback("tmc","pidPrec",self.precisionCb,self.axis,int)
+        self.registerCallback("tmc","torqueP",self.spinBox_tp.setValue,self.axis,int)
+        self.registerCallback("tmc","torqueI",self.spinBox_ti.setValue,self.axis,int)
+        self.registerCallback("tmc","fluxP",self.spinBox_fp.setValue,self.axis,int)
+        self.registerCallback("tmc","fluxI",self.spinBox_fi.setValue,self.axis,int)
+        self.registerCallback("tmc","fluxoffset",self.spinBox_fluxoffset.setValue,self.axis,int)
+        self.registerCallback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
+
+        self.registerCallback("tmc","mtype",self.comboBox_mtype.setCurrentIndex,self.axis,int)
+        self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
+        self.registerCallback("tmc","encsrc",self.comboBox_enc.setCurrentIndex,self.axis,int)
+        self.registerCallback("tmc","cprtmc",self.spinBox_cpr.setValue,self.axis,int)
+
+        self.registerCallback("tmc","iScale",self.setCurrentScaler,self.axis,float)
+
+        self.registerCallback("tmc","encsrc",self.encsCb,self.axis,str,typechar='!')
+        self.registerCallback("tmc","tmcHwType",self.hwVersionsCb,self.axis,str,typechar='!')
+        self.registerCallback("tmc","tmcHwType",self.hwtcb,self.axis,int,typechar='?')
+
 
     def showEvent(self,event):
         self.initUi()
@@ -71,7 +98,6 @@ class TMC4671Ui(WidgetUI):
             self.spinBox_poles.setEnabled(False)
 
     def updateCurrent(self,current):
-   
         try:
             current = abs(float(current))
             if self.adc_to_amps != 0:
@@ -91,53 +117,65 @@ class TMC4671Ui(WidgetUI):
             self.main.log("TMC update error: " + str(e)) 
 
     def updateTemp(self,t):
+        t = t/100.0
         if(t > 150 or t < -20):
             return
         self.label_Temp.setText(str(round(t,2)) + "°C")
     
-    def updateVolt(self,v):
-        t = "Mot: {:2.2f}V".format(v[0]/1000)
-        t += "\nIn: {:2.2f}V".format(v[1]/1000)
+    def updateVolt(self):
+        t = "Mot: {:2.2f}V".format(self.vint)
+        t += "\nIn: {:2.2f}V".format(self.vext)
         self.label_volt.setText(t)
 
+    def vintCb(self,v):
+        self.vint = v/1000
+
+    def vextCb(self,v):
+        self.vext = v/1000
+        self.updateVolt()
+
     def updateTimer(self):
-        self.serialGetAsync("acttrq",self.updateCurrent)
+        self.sendCommand("tmc","acttrq",self.axis)
+        
         
     def updateStatus(self):
-        self.serialGetAsync("tmctemp",self.updateTemp,float)
-        self.main.comms.serialGetAsync(["vint","vext"],self.updateVolt,float)
+        #self.serialGetAsync("tmctemp",self.updateTemp,float)
+        self.sendCommand("tmc","temp",self.axis)
+        self.sendCommands("sys",["vint","vext"])
 
     def submitMotor(self):
         mtype = self.comboBox_mtype.currentIndex()
-        self.serialWrite("mtype="+str(mtype))
+        self.sendValue("tmc","mtype",val=mtype,instance=self.axis)
 
         poles = self.spinBox_poles.value()
-        self.serialWrite("poles="+str(poles))
+        self.sendValue("tmc","poles",val=poles,instance=self.axis)
 
-        self.serialWrite("cprtmc="+str(self.spinBox_cpr.value()))
+        self.sendValue("tmc","cpr",val=self.spinBox_cpr.value(),instance=self.axis)
 
         enc = self.comboBox_enc.currentIndex()
-        self.serialWrite("encsrc="+str(enc))
+        self.sendValue("tmc","encsrc",val=enc,instance=self.axis)
         
     def submitPid(self):
         # PIDs
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        self.serialWrite("seqpi="+str(seq))
+        #self.serialWrite("seqpi="+str(seq))
+        self.sendValue("tmc","seqpi",val=seq,instance=self.axis)
 
         tp = self.spinBox_tp.value()
-        self.serialWrite("torqueP="+str(tp))
+        #self.serialWrite("torqueP="+str(tp))
+        self.sendValue("tmc","torqueP",val=tp,instance=self.axis)
 
         ti = self.spinBox_ti.value()
-        self.serialWrite("torqueI="+str(ti))
+        self.sendValue("tmc","torqueI",val=ti,instance=self.axis)
 
         fp = self.spinBox_fp.value()
-        self.serialWrite("fluxP="+str(fp))
+        self.sendValue("tmc","fluxP",val=fp,instance=self.axis)
 
         fi = self.spinBox_fi.value()
-        self.serialWrite("fluxI="+str(fi))
+        self.sendValue("tmc","fluxI",val=fi,instance=self.axis)
 
         prec = self.checkBox_I_Precision.isChecked() | (self.checkBox_P_Precision.isChecked() << 1)
-        self.serialWrite("pidPrec="+str(prec))
+        self.sendValue("tmc","pidPrec",val=prec,instance=self.axis)
         
     def changePrecision(self,button,checked):
         rescale = (16 if checked else 1/16)
@@ -168,18 +206,22 @@ class TMC4671Ui(WidgetUI):
             self.checkBox_I_Precision.setChecked(False)
    
     def showVersionSelectorPopup(self):
-        selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self),self.main)
+        selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self,self.axis),self.main)
         selectorPopup.exec()
-        self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
+        self.sendCommand("tmc","tmcHwType",self.axis,'!')
+        self.sendCommand("tmc","tmcHwType",self.axis,'?')
+        #self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
     
-    def hwtcb(self,t):
-        self.hwversion = int(t[0])
-        entriesList = t[1].split("\n")
+    def hwVersionsCb(self,v):
+        entriesList = v.split("\n")
         entriesList = [m.split(":") for m in entriesList if m]
         self.hwversions = {int(entry[0]):entry[1] for entry in entriesList}
+    def hwtcb(self,t):
+        self.hwversion = int(t)
+        
         self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
         # change scaler
-        self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
+        self.sendCommand("tmc","iScale",self.axis) # request scale update
         if self.hwversion == 0 and self.versionWarningShow:
             # no version set. ask user to select version
             self.showVersionSelectorPopup()
@@ -191,25 +233,28 @@ class TMC4671Ui(WidgetUI):
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
-           
-            def encs(encsrcs):
-                for s in encsrcs.split(","):
-                    e = s.split("=")
-                    self.comboBox_enc.addItem(e[0],e[1])
-            self.serialGetAsync("encsrc!",encs)
-            self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)  
+ 
+            #self.serialGetAsync("encsrc!",encs)
+            self.sendCommands("tmc",["encsrc","tmcHwType"],self.axis,'!')
+            self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale"],self.axis)
+            #self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)  
             self.getMotor()
             self.getPids()
-            self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
-            self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
+            #self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
+            #self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
 
-            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.serialWrite("fluxoffset="+str(v)+";"))
+            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.sendValue("tmc","fluxoffset",v,instance=self.axis))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
         except Exception as e:
             self.main.log("Error initializing TMC tab. Please reconnect: " + str(e))
             return False
         return True
+
+    def encsCb(self,encsrcs):
+        for s in encsrcs.split(","):
+            e = s.split("=")
+            self.comboBox_enc.addItem(e[0],e[1])
 
     def alignEnc(self):
         self.pushButton_align.setEnabled(False)
@@ -219,58 +264,51 @@ class TMC4671Ui(WidgetUI):
                 msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
                 msg.exec_()
 
-        res = self.serialGetAsync("encalign",f)
+        res = self.getValueAsync("tmc","encalign",f,self.axis)
         self.main.log("Started encoder alignment")
         
 
     def getMotor(self):
-        commands=["mtype?","poles?","encsrc?","cprtmc?"]
-        callbacks = [self.comboBox_mtype.setCurrentIndex,
-        self.spinBox_poles.setValue,
-        self.comboBox_enc.setCurrentIndex,
-        self.spinBox_cpr.setValue]
-        self.serialGetAsync(commands,callbacks,convert=int)
-                
+        commands=["mtype","poles","encsrc","cprtmc"]
+        self.sendCommands("tmc",commands,self.axis)
+
 
     def getPids(self):
-        callbacks = [self.precisionCb,
-        self.spinBox_tp.setValue,
-        self.spinBox_ti.setValue,
-        self.spinBox_fp.setValue,
-        self.spinBox_fi.setValue,
-        self.spinBox_fluxoffset.setValue,
-        self.checkBox_advancedpid.setChecked]
+        commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","fluxoffset","seqpi"]
+        #self.serialGetAsync(commands,callbacks,convert=int)
+        self.sendCommands("tmc",commands,self.axis)
 
-        commands = ["pidPrec?","torqueP?","torqueI?","fluxP?","fluxI?","fluxoffset?","seqpi?"]
-        self.serialGetAsync(commands,callbacks,convert=int)
+        
 
     def setCurrentScaler(self,x):
         if(x != self.adc_to_amps):
             self.curveAmpData.clear()
         self.adc_to_amps = x
 
-    def serialWrite(self,cmd):
-        cmd = self.axis+"."+cmd
-        self.main.comms.serialWrite(cmd)
+    # def serialWrite(self,cmd):
+    #     cmd = self.axis+"."+cmd
+    #     self.main.comms.serialWrite(cmd)
 
 
-    def serialGetAsync(self,cmds,callbacks,convert=None):
-        if(type(cmds) == list):
-            axis_cmds = list(map(lambda x: self.axis+"."+x, cmds)) # y.torqueP? etc
-        else:
-            axis_cmds = self.axis+"."+cmds
-        self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
+    # def serialGetAsync(self,cmds,callbacks,convert=None):
+    #     if(type(cmds) == list):
+    #         axis_cmds = list(map(lambda x: self.axis+"."+x, cmds)) # y.torqueP? etc
+    #     else:
+    #         axis_cmds = self.axis+"."+cmds
+    #     self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
 
 
 
-class TMC_HW_Version_Selector(OptionsDialogGroupBox):
+class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
-    def __init__(self,name,main):
+    def __init__(self,name,main,instance):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
+        CommunicationHandler.__init__(self)
         self.typeBox = QGroupBox("Hardware Version")
         self.typeBoxLayout = QVBoxLayout()
         self.typeBox.setLayout(self.typeBoxLayout)
+        self.axis = instance
 
     def initUI(self):
         vbox = QVBoxLayout()
@@ -280,16 +318,20 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox):
         vbox.addWidget(self.combobox)
         self.setLayout(vbox)
 
- 
+    def onclose(self):
+        self.removeCallbacks()
+
+
     def apply(self):
-        self.main.serialWrite(f"tmcHwType={self.combobox.currentIndex()}")
+        self.sendValue("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
     
     def typeCb(self,entries):
+        print("Reply",entries)
         entriesList = entries.split("\n")
         entriesList = [m.split(":") for m in entriesList if m]
         for m in entriesList:
             self.combobox.addItem(m[1],m[0])
-        self.main.serialGetAsync("tmcHwType?",self.combobox.setCurrentIndex,int)
+        self.getValueAsync("tmc","tmcHwType",self.combobox.setCurrentIndex,self.axis,int)
 
     def readValues(self):
-        self.main.serialGetAsync("tmcHwType!",self.typeCb)
+        self.getValueAsync("tmc","tmcHwType",self.typeCb,self.axis,str,typechar='!')

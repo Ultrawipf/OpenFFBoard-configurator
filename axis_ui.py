@@ -11,6 +11,7 @@ import analogconf_ui
 from base_ui import WidgetUI,CommunicationHandler
 from encoderconf_ui import EncoderOptions
 
+
 class AxisUI(WidgetUI,CommunicationHandler):
     adc_to_amps = 0.0
     
@@ -23,10 +24,10 @@ class AxisUI(WidgetUI,CommunicationHandler):
     drvId = 0
     encId = 0
 
-    axis = 'X'
+    axis = 0
     encWidgets = {}
 
-    def __init__(self, main=None, unique='X'):
+    def __init__(self, main=None, unique=0):
         WidgetUI.__init__(self, main, 'axis_ui.ui')
         CommunicationHandler.__init__(self)
 
@@ -35,24 +36,32 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.timer = QTimer(self)
 
         self.horizontalSlider_power.valueChanged.connect(self.power_changed)
-        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.serialWrite("degrees="+str(val)+"\n"))
-        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.serialWrite("esgain="+str(val)+"\n"))
+        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.sendValue("axis","degrees",(val),instance=self.axis))
+        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.sendValue("axis","esgain",(val),instance=self.axis))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
-        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.serialWrite("idlespring="+str(val)+"\n"))
-        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.serialWrite("axisdamper="+str(val)+"\n"))
-
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.sendValue("axis","idlespring",(val),instance=self.axis))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sendValue("axis","axisdamper",val,instance=self.axis))
+        self.pushButton_center.clicked.connect(lambda : self.sendCommand("axis","zeroenc",instance=self.axis))
         self.spinBox_range.editingFinished.connect(self.rangeChanged) # don't update while typing
 
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderIndexChanged)
 
-        self.checkBox_invert.stateChanged.connect(lambda val : self.serialWrite("invert="+("0" if val == 0 else "1")+"\n"))
+        self.checkBox_invert.stateChanged.connect(lambda val : self.sendValue("axis","invert",(1 if val == 0 else 0),instance=self.axis))
 
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
         tabId = self.main.addTab(self,"FFB Axis")
 
-        self.pushButton_center.clicked.connect(lambda : self.serialWrite("zeroenc\n"))
+        self.registerCallback("axis","invert",self.checkBox_invert.setChecked,self.axis,int)
+        self.registerCallback("axis","power",self.horizontalSlider_power.setValue,self.axis,int)
+        self.registerCallback("axis","degrees",self.horizontalSlider_degrees.setValue,self.axis,int)
+        self.registerCallback("axis","fxratio",self.horizontalSlider_fxratio.setValue,self.axis,int)
+        self.registerCallback("axis","esgain",self.horizontalSlider_esgain.setValue,self.axis,int)
+        self.registerCallback("axis","idlespring",self.horizontalSlider_idle.setValue,self.axis,int)
+        self.registerCallback("axis","axisdamper",self.horizontalSlider_damper.setValue,self.axis,int)
+        
+        
 
 
     def initUi(self):
@@ -60,8 +69,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getMotorDriver()
             self.getEncoder()
             self.updateSliders()
-
-            self.serialGetAsync("invert?",self.checkBox_invert.setChecked,int)
+            self.sendCommand("axis","invert",self.axis)
+            #self.serialGetAsync("invert?",self.checkBox_invert.setChecked,int)
             
         except:
             self.main.log("Error initializing Axis tab")
@@ -94,13 +103,15 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.label_power.setText(text)
 
     def power_changed(self,val):
-        self.serialWrite("power="+str(val)+"\n")
+        #self.serialWrite("power="+str(val)+"\n")
+        self.sendValue("axis","power",val,instance=self.axis)
         self.updatePowerLabel(val)
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
 
-        self.serialWrite("fxratio="+str(val)+"\n")
+        #self.serialWrite("fxratio="+str(val)+"\n")
+        self.sendValue("axis","fxratio",val,instance=self.axis)
         ratio = val / 255
         text = str(round(100*ratio,1)) + "%"
         self.label_fxratio.setText(text)
@@ -119,7 +130,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
             return
         id = self.drvClasses[idx][0]
         if(self.drvId != id):
-            self.serialWrite("drvtype="+str(id)+"\n")
+            self.sendValue("axis","drvtype",id,instance=self.axis)
+            #self.serialWrite("drvtype="+str(id)+"\n")
             self.getMotorDriver()
             self.getEncoder()
             self.main.updateTabs()
@@ -130,45 +142,51 @@ class AxisUI(WidgetUI,CommunicationHandler):
             return
         id = self.encClasses[idx][0]
         if(self.encId != id):
-            self.serialWrite("enctype="+str(id)+"\n")
+            self.sendValue("axis","enctype",id,instance=self.axis)
+            #self.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
             self.main.updateTabs()
             self.encoderIndexChanged(id)
         
     
     def updateSliders(self):
-        commands = ["power?","degrees?","fxratio?","esgain?","idlespring?","axisdamper?"]
-        if(self.drvId == 1): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
+        #commands = ["power?","degrees?","fxratio?","esgain?","idlespring?","axisdamper?"]
+        if(self.drvId == 1 or self.drvId == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
-            self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)       
+            self.getValueAsync("tmc","iScale",self.setCurrentScaler,self.drvId - 1,float)
+            #self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)       
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
-        callbacks = [
-        self.horizontalSlider_power.setValue,
-        self.horizontalSlider_degrees.setValue,
-        self.horizontalSlider_fxratio.setValue,
-        self.horizontalSlider_esgain.setValue,
-        self.horizontalSlider_idle.setValue,
-        self.horizontalSlider_damper.setValue]
+        # callbacks = [
+        # self.horizontalSlider_power.setValue,
+        # self.horizontalSlider_degrees.setValue,
+        # self.horizontalSlider_fxratio.setValue,
+        # self.horizontalSlider_esgain.setValue,
+        # self.horizontalSlider_idle.setValue,
+        # self.horizontalSlider_damper.setValue]
+        commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper"] # requests updates
+        self.sendCommands("axis",commands,self.axis)
 
-        self.serialGetAsync(commands,callbacks,convert=int)
+        
+        #self.serialGetAsync(commands,callbacks,convert=int)
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
+    def drvtypecb(self,i):
+        self.drvId = int(i)
+        if(i == None):
+            self.main.log("Error getting driver")
+            return
+        updateClassComboBox(self.comboBox_driver,self.drvIds,self.drvClasses,self.drvId)
+        self.updateSliders()
+
+    def drvlistcb(self,l):
+            self.drvIds,self.drvClasses = classlistToIds(l)
+            #print("drv",l)
+            self.getValueAsync("axis","drvtype",self.drvtypecb,self.axis,int,typechar='?',delete=False)
 
     def getMotorDriver(self):
-        def drvtypecb(dat):
-            l,i = dat
-            self.drvIds,self.drvClasses = classlistToIds(l)
-            self.drvId = int(i)
-
-            if(i == None):
-                self.main.log("Error getting driver")
-                return
-
-            updateClassComboBox(self.comboBox_driver,self.drvIds,self.drvClasses,self.drvId)
-
-            self.updateSliders()
-        self.serialGetAsync(["drvtype!","drvtype?"],drvtypecb)
+        self.getValueAsync("axis","drvtype",self.drvlistcb,self.axis,str,typechar='!')
+        
        
     def encoderIndexChanged(self,idx):
         id = self.comboBox_encoder.currentData()
@@ -179,6 +197,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def getEncoder(self):
        
         def f(dat):
+            for w in self.encWidgets:
+                # cleanup if present
+                CommunicationHandler.removeCallbacks(w)
             self.comboBox_encoder.clear()
             self.encWidgets.clear()
 
@@ -193,7 +214,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
                     self.encWidgets[id] = EncoderOptions(self.main,id)
                     self.stackedWidget_encoder.addWidget(self.encWidgets[id])
 
-        self.serialGetAsync("enctype!",f)
+        #self.serialGetAsync("enctype!",f)
+        self.getValueAsync("axis","enctype",f,self.axis,str,typechar='!')
         
         def encid_f(id):
             if(id == 255):
@@ -212,25 +234,10 @@ class AxisUI(WidgetUI,CommunicationHandler):
             
             # if(self.encId == 1):
             #     self.spinBox_cpr.setEnabled(False)
-        self.serialGetAsync("enctype?",encid_f,int)
+        #self.serialGetAsync("enctype?",encid_f,int)
+        self.getValueAsync("axis","enctype",encid_f,self.axis,int,typechar='?')
         # def f_cpr(v):
         #     self.spinBox_cpr.setValue(v)
         # self.serialGetAsync("cpr?",f_cpr,int)
-
-
-    # Prepend the axis letter to the command before sending   
-    def serialWrite(self,cmd):
-        cmd = self.axis+"."+cmd
-        self.main.comms.serialWrite(cmd)
-
-
-    # Prepend the axis letter to the command(s) before sending   
-    def serialGetAsync(self,cmds,callbacks,convert=None):
-        if(type(cmds) == list):
-            axis_cmds = list(map(lambda x: self.axis+"."+x, cmds)) # y.torqueP? etc
-        else:
-            axis_cmds = self.axis+"."+cmds
-        self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
-
 
         
