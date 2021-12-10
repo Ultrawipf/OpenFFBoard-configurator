@@ -40,7 +40,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 
-        self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"ffbfiltercf_q"))
+        self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"filterCfQ"))
         self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(val * 100))
 
         self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(val * 64))

@@ -63,15 +63,13 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         
 
-
     def initUi(self):
         try:
             self.getMotorDriver()
             self.getEncoder()
-            self.updateSliders()
+            #self.updateSliders()
             self.sendCommand("axis","invert",self.axis)
-            #self.serialGetAsync("invert?",self.checkBox_invert.setChecked,int)
-            
+       
         except:
             self.main.log("Error initializing Axis tab")
             return False
@@ -103,14 +101,11 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.label_power.setText(text)
 
     def power_changed(self,val):
-        #self.serialWrite("power="+str(val)+"\n")
         self.sendValue("axis","power",val,instance=self.axis)
         self.updatePowerLabel(val)
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
-
-        #self.serialWrite("fxratio="+str(val)+"\n")
         self.sendValue("axis","fxratio",val,instance=self.axis)
         ratio = val / 255
         text = str(round(100*ratio,1)) + "%"
@@ -120,9 +115,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.encoderChanged(self.comboBox_encoder.currentIndex())
 
     def submitHw(self):
-        #val = self.spinBox_cpr.value()
         self.driverChanged(self.comboBox_driver.currentIndex())
-        #self.serialWrite("cpr="+str(val)+"\n")
 
 
     def driverChanged(self,idx):
@@ -131,7 +124,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         id = self.drvClasses[idx][0]
         if(self.drvId != id):
             self.sendValue("axis","drvtype",id,instance=self.axis)
-            #self.serialWrite("drvtype="+str(id)+"\n")
             self.getMotorDriver()
             self.getEncoder()
             self.main.updateTabs()
@@ -150,25 +142,16 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
     
     def updateSliders(self):
-        #commands = ["power?","degrees?","fxratio?","esgain?","idlespring?","axisdamper?"]
         if(self.drvId == 1 or self.drvId == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
             self.getValueAsync("tmc","iScale",self.setCurrentScaler,self.drvId - 1,float)
             #self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)       
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
-        # callbacks = [
-        # self.horizontalSlider_power.setValue,
-        # self.horizontalSlider_degrees.setValue,
-        # self.horizontalSlider_fxratio.setValue,
-        # self.horizontalSlider_esgain.setValue,
-        # self.horizontalSlider_idle.setValue,
-        # self.horizontalSlider_damper.setValue]
+
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper"] # requests updates
         self.sendCommands("axis",commands,self.axis)
 
-        
-        #self.serialGetAsync(commands,callbacks,convert=int)
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def drvtypecb(self,i):
@@ -214,7 +197,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
                     self.encWidgets[id] = EncoderOptions(self.main,id)
                     self.stackedWidget_encoder.addWidget(self.encWidgets[id])
 
-        #self.serialGetAsync("enctype!",f)
         self.getValueAsync("axis","enctype",f,self.axis,str,typechar='!')
         
         def encid_f(id):
@@ -232,12 +214,4 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.comboBox_encoder.setCurrentIndex(idx)
             self.encoderIndexChanged(idx)
             
-            # if(self.encId == 1):
-            #     self.spinBox_cpr.setEnabled(False)
-        #self.serialGetAsync("enctype?",encid_f,int)
         self.getValueAsync("axis","enctype",encid_f,self.axis,int,typechar='?')
-        # def f_cpr(v):
-        #     self.spinBox_cpr.setValue(v)
-        # self.serialGetAsync("cpr?",f_cpr,int)
-
-        

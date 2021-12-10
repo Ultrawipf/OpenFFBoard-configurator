@@ -24,12 +24,8 @@ class SerialComms(QObject):
         QObject.__init__(self)
         self.serial = serialport
         self.main=main
-        #self.serialQueue = []
         self.serial.readyRead.connect(self.serialReceive)
-        #self.waitForRead = False
         self.serial.aboutToClose.connect(self.reset)
-        #self.cmdbuf = []
-        #self.persistentCallbacks = []
 
 
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
@@ -47,7 +43,6 @@ class SerialComms(QObject):
                 if cb["handler"] == handler:
                     #print("Remove callback",handler)
                     item.remove(cb)
-        #print("CB",SerialComms.callbackDict)
     def removeAllCallbacks(self):
         SerialComms.callbackDict.clear()
 
@@ -74,10 +69,7 @@ class SerialComms(QObject):
 
     def reset(self):
         self.replytext = ""
-        # self.serialQueue.clear()
-        # self.waitForRead = False
-        # self.cmdbuf = []
-        
+
     def checkOk(self,reply):
         if(reply == "OK" or reply.find("Err") == -1):
             return
@@ -123,8 +115,7 @@ class SerialComms(QObject):
         typechar = groups[GRP_TYPE] if groups[GRP_TYPE] else ''
         cmd = groups[GRP_CMD]
         deleted = False
-        #if(typechar == '?'): # read command with value. return the value to the callback
-
+        
         if cls in SerialComms.callbackDict:
             for callbackObject in SerialComms.callbackDict[cls]:
                 if callbackObject["cmd"] != cmd:
@@ -133,6 +124,7 @@ class SerialComms(QObject):
                     #print("ignoring",callbackObject,instance)
                     continue
                 if typechar != callbackObject["typechar"] and callbackObject["typechar"] != None:
+                    #print("Ignoring",typechar,callbackObject["typechar"])
                     continue
                 if reply == "NOT_FOUND":
                     print(f"Cmd {cmd} not found. check syntax")
@@ -144,7 +136,5 @@ class SerialComms(QObject):
                     #print("Deleting",callbackObject)
                     SerialComms.callbackDict[cls].remove(callbackObject)
                     deleted = True
-   
-                
-                
+          
         return deleted

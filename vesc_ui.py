@@ -27,17 +27,17 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.prefix = unique
 
         self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
-        self.registerCallback("vesc","canid",self.spinBox_id.setValue,self.axis,int)
-        self.registerCallback("vesc","canspd",self.updateCanSpd,self.axis,int)
-        self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.axis,int)
-        self.registerCallback("vesc","offset",self.updateOffset,self.axis,int)
+        self.registerCallback("vesc","canid",self.spinBox_id.setValue,self.prefix,int)
+        self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
+        self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
+        self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
 
-        self.registerCallback("vesc","errorflags",self.errorCb,self.axis,int)
-        self.registerCallback("vesc","encrate",self.label_encoder_rate.setText,self.axis,str)
-        self.registerCallback("vesc","voltage",self.label_voltage.setText,self.axis,str)
-        self.registerCallback("vesc","pos",self.posCb,self.axis,int)
-        self.registerCallback("vesc","vescstate",self.stateCb,self.axis,int)
-        self.registerCallback("vesc","torque",self.stateCb,self.axis,int)
+        self.registerCallback("vesc","errorflags",self.errorCb,self.prefix,int)
+        self.registerCallback("vesc","encrate",self.label_encoder_rate.setText,self.prefix,str)
+        self.registerCallback("vesc","voltage",self.label_voltage.setText,self.prefix,str)
+        self.registerCallback("vesc","pos",self.posCb,self.prefix,int)
+        self.registerCallback("vesc","vescstate",self.stateCb,self.prefix,int)
+        self.registerCallback("vesc","torque",self.stateCb,self.prefix,int)
         
         self.initUi()
 
@@ -112,13 +112,12 @@ class VescUI(WidgetUI,CommunicationHandler):
     def errorCb(self,dat):
         txt = "Ok"
         if dat != 0:
-            txt = "Error code " + str(dat[1])
-        self.label_errors.setText()
+            txt = "Error code " + str(dat)
+        self.label_errors.setText(txt)
 
 
     def updateTimer(self):
         self.sendCommands("vesc",["vescstate","errorflags","voltage","pos","encrate","torque"],self.prefix)
-        #self.main.comms.serialGetAsync(["vescState?","vescErrorFlag?","vescEncRate?","vescPos?","vescTorque?","vescVoltage?"],self.statusUpdateCb,int,self.prefix)
  
     def apply(self):
         spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!

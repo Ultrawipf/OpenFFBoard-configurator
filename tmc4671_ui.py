@@ -139,7 +139,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         
     def updateStatus(self):
-        #self.serialGetAsync("tmctemp",self.updateTemp,float)
         self.sendCommand("tmc","temp",self.axis)
         self.sendCommands("sys",["vint","vext"])
 
@@ -158,11 +157,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     def submitPid(self):
         # PIDs
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        #self.serialWrite("seqpi="+str(seq))
         self.sendValue("tmc","seqpi",val=seq,instance=self.axis)
 
         tp = self.spinBox_tp.value()
-        #self.serialWrite("torqueP="+str(tp))
         self.sendValue("tmc","torqueP",val=tp,instance=self.axis)
 
         ti = self.spinBox_ti.value()
@@ -200,7 +197,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.checkBox_I_Precision.setEnabled(state)
         if(state):
             pass
-            #self.serialGetAsync("pidPrec?",self.precisionCb,int) #update checkbox
         else:
             self.checkBox_P_Precision.setChecked(False)
             self.checkBox_I_Precision.setChecked(False)
@@ -210,8 +206,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         selectorPopup.exec()
         self.sendCommand("tmc","tmcHwType",self.axis,'!')
         self.sendCommand("tmc","tmcHwType",self.axis,'?')
-        #self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
-    
+       
     def hwVersionsCb(self,v):
         entriesList = v.split("\n")
         entriesList = [m.split(":") for m in entriesList if m]
@@ -233,15 +228,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
- 
-            #self.serialGetAsync("encsrc!",encs)
             self.sendCommands("tmc",["encsrc","tmcHwType"],self.axis,'!')
             self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale"],self.axis)
-            #self.serialGetAsync("tmctype",self.groupBox_tmc.setTitle)  
             self.getMotor()
             self.getPids()
-            #self.serialGetAsync(["tmcHwType?","tmcHwType!"],self.hwtcb)
-            #self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)
 
             self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.sendValue("tmc","fluxoffset",v,instance=self.axis))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
@@ -264,7 +254,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
                 msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
                 msg.exec_()
 
-        res = self.getValueAsync("tmc","encalign",f,self.axis)
+        res = self.getValueAsync("tmc","encalign",f,self.axis,typechar='?')
         self.main.log("Started encoder alignment")
         
 
@@ -275,7 +265,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def getPids(self):
         commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","fluxoffset","seqpi"]
-        #self.serialGetAsync(commands,callbacks,convert=int)
         self.sendCommands("tmc",commands,self.axis)
 
         
@@ -284,20 +273,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if(x != self.adc_to_amps):
             self.curveAmpData.clear()
         self.adc_to_amps = x
-
-    # def serialWrite(self,cmd):
-    #     cmd = self.axis+"."+cmd
-    #     self.main.comms.serialWrite(cmd)
-
-
-    # def serialGetAsync(self,cmds,callbacks,convert=None):
-    #     if(type(cmds) == list):
-    #         axis_cmds = list(map(lambda x: self.axis+"."+x, cmds)) # y.torqueP? etc
-    #     else:
-    #         axis_cmds = self.axis+"."+cmds
-    #     self.main.comms.serialGetAsync(axis_cmds,callbacks,convert)
-
-
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
