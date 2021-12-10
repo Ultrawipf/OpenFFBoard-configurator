@@ -41,8 +41,6 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
     def readValues(self):
         self.getValueAsync("apin","pins",self.createAinButtons,0,conversion=int)
         self.getValueAsync("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
-        #self.main.comms.serialGetAsync("local_ain_num?",self.createAinButtons,int)
-        #self.main.comms.serialGetAsync("local_ain_acal?",self.autorangeBox.setChecked,int)
         
 
     def createAinButtons(self,axes):
@@ -65,7 +63,6 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         def f(axismask):
             for i in range(self.axes):
                 self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        #self.main.comms.serialGetAsync("local_ain_mask?",f,int)
         self.getValueAsync("apin","mask",f,0,conversion=int)
 
     def apply(self):
