@@ -85,7 +85,7 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
         self.setLayout(layout)
 
     def onshown(self):
-        self.getValueAsync("localenc","cpr",self.spinBox_cpr.setValue,int)
+        self.getValueAsync("localenc","cpr",self.spinBox_cpr.setValue,0,int)
 
     def apply(self):
         val = self.spinBox_cpr.value()
@@ -110,7 +110,7 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
         self.setLayout(layout)
 
     def onshown(self):
-        self.getValueAsync("mtenc","cs",self.spinBox_cs.setValue,int)
+        self.getValueAsync("mtenc","cs",self.spinBox_cs.setValue,0,int)
 
     def apply(self):
         val = self.spinBox_cs.value()

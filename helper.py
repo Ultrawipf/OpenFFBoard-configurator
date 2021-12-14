@@ -1,6 +1,8 @@
 from os import path
 import sys
 
+from PyQt5.QtCore import QObject
+
 respath = "res"
 def res_path(file):
     if getattr(sys, 'frozen',False) and hasattr(sys, '_MEIPASS'):
@@ -37,3 +39,9 @@ def updateClassComboBox(combobox,ids,classes,selected = None):
 def splitListReply(reply,itemdelim = ':', entrydelim = '\n'):
     #for line in reply.split(entrydelim):
     return [ line.split(itemdelim) for line in reply.split(entrydelim) ]
+
+
+def qtBlockAndCall(object : QObject,function,value):
+    object.blockSignals(True)
+    function(value)
+    object.blockSignals(False)

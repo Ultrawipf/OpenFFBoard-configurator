@@ -72,7 +72,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","mtype",self.comboBox_mtype.setCurrentIndex,self.axis,int)
         self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
         self.registerCallback("tmc","encsrc",self.comboBox_enc.setCurrentIndex,self.axis,int)
-        self.registerCallback("tmc","cprtmc",self.spinBox_cpr.setValue,self.axis,int)
+        self.registerCallback("tmc","cpr",self.spinBox_cpr.setValue,self.axis,int)
 
         self.registerCallback("tmc","iScale",self.setCurrentScaler,self.axis,float)
 
@@ -259,7 +259,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cprtmc"]
+        commands=["mtype","poles","encsrc","cpr"]
         self.sendCommands("tmc",commands,self.axis)
 
 

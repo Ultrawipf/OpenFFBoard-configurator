@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QToolButton 
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
 from PyQt5 import uic
-from helper import res_path,classlistToIds,updateClassComboBox
+from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall
 from PyQt5.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
@@ -35,15 +35,18 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.timer = QTimer(self)
 
-        self.horizontalSlider_power.valueChanged.connect(self.power_changed)
+
+        self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
+
+        self.spinBox_range.editingFinished.connect(lambda : self.horizontalSlider_degrees.setValue(self.spinBox_range.value())) # don't update while typing
         self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.sendValue("axis","degrees",(val),instance=self.axis))
+
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.sendValue("axis","esgain",(val),instance=self.axis))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.sendValue("axis","idlespring",(val),instance=self.axis))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sendValue("axis","axisdamper",val,instance=self.axis))
         self.pushButton_center.clicked.connect(lambda : self.sendCommand("axis","zeroenc",instance=self.axis))
-        self.spinBox_range.editingFinished.connect(self.rangeChanged) # don't update while typing
-
+        
         #self.comboBox_encoder.currentIndexChanged.connect(self.encoderIndexChanged)
 
         self.checkBox_invert.stateChanged.connect(lambda val : self.sendValue("axis","invert",(1 if val == 0 else 0),instance=self.axis))
@@ -52,16 +55,29 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
         tabId = self.main.addTab(self,"FFB Axis")
+        # Callbacks must prevent sending a value change command
+        self.registerCallback("axis","power",self.updatePowerSlider,self.axis,int)
+        self.registerCallback("axis","degrees",self.rangeChanged,self.axis,int)
 
-        self.registerCallback("axis","invert",self.checkBox_invert.setChecked,self.axis,int)
-        self.registerCallback("axis","power",self.horizontalSlider_power.setValue,self.axis,int)
-        self.registerCallback("axis","degrees",self.horizontalSlider_degrees.setValue,self.axis,int)
-        self.registerCallback("axis","fxratio",self.horizontalSlider_fxratio.setValue,self.axis,int)
-        self.registerCallback("axis","esgain",self.horizontalSlider_esgain.setValue,self.axis,int)
-        self.registerCallback("axis","idlespring",self.horizontalSlider_idle.setValue,self.axis,int)
-        self.registerCallback("axis","axisdamper",self.horizontalSlider_damper.setValue,self.axis,int)
+        self.registerCallback("axis","invert",lambda val : qtBlockAndCall(self.checkBox_invert,self.checkBox_invert.setChecked,val),self.axis,int)
         
-        
+        self.registerCallback("axis","fxratio",lambda val : self.updateFxratio(val),self.axis,int)
+
+        self.registerCallback("axis","esgain",lambda val : self.updateEsgain(val),self.axis,int)
+        self.registerCallback("axis","idlespring",lambda val : self.updateIdlespring(val),self.axis,int)
+
+        self.registerCallback("axis","axisdamper",lambda val : self.updateDamper(val),self.axis,int)
+    
+    def updateEsgain(self,val):
+        qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_esgain,self.horizontalSlider_esgain.setValue,val)
+
+    def updateIdlespring(self,val):
+        qtBlockAndCall(self.spinBox_idlespring,self.spinBox_idlespring.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_idle,self.horizontalSlider_idle.setValue,val)
+    def updateDamper(self,val):
+        qtBlockAndCall(self.spinBox_damper,self.spinBox_damper.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_damper,self.horizontalSlider_damper.setValue,val)
 
     def initUi(self):
         try:
@@ -84,8 +100,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def hideEvent(self,event):
         self.timer.stop()
 
-    def rangeChanged(self):
-        self.horizontalSlider_degrees.setValue(self.spinBox_range.value())
+    def rangeChanged(self,val):
+        qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
+        qtBlockAndCall(self.spinBox_range,self.spinBox_range.setValue,val)
     
     def setCurrentScaler(self,x):
         if(x):
@@ -100,16 +117,34 @@ class AxisUI(WidgetUI,CommunicationHandler):
             text += " ("+str(round(current,1)) + "A)"
         self.label_power.setText(text)
 
-    def power_changed(self,val):
-        self.sendValue("axis","power",val,instance=self.axis)
-        self.updatePowerLabel(val)
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
         self.sendValue("axis","fxratio",val,instance=self.axis)
+        self.updateFxratioText(val)
+
+    def updateFxratio(self,val):
+        qtBlockAndCall(self.horizontalSlider_fxratio,self.horizontalSlider_fxratio.setValue,val)
+        self.updateFxratioText(val)
+
+    def updateFxratioText(self,val):
         ratio = val / 255
         text = str(round(100*ratio,1)) + "%"
         self.label_fxratio.setText(text)
+
+    def updatePowerSlider(self,val):
+        qtBlockAndCall(self.horizontalSlider_power,self.horizontalSlider_power.setValue,val)
+        self.updatePowerLabel(val)
+
+    def powerSiderMoved(self,val):
+        self.sendValue("axis","power",val,instance=self.axis)
+        self.updatePowerLabel(val)
+
+    def updateDegSlider(self,val):
+        qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
+
+    def degSiderMoved(self,val):
+        self.sendValue("axis","degrees",(val),instance=self.axis)
 
     def submitEnc(self):
         self.encoderChanged(self.comboBox_encoder.currentIndex())

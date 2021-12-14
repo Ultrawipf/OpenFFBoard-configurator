@@ -34,10 +34,11 @@ class CommunicationHandler():
         SerialComms.removeCallbacks(self)
 
     # Helper function to register a callback that can be deleted automatically later
+    # Callbacks normally must prevent sending a value change command in this callback to prevent the same value from being sent back again
     def registerCallback(self,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
         SerialComms.registerCallback(self,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,delete=delete,typechar=typechar)
 
-    def getValueAsync(self,cls,cmd,callback,instance=0,conversion=None,adr=None,typechar='?',delete=True):
+    def getValueAsync(self,cls,cmd,callback,instance : int=0,conversion=None,adr=None,typechar='?',delete=True):
         self.comms.getValueAsync(self,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,typechar=typechar,delete=delete)
 
     def serialWriteRaw(self,cmd):
