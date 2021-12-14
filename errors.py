@@ -78,7 +78,7 @@ class ErrorsUI(WidgetUI,CommunicationHandler):
         CommunicationHandler.__init__(self)
         self.main = main
         self.parent = parent
-        self.registerCallback("err","error",self.errorCallback)
+        self.registerCallback("err","error",self.errorCallback,0,typechar='')
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearAll.clicked.connect(self.clearErrors)
         self.errors = ErrorsModel(self.tableView)

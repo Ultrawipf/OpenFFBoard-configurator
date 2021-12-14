@@ -358,7 +358,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         if(send):
             self.sendValue("fx","filterCfFreq",(freq))
         else:
-            self.horizontalSlider_CFq.setValue(v)
+            self.horizontalSlider_cffilter.setValue(v)
         lbl = str(freq)+"Hz"
         
         qOn = True
