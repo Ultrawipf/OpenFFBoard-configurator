@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QSlider
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget,QToolButton 
 from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
@@ -70,13 +70,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.registerCallback("main","lsain",self.updateAnalogClassesCB,0)
         self.registerCallback("main","aintypes",self.updateAnalogSources,0,int)
 
+        self.registerCallback("fx","filterCfFreq",lambda val : self.cffilter_changed(val,send=False),0,int)
 
-        self.registerCallback("fx","filterCfQ",self.horizontalSlider_CFq.setValue,0,int)
-        self.registerCallback("fx","filterCfFreq",self.horizontalSlider_cffilter.setValue,0,int)
-        self.registerCallback("fx","spring",self.horizontalSlider_spring.setValue,0,int)
-        self.registerCallback("fx","damper",self.horizontalSlider_damper.setValue,0,int)
-        self.registerCallback("fx","friction",self.horizontalSlider_friction.setValue,0,int)
-        self.registerCallback("fx","inertia",self.horizontalSlider_inertia.setValue,0,int)
+        self.registerCallback("fx","filterCfQ",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_CFq,self.horizontalSlider_CFq,0.01),0,int)
+        
+        self.registerCallback("fx","spring",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_spring,self.horizontalSlider_spring,4/255),0,int)
+        self.registerCallback("fx","damper",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_damper,self.horizontalSlider_damper,2/255),0,int)
+        self.registerCallback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,2/255),0,int)
+        self.registerCallback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,2/255),0,int)
         
 
         if(self.initUi()):
@@ -145,13 +146,18 @@ class FfbUI(WidgetUI,CommunicationHandler):
     
     # Helper function to sync spinboxes and sliders
     # Should be called by the sliders update event while the spinbox should update the slider directly
-    def sliderChangedUpdateSpinbox(self,val,spinbox,factor,command):
+    def sliderChangedUpdateSpinbox(self,val,spinbox,factor,command=None):
         newVal = val * factor
         if(spinbox.value != newVal):
             spinbox.blockSignals(True)
             spinbox.setValue(newVal)
             spinbox.blockSignals(False)
-        self.sendValue("fx",command,val)
+        if(command):
+            self.sendValue("fx",command,val)
+
+    def updateSpinboxAndSlider(self,val,spinbox : QSlider,slider,factor):
+        slider.setValue(val)
+        self.sliderChangedUpdateSpinbox(val,spinbox,factor)
 
     def setAxisCheckBoxes(self,count):
         self.checkBox_axisX.setChecked(True if (count>0) else False)
@@ -347,9 +353,12 @@ class FfbUI(WidgetUI,CommunicationHandler):
     #     self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
         
 
-    def cffilter_changed(self,v):
+    def cffilter_changed(self,v,send=True):
         freq = max(min(v,500),0)
-        self.sendValue("fx","filterCfFreq",(freq))
+        if(send):
+            self.sendValue("fx","filterCfFreq",(freq))
+        else:
+            self.horizontalSlider_CFq.setValue(v)
         lbl = str(freq)+"Hz"
         
         qOn = True
@@ -363,14 +372,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
     
     def updateSliders(self):
-        #commands = ["ffbfiltercf_q?","ffbfiltercf?","spring?","damper?","friction?","inertia?"]
         self.sendCommands("fx",["filterCfQ","filterCfFreq","spring","damper","friction","inertia"],0)
-        # self.sendCommand("fx","filterCfQ")
-        # self.sendCommand("fx","filterCfFreq")
-        # self.sendCommand("fx","spring")
-        # self.sendCommand("fx","damper")
-        # self.sendCommand("fx","friction")
-        # self.sendCommand("fx","inertia")
+
 
 
         
