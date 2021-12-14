@@ -16,7 +16,7 @@ GRP_REPLY       = 6
 
 class SerialComms(QObject):
     replytext = ""
-    cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=])(?:(\d+))?(?:\?(\d))?\|(.+)\]",re.DOTALL)
+    cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
     rawReply = pyqtSignal(str)
 
