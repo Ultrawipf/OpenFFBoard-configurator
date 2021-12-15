@@ -20,11 +20,18 @@ class SystemUI(WidgetUI,CommunicationHandler):
         self.pushButton_save.clicked.connect(self.saveClicked)
 
     def updateRamUse(self,reply):
-        #use,size = re.match(r"Usage:\W(\d+)\WSize:\W(\d+)",reply).groups()
-        use = int(reply)
+        usage = reply.split(":")
+        use = int(usage[0])
+        minuse = None
+        if(len(usage) == 2):
+            minuse = int(usage[1])
         if use:
             use = round(int(use)/1000.0,2)
-            self.label_ramUse.setText("{}k".format(use))
+            if minuse:
+                minuse = round(int(minuse)/1000.0,2)
+                self.label_ramUse.setText("{}k ({}k min)".format(use,minuse))
+            else:
+                self.label_ramUse.setText("{}k".format(use))
 
     def saveClicked(self):
         def f(res):
