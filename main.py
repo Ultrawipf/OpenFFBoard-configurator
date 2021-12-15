@@ -244,7 +244,7 @@ class MainUi(QMainWindow,CommunicationHandler):
 
     def reconnect(self):
         self.resetPort()
-        QTimer.singleShot(4000,self.serialchooser.serialConnect)
+        QTimer.singleShot(1000,self.serialchooser.serialConnect)
         #self.serialchooser.serialConnect()
 
     def resetPort(self):
