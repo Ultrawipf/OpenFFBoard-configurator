@@ -84,10 +84,8 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
     
     def readValues(self):
         self.getValueAsync("dpin","pins",self.initButtons,0,conversion=int)
-        #self.main.comms.serialGetAsync("local_btnpins?",self.initButtons,int)
         self.getValueAsync("dpin","polarity",self.polBox.setChecked,0,conversion=int)
-        #self.main.comms.serialGetAsync("local_btnpol?",self.polBox.setChecked,int)
-
+ 
 
 class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
@@ -237,15 +235,15 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             self.csPinBox.setVisible(mode.uses_spi)
  
     def apply(self):
-        self.sendValue("spibtn","mode",self.modeBox.currentData().index)
-        self.sendValue("spibtn","xchan",self.xChannel.value())
-        self.sendValue("spibtn","ychan",self.yChannel.value())
-        self.sendValue("spibtn","x12",self.x12.value())
-        self.sendValue("spibtn","x56",self.x56.value())
-        self.sendValue("spibtn","y135",self.y135.value())
-        self.sendValue("spibtn","y246",self.y246.value())
-        self.sendValue("spibtn","revbtn",self.revBtnBox.value())
-        self.sendValue("spibtn","cspin",self.csPinBox.value())
+        self.sendValue("shifter","mode",self.modeBox.currentData().index)
+        self.sendValue("shifter","xchan",self.xChannel.value())
+        self.sendValue("shifter","ychan",self.yChannel.value())
+        self.sendValue("shifter","x12",self.x12.value())
+        self.sendValue("shifter","x56",self.x56.value())
+        self.sendValue("shifter","y135",self.y135.value())
+        self.sendValue("shifter","y246",self.y246.value())
+        self.sendValue("shifter","revbtn",self.revBtnBox.value())
+        self.sendValue("shifter","cspin",self.csPinBox.value())
 
     def readXYPosition(self):
         def updatePosition(valueStr: str):
