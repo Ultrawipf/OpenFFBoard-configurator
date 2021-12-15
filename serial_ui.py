@@ -1,13 +1,16 @@
+import PyQt5
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
-from PyQt5.QtCore import QIODevice,pyqtSignal
+from PyQt5.QtCore import QIODevice,pyqtSignal,Qt
 import main
 from base_ui import WidgetUI,CommunicationHandler
 from helper import classlistToIds,updateClassComboBox
 from PyQt5.QtWidgets import QMessageBox
 
+officialVidPids = [(0x1209,0xFFB0)] # Highlighted in serial selector
 
 class SerialChooser(WidgetUI,CommunicationHandler):
     connected = pyqtSignal(bool)
@@ -21,8 +24,8 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         CommunicationHandler.__init__(main.comms)
         self.serial = serial
         self.pushButton_refresh.clicked.connect(self.getPorts)
-        self.pushButton_connect.clicked.connect(self.serialConnect)
-        self.comboBox_port.currentIndexChanged.connect(self.selectPort)
+        self.pushButton_connect.clicked.connect(self.serialConnectButton)
+        #self.comboBox_port.currentIndexChanged.connect(self.selectPort)
         self.pushButton_send.clicked.connect(self.sendLine)
         self.lineEdit_cmd.returnPressed.connect(self.sendLine)
         self.pushButton_ok.clicked.connect(self.mainBtn)
@@ -49,7 +52,7 @@ class SerialChooser(WidgetUI,CommunicationHandler):
 
     def sendLine(self):
         cmd = self.lineEdit_cmd.text()+"\n"
-        self.serialLog(cmd)
+        self.serialLog(">"+cmd)
         self.main.comms.serialWriteRaw(cmd)
         #self.main.comms.serialGetAsync(cmd,self.serialLog)
 
@@ -74,6 +77,12 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.connected.emit(False)
             self.groupBox_system.setEnabled(False)
 
+    def serialConnectButton(self):
+        if(not self.serial.isOpen() and self.port != None):
+            self.serialConnect()
+        else:
+            self.serial.close()
+            self.update()
 
     def serialConnect(self):
         self.selectPort(self.comboBox_port.currentIndex())
@@ -85,8 +94,6 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.serial.open(QIODevice.ReadWrite)
             if(not self.serial.isOpen()):
                 self.main.log("Can not open port")
-        else:
-            self.serial.close()
             
         self.update()
         
@@ -102,13 +109,29 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         
         self.ports = QSerialPortInfo().availablePorts()
         self.comboBox_port.clear()
-        for port in self.ports:
-            self.comboBox_port.addItem(port.portName() + " : " + port.description())
-        self.update()
+        selIdx = 0
+        for i,port in enumerate(self.ports):
+            supportedVidPid =  (port.vendorIdentifier() ,port.productIdentifier()) in officialVidPids
+            name = port.portName() + " : " + port.description()
+            if (supportedVidPid):
+                name += " (FFBoard device)"
+            else:
+                name += " (Unsupported device)"
+            self.comboBox_port.addItem(name)
+            if(supportedVidPid):
+                selIdx = i
+                self.comboBox_port.setItemData(i,QColor(Qt.green),Qt.BackgroundRole)
+            else:
+                self.comboBox_port.setItemData(i,QColor(Qt.red),Qt.BackgroundRole)
+
+        
         plist = [p.portName() for p in self.ports]
         if oldport in plist:
             self.comboBox_port.setCurrentIndex(plist.index(oldport))
+        else:
+            self.comboBox_port.setCurrentIndex(selIdx) # preselect found entry
         self.selectPort(self.comboBox_port.currentIndex())
+        self.update()
 
     def updateMains(self,dat):
         self.comboBox_main.clear()
@@ -126,8 +149,7 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         self.main.updateTabs()
 
     def getMainClasses(self):
-        
-
+    
         def f(i):
             self.mainID = i
         self.getValueAsync("main","id",f,conversion=int,delete=True)
