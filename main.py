@@ -186,7 +186,7 @@ class MainUi(QMainWindow,CommunicationHandler):
         def updateTabs_cb(active):
             #print(f"tabs:{active}")
             lines = [l.split(":") for l in active.split("\n") if l]
-            newActiveClasses = {i[1]+":"+i[3]:{"name":i[0],"clsname":i[1],"id":int(i[2]),"unique":int(i[3]),"ui":None,"cmdaddr":[4]} for i in lines}
+            newActiveClasses = {i[1]+":"+i[2]:{"name":i[0],"clsname":i[1],"id":int(i[3]),"unique":int(i[2]),"ui":None,"cmdaddr":[4]} for i in lines}
             deleteClasses = [(c,name) for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
             for c,name in deleteClasses:

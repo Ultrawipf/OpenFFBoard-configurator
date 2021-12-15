@@ -83,6 +83,8 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.serial.setPort(self.port)
             self.serial.setBaudRate(500000)
             self.serial.open(QIODevice.ReadWrite)
+            if(not self.serial.isOpen()):
+                self.main.log("Can not open port")
         else:
             self.serial.close()
             
