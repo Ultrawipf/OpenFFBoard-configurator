@@ -83,27 +83,34 @@ class SerialComms(QObject):
 
     def serialReceive(self):
         data = self.serial.readAll()
-        newReply = data.data().decode("utf-8")
-        self.replytext += newReply # Buffer replies until newline found at end of buffer
-    
-        while self.replytext:
-            firstEndmarker = self.replytext.find("]")
-            firstStartmarker = self.replytext.find("[")
-            if(firstStartmarker >= 0 and firstEndmarker > 1 and firstStartmarker < firstEndmarker):
-                match = self.cmdRegex.search(self.replytext,firstStartmarker,firstEndmarker+1)
-                if (match):
-                    curRepl = self.replytext[firstStartmarker+1:firstEndmarker]
-                    self.replytext = self.replytext[match.end()::] # cut out everything before the end of the match
-                    if self.processMatchedReply(match):
-                        pass
+        try:
+            newReply = data.data().decode("utf-8")
+            self.replytext += newReply # Buffer replies until newline found at end of buffer
+        except Exception as e:
+            print(f"Can not decode:\n{data}. Exception: {e}")
+        try:
+        
+            while self.replytext:
+                firstEndmarker = self.replytext.find("]")
+                firstStartmarker = self.replytext.find("[")
+                if(firstStartmarker >= 0 and firstEndmarker > 1 and firstStartmarker < firstEndmarker):
+                    match = self.cmdRegex.search(self.replytext,firstStartmarker,firstEndmarker+1)
+                    if (match):
+                        curRepl = self.replytext[firstStartmarker+1:firstEndmarker]
+                        self.replytext = self.replytext[match.end()::] # cut out everything before the end of the match
+                        if self.processMatchedReply(match):
+                            pass
+                        else:
+                            self.rawReply.emit(curRepl)
+                        
                     else:
-                        self.rawReply.emit(curRepl)
-                    
+                        self.rawReply.emit(self.replytext[firstStartmarker+1:firstEndmarker])
+                        self.replytext = self.replytext[firstEndmarker+1::]
                 else:
-                    self.rawReply.emit(self.replytext[firstStartmarker+1:firstEndmarker])
-                    self.replytext = self.replytext[firstEndmarker+1::]
-            else:
-                break
+                    break
+        except Exception as e:
+            print("Can not process:",e)
+        
 
 
     def processMatchedReply(self,match):

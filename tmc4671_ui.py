@@ -69,6 +69,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","fluxoffset",self.spinBox_fluxoffset.setValue,self.axis,int)
         self.registerCallback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
 
+        self.registerCallback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
+
         self.registerCallback("tmc","mtype",self.comboBox_mtype.setCurrentIndex,self.axis,int)
         self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
         self.registerCallback("tmc","encsrc",self.comboBox_enc.setCurrentIndex,self.axis,int)
@@ -83,8 +85,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def showEvent(self,event):
         self.initUi()
-        self.timer.start(50)
-        self.timer_status.start(250)
+        if self.isEnabled():
+            self.timer.start(50)
+            self.timer_status.start(250)
 
     # Tab is hidden
     def hideEvent(self,event):
@@ -219,8 +222,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.sendCommand("tmc","iScale",self.axis) # request scale update
         if self.hwversion == 0 and self.versionWarningShow:
             # no version set. ask user to select version
-            self.showVersionSelectorPopup()
             self.versionWarningShow = False
+            self.showVersionSelectorPopup()
+            
         else:
             self.versionWarningShow = False
 
@@ -240,6 +244,18 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.main.log("Error initializing TMC tab. Please reconnect: " + str(e))
             return False
         return True
+
+    def tmcChipTypeCB(self,type : str):
+        if not type.startswith("TMC"):
+            self.main.log("Can not find TMC")
+            self.groupBox_tmc.setTitle("Driver (not connected)")
+            self.setEnabled(False)
+            self.timer.stop()
+            self.timer_status.stop()
+        else:
+            self.groupBox_tmc.setTitle(type)
+            self.setEnabled(True)
+
 
     def encsCb(self,encsrcs):
         for s in encsrcs.split(","):
@@ -301,7 +317,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
         self.sendValue("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
     
     def typeCb(self,entries):
-        print("Reply",entries)
+        #print("Reply",entries)
         entriesList = entries.split("\n")
         entriesList = [m.split(":") for m in entriesList if m]
         for m in entriesList:

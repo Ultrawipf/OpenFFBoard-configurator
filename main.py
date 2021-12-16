@@ -14,11 +14,11 @@ from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 
 # This GUIs version
-version = "1.5.0"
+version = "1.5.1"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.5.0"
+min_fw = "1.5.1"
 
 # UIs
 import system_ui
