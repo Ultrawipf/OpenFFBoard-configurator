@@ -47,9 +47,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sendValue("axis","axisdamper",val,instance=self.axis))
         self.pushButton_center.clicked.connect(lambda : self.sendCommand("axis","zeroenc",instance=self.axis))
         
-        #self.comboBox_encoder.currentIndexChanged.connect(self.encoderIndexChanged)
-
-        self.checkBox_invert.stateChanged.connect(lambda val : self.sendValue("axis","invert",(1 if val == 0 else 0),instance=self.axis))
+        self.checkBox_invert.stateChanged.connect(lambda val : self.sendValue("axis","invert",(0 if val == 0 else 1),instance=self.axis))
 
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
