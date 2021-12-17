@@ -51,8 +51,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         CommunicationHandler.comms = serial_comms.SerialComms(self,self.serial)
         #self.serial.moveToThread(self.serialThread)
 
-        
-
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
@@ -101,7 +99,7 @@ class MainUi(QMainWindow,CommunicationHandler):
 
 
     def dfuUploader(self):
-        msg = QDialog()#QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
+        msg = QDialog()
         msg.setWindowTitle("DFU Mode")
         dfu = DFUModeUI(msg)
         l = QVBoxLayout()
