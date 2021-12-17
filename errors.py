@@ -95,7 +95,7 @@ class ErrorsUI(WidgetUI,CommunicationHandler):
         self.readErrors()
 
     def registerCallbacks(self):
-        self.registerCallback("err","error",self.errorCallback,0,typechar='')
+        self.registerCallback("sys","errors",self.errorCallback,0,typechar='?')
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
@@ -103,13 +103,13 @@ class ErrorsUI(WidgetUI,CommunicationHandler):
 
     def readErrors(self):
         if(self.isEnabled):
-            self.getValueAsync("sys","errors",self.errorCallback)
+            self.sendCommand("sys","errors",0)
 
     def errorCallback(self,errorstring):
         self.parent.show()
         errors = []
         for errorline in errorstring.split("\n"):
-            e = errorline.split(":")
+            e = errorline.split(":",2)
             if(len(e) < 3):
                 continue
             error = {"code":e[0], "level":e[1], "info":e[2]}
