@@ -309,50 +309,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.groupBox_analogaxes.setLayout(layout)
         
 
-    # def getAxisSources(self):
-        
-    #     def cb_axisSources(dat):
-    #         btns = dat[0]
-    #         types = int(dat[1])
-            
-    #         self.axisIds,self.axisClasses = classlistToIds(btns)
-    #         if(types == None):
-    #             self.main.log("Error getting buttons")
-    #             return
-    #         types = int(types)
-    #         layout = QGridLayout()
-    #         #clear
-    #         for b in self.axisconfbuttons:
-    #             del b
-    #         for b in self.axisbtns.buttons():
-    #             self.axisbtns.removeButton(b)
-    #             del b
-    #         #add buttons
-    #         row = 0
-    #         for c in self.axisClasses:
-    #             creatable = c[2]
-    #             btn=QCheckBox(str(c[1]),self.groupBox_buttons)
-    #             self.axisbtns.addButton(btn,c[0])
-    #             layout.addWidget(btn,row,0)
-    #             enabled = types & (1<<c[0]) != 0
-    #             btn.setChecked(enabled)
-
-    #             confbutton = QToolButton(self)
-    #             confbutton.setText(">")
-    #             layout.addWidget(confbutton,row,1)
-    #             self.axisconfbuttons.append((confbutton,analogconf_ui.AnalogOptionsDialog(str(c[1]),c[0],self.main)))
-    #             confbutton.clicked.connect(self.axisconfbuttons[row][1].exec)
-    #             confbutton.setEnabled(enabled)
-    #             self.axisbtns.button(c[0]).stateChanged.connect(confbutton.setEnabled)
-    #             row+=1
-       
-    #             confbutton.setEnabled(creatable or enabled)
-    #             btn.setEnabled(creatable or enabled)
-
-    #         self.groupBox_analogaxes.setLayout(layout)
-    #     self.main.comms.serialGetAsync(["lsain","aintypes?"],cb_axisSources)
-        
-
     def cffilter_changed(self,v,send=True):
         freq = max(min(v,500),0)
         if(send):

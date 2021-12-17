@@ -299,6 +299,7 @@ class MainUi(QMainWindow,CommunicationHandler):
             self.serialTim.singleShot(500,t)
             self.getValueAsync("main","id",f,0)
             #self.comms.serialGetAsync("id?",f)  
+            self.errorsDialog.registerCallbacks()
 
         else:
             self.connected = False

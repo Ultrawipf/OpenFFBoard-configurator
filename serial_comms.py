@@ -39,10 +39,8 @@ class SerialComms(QObject):
 
     def removeCallbacks(handler):
         for cls,item in (SerialComms.callbackDict.items()):
-            for cb in (item):
-                if cb["handler"] == handler:
-                    #print("Remove callback",handler)
-                    item.remove(cb)
+            SerialComms.callbackDict[cls] = [ entry for entry in item if entry["handler"] != handler]
+
     def removeAllCallbacks(self):
         SerialComms.callbackDict.clear()
 

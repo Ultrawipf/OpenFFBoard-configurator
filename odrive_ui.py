@@ -29,7 +29,7 @@ class OdriveUI(WidgetUI,CommunicationHandler):
 
         self.registerCallback("odrv","canid",self.spinBox_id.setValue,self.prefix,int)
         self.registerCallback("odrv","canspd",self.updateCanSpd,self.prefix,int)
-        self.registerCallback("odrv","maxtorqe",self.updateTorque,self.prefix,int)
+        self.registerCallback("odrv","maxtorque",self.updateTorque,self.prefix,int)
         self.registerCallback("odrv","vbus",lambda v : self.label_voltage.setText("{}V".format(v/1000)),self.prefix,int)
         self.registerCallback("odrv","errors",lambda v : self.showErrors(v),self.prefix,int)
         self.registerCallback("odrv","state",lambda v : self.stateCb(v),self.prefix,int)
@@ -104,7 +104,7 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         torqueScaler = str(int(self.doubleSpinBox_torque.value() * 100))
         self.sendValue("odrv","canspd",spdPreset,instance=self.prefix)
         self.sendValue("odrv","canid",canId,instance=self.prefix)
-        self.sendValue("odrv","maxtorqe",torqueScaler,instance=self.prefix)
+        self.sendValue("odrv","maxtorque",torqueScaler,instance=self.prefix)
 
 
         self.initUi() # Update UI
