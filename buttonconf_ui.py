@@ -48,7 +48,8 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         
         self.setLayout(vbox)
 
-
+    def onclose(self):
+            self.removeCallbacks()
     def initButtons(self,num):
         #delete buttons
         self.num = num
@@ -123,6 +124,10 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.sendValue("spibtn","btnnum",self.numBtnBox.value(),instance=self.id)
         self.sendValue("spibtn","btnpol",1 if self.polBox.isChecked() else 0,instance=self.id)
         self.sendValue("spibtn","btn_cs",self.csBox.value(),instance=self.id)
+
+    def onclose(self):
+        self.removeCallbacks()
+
      
     def readValues(self):
 
@@ -224,6 +229,7 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def onclose(self):
         self.timer.stop()
+        self.removeCallbacks()
 
     def modeBoxChanged(self, _):
         mode = self.modeBox.currentData()

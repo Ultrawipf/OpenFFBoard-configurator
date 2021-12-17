@@ -45,7 +45,6 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def createAinButtons(self,axes):
         self.axes = axes
-        print(axes)
         # remove buttons
         for i in range(self.buttonBoxLayout.count()):
             b = self.buttonBoxLayout.takeAt(0)
@@ -73,3 +72,6 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.sendValue("apin","mask",mask)
         self.sendValue("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
+
+    def onclose(self):
+        self.removeCallbacks()

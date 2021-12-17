@@ -70,6 +70,9 @@ class ErrorsDialog(QDialog):
         self.layout.addWidget(self.ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Errors")
+        
+    def registerCallbacks(self):
+        self.ui.registerCallbacks()
 
 class ErrorsUI(WidgetUI,CommunicationHandler):
     
@@ -78,18 +81,21 @@ class ErrorsUI(WidgetUI,CommunicationHandler):
         CommunicationHandler.__init__(self)
         self.main = main
         self.parent = parent
-        self.registerCallback("err","error",self.errorCallback,0,typechar='')
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearAll.clicked.connect(self.clearErrors)
         self.errors = ErrorsModel(self.tableView)
         self.tableView.setModel(self.errors)
         header = self.tableView.horizontalHeader()
         header.setStretchLastSection(True)
+        self.registerCallbacks()
 
 
     def clearErrors(self):
         self.sendCommand("sys","errorsclr")
         self.readErrors()
+
+    def registerCallbacks(self):
+        self.registerCallback("err","error",self.errorCallback,0,typechar='')
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
