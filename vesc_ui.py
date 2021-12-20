@@ -34,10 +34,10 @@ class VescUI(WidgetUI,CommunicationHandler):
 
         self.registerCallback("vesc","errorflags",self.errorCb,self.prefix,int)
         self.registerCallback("vesc","encrate",self.label_encoder_rate.setText,self.prefix,str)
-        self.registerCallback("vesc","voltage",self.label_voltage.setText,self.prefix,str)
+        self.registerCallback("vesc","voltage",lambda mv : self.label_voltage.setText(f"{mv/1000}V"),self.prefix,int)
         self.registerCallback("vesc","pos",self.posCb,self.prefix,int)
         self.registerCallback("vesc","vescstate",self.stateCb,self.prefix,int)
-        self.registerCallback("vesc","torque",self.stateCb,self.prefix,int)
+        self.registerCallback("vesc","torque",self.torqueCb,self.prefix,int)
         
         self.initUi()
 
