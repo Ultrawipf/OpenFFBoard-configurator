@@ -119,8 +119,7 @@ class MainUi(QMainWindow,CommunicationHandler):
         if not dump:
             return
         for e in dump["flash"]:
-            cmd = "sys.flashraw?{}={}\n".format(e["addr"], e["val"])
-            self.comms.serialWriteRaw(cmd)
+            self.comms.sendValue(self,"sys","flashraw",e["val"],e["addr"],0)
         # Message
         msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
         msg.exec_()

@@ -16,7 +16,7 @@ GRP_REPLY       = 6
 
 class SerialComms(QObject):
     replytext = ""
-    cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d))?\|(.+)\]",re.DOTALL)
+    cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d+))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
     rawReply = pyqtSignal(str)
 
@@ -49,7 +49,10 @@ class SerialComms(QObject):
         if typechar == None:
             typechar = ''
         SerialComms.registerCallback(handler=handler,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,delete=delete,typechar=typechar)
-        self.serialWriteRaw(f"{cls}.{instance}.{cmd}{typechar};")
+        if not adr:
+            self.serialWriteRaw(f"{cls}.{instance}.{cmd}{typechar};")
+        else:
+            self.serialWriteRaw(f"{cls}.{instance}.{cmd}{typechar}{adr};")
 
     def sendCommand(self,cls,cmd,instance=0,typechar='?'):
         cmdstring = f"{cls}.{instance}.{cmd}{typechar};"
@@ -58,7 +61,7 @@ class SerialComms(QObject):
     def sendValue(self,handler,cls,cmd,val,adr=None,instance=0):
         cmdstring  = f"{cls}.{instance}.{cmd}={val}"
         if adr:
-            cmdstring+=str(adr)
+            cmdstring+="?"+str(adr)
         cmdstring += ";"
         SerialComms.registerCallback(handler=handler,cls=cls,cmd=cmd,callback=self.checkOk,instance=instance,adr=adr,delete=True,typechar='=')
         self.serialWriteRaw(cmdstring)
@@ -120,6 +123,8 @@ class SerialComms(QObject):
         typechar = groups[GRP_TYPE] if groups[GRP_TYPE] else ''
         cmd = groups[GRP_CMD]
         deleted = False
+        adr = groups[GRP_CMDVAL2] if groups[GRP_CMDVAL2] else None
+        val = groups[GRP_CMDVAL1] if groups[GRP_CMDVAL1] else None
         
         if cls in SerialComms.callbackDict:
             for callbackObject in SerialComms.callbackDict[cls]:
@@ -131,8 +136,13 @@ class SerialComms(QObject):
                 if typechar != callbackObject["typechar"] and callbackObject["typechar"] != None:
                     #print("Ignoring",typechar,callbackObject["typechar"])
                     continue
+
+                if adr != None and adr != callbackObject["address"]:
+                    #print("Ignoring address",callbackObject,groups)
+                    continue
+
                 if reply == "NOT_FOUND":
-                    print(f"Cmd {cmd} not found. check syntax")
+                    #print(f"Cmd {cmd} not found. check syntax")
                     continue
                 if(callbackObject["convert"]):
                     reply = callbackObject["convert"](reply)
