@@ -6,7 +6,7 @@ def saveDump(buf):
     for l in buf.split("\n"):
         if not l:
             break
-        addr,val = l.split(":")
+        val,addr = l.split(":")
         dump["flash"].append({"addr":addr,"val":val})
     fname,_ = QFileDialog.getSaveFileName( directory = 'dump.json' ,filter  = "Json files (*.json)")
     try:
