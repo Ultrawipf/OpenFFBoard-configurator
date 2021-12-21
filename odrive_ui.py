@@ -26,11 +26,13 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         #self.pushButton_anticogging.clicked.connect(self.antigoggingBtn) #TODO test first
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
+        self.connected = False
 
         self.registerCallback("odrv","canid",self.spinBox_id.setValue,self.prefix,int)
         self.registerCallback("odrv","canspd",self.updateCanSpd,self.prefix,int)
+        self.registerCallback("odrv","connected",self.connectedCb,self.prefix,int)
         self.registerCallback("odrv","maxtorque",self.updateTorque,self.prefix,int)
-        self.registerCallback("odrv","vbus",lambda v : self.label_voltage.setText("{}V".format(v/1000)),self.prefix,int)
+        self.registerCallback("odrv","vbus",self.voltageCb,self.prefix,int)
         self.registerCallback("odrv","errors",lambda v : self.showErrors(v),self.prefix,int)
         self.registerCallback("odrv","state",lambda v : self.stateCb(v),self.prefix,int)
 
@@ -50,19 +52,8 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         self.sendCommands("odrv",commands,self.prefix)
 
        
-    
-    # def antigoggingBtn(self):
-    #     def anticogging( btn):
-    #         cmd = btn.text()
-    #         if(cmd=="OK"):
-    #             self.main.comms.serialWrite("odriveAnticogging=1\n")
-
-    #     msg = QMessageBox()
-    #     msg.setIcon(QMessageBox.Warning)
-    #     msg.setText("Start Anticogging calibration?\nThis can take a very long time or may not work if the position controller is not tuned!")
-    #     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-    #     msg.buttonClicked.connect(anticogging)
-    #     msg.exec_()
+    def connectedCb(self,v):
+        self.connected = False if v == 0 else True
 
     def updateCanSpd(self,preset):
         self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
@@ -70,8 +61,16 @@ class OdriveUI(WidgetUI,CommunicationHandler):
     def updateTorque(self,torque):
         self.doubleSpinBox_torque.setValue(torque/100)
 
+    def voltageCb(self,v):
+        if not self.connected:
+            self.label_voltage.setText("Not connected")
+            return
+        self.label_voltage.setText("{}V".format(v/1000))
 
     def showErrors(self,codes):
+        if not self.connected:
+            self.label_errornames.setText("Not connected")
+            return
         errs = []
         if(codes == 0):
             errs = ["None"]
@@ -86,7 +85,9 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         self.label_errornames.setText(errString)
 
     def stateCb(self,dat):
-
+        if not self.connected:
+            self.label_state.setText("Not connected")
+            return
         if(dat < len(self.odriveStates)):
             self.label_state.setText(self.odriveStates[dat])
         else:
@@ -94,7 +95,7 @@ class OdriveUI(WidgetUI,CommunicationHandler):
 
 
     def updateTimer(self):
-        self.sendCommands("odrv",["vbus","errors","state"],self.prefix)
+        self.sendCommands("odrv",["connected","vbus","errors","state"],self.prefix)
         #self.main.comms.serialGetAsync(["odriveVbus?","odriveErrors?","odriveState?"],self.statusUpdateCb,int,self.prefix)
 
         
