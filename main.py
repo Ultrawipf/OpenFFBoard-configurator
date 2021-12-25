@@ -228,7 +228,7 @@ class MainUi(QMainWindow,CommunicationHandler):
                     self.activeClasses[name] = c
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
-                elif cl["id"] == 0x87:
+                elif cl["id"] == 0x87 or cl["id"] == 0x88:
                     c = vesc_ui.VescUI(main = self,unique = cl["unique"])
                     n = cl["name"]
                     self.activeClasses[name] = c

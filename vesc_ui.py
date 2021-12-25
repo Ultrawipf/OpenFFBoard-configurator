@@ -12,7 +12,6 @@ from base_ui import CommunicationHandler
 
 class VescUI(WidgetUI,CommunicationHandler):
     prefix = None
-    odriveStates = ["AXIS_STATE_UNDEFINED","AXIS_STATE_IDLE","AXIS_STATE_STARTUP_SEQUENCE","AXIS_STATE_FULL_CALIBRATION_SEQUENCE","AXIS_STATE_MOTOR_CALIBRATION","-","AXIS_STATE_ENCODER_INDEX_SEARCH","AXIS_STATE_ENCODER_OFFSET_CALIBRATION","AXIS_STATE_CLOSED_LOOP_CONTROL","AXIS_STATE_LOCKIN_SPIN","AXIS_STATE_ENCODER_DIR_FIND","AXIS_STATE_HOMING","AXIS_STATE_ENCODER_HALL_POLARITY_CALIBRATION","AXIS_STATE_ENCODER_HALL_PHASE_CALIBRATION"]
     def __init__(self, main=None, unique=None):
         WidgetUI.__init__(self, main,'vesc.ui')
         CommunicationHandler.__init__(self)
@@ -27,7 +26,8 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.prefix = unique
 
         self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
-        self.registerCallback("vesc","canid",self.spinBox_id.setValue,self.prefix,int)
+        self.registerCallback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
+        self.registerCallback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
         self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
         self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
         self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
@@ -83,7 +83,7 @@ class VescUI(WidgetUI,CommunicationHandler):
 
 
     def initUi(self):
-        self.sendCommands("vesc",["canid","canspd","useencoder","offset"],self.prefix)
+        self.sendCommands("vesc",["offbcanid", "vesccanid", "canspd", "useencoder", "offset"],self.prefix)
     
     def updateOffset(self, preset):
         self.doubleSpinBox_encoderOffset.setValue(preset / 10000)
@@ -93,6 +93,14 @@ class VescUI(WidgetUI,CommunicationHandler):
 
     def stateCb(self,state):
         self.label_state.setText(self.vescstate(state))
+        if (state == 0) and (self.label_errors.isEnabled()):
+            self.label_errors.setEnabled(0)
+            self.label_voltage.setEnabled(0)
+            self.label_encoder_rate.setEnabled(0)
+        elif (state != 0) and (not self.label_errors.isEnabled()):
+            self.label_errors.setEnabled(1)
+            self.label_voltage.setEnabled(1)
+            self.label_encoder_rate.setEnabled(1)
 
     def torqueCb(self,v):
         vesc_torque = math.ceil(v / 100)
@@ -121,10 +129,11 @@ class VescUI(WidgetUI,CommunicationHandler):
  
     def apply(self):
         spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
-        canId = str(self.spinBox_id.value())
+        OpenFFBoardCANId = str(self.spinBox_OFFB_can_id.value())
+        VESCCANId = str(self.spinBox_VESC_can_Id.value())
         self.sendValue("vesc","canspd",spdPreset,instance=self.prefix)
-        self.sendValue("vesc","canid",canId,instance=self.prefix)
-
+        self.sendValue("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
+        self.sendValue("vesc","vesccanid",VESCCANId,instance=self.prefix)
         self.initUi() # Update UI
     
     def manualEncPosRead(self):
