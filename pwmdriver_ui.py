@@ -18,36 +18,36 @@ class PwmDriverUI(WidgetUI,CommunicationHandler):
         
         self.pushButton_apply.clicked.connect(self.apply)
 
-        self.registerCallback("pwmdrv","freq",self.freq_cb,0,str,typechar='!')
-        self.registerCallback("pwmdrv","freq",self.comboBox_freq.setCurrentIndex,0,int,typechar='?')
+        self.register_callback("pwmdrv","freq",self.freq_cb,0,str,typechar='!')
+        self.register_callback("pwmdrv","freq",self.comboBox_freq.setCurrentIndex,0,int,typechar='?')
 
-        self.registerCallback("pwmdrv","mode",self.pwmmode_cb,0,str,typechar='!')
-        self.registerCallback("pwmdrv","mode",self.comboBox_mode.setCurrentIndex,0,int,typechar='?')
+        self.register_callback("pwmdrv","mode",self.pwmmode_cb,0,str,typechar='!')
+        self.register_callback("pwmdrv","mode",self.comboBox_mode.setCurrentIndex,0,int,typechar='?')
 
-        self.initUi()
+        self.init_ui()
 
-    def initUi(self):
+    def init_ui(self):
         # Fill menus
-        self.sendCommand("pwmdrv","freq",0,'!')
-        self.sendCommand("pwmdrv","mode",0,'!')
+        self.send_command("pwmdrv","freq",0,'!')
+        self.send_command("pwmdrv","mode",0,'!')
     
     def freq_cb(self,modes):
         self.comboBox_freq.clear()
         modes = [m.split(":") for m in modes.split("\n") if m]
         for m in modes:
             self.comboBox_freq.addItem(m[0],m[1])
-        self.sendCommand("pwmdrv","freq",0,'?')
+        self.send_command("pwmdrv","freq",0,'?')
 
     def pwmmode_cb(self,modes):
         self.comboBox_mode.clear()
         modes = [m.split(":") for m in modes.split("\n") if m]
         for m in modes:
             self.comboBox_mode.addItem(m[0],m[1])
-        self.sendCommand("pwmdrv","mode",0,'?')
+        self.send_command("pwmdrv","mode",0,'?')
 
  
     def apply(self):
-        self.sendValue("pwmdrv","mode",self.comboBox_mode.currentData())
-        self.sendValue("pwmdrv","freq",self.comboBox_freq.currentData())
-        self.initUi() # Update UI
+        self.send_value("pwmdrv","mode",self.comboBox_mode.currentData())
+        self.send_value("pwmdrv","freq",self.comboBox_freq.currentData())
+        self.init_ui() # Update UI
 

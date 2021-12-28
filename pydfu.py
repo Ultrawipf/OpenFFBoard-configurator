@@ -76,6 +76,9 @@ __chunksize = 512
 # USB DFU interface
 __DFU_INTERFACE = 0
 
+class DFUException(Exception):
+    pass
+
 import platform
 import usb.backend.libusb1
 def get_backend(): # Return a specific backend for windows
@@ -140,11 +143,11 @@ def mass_erase():
 
     # Execute last command
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
-        raise Exception("DFU: erase failed")
+        raise DFUException("DFU: erase failed")
 
     # Check command state
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
-        raise Exception("DFU: erase failed")
+        raise DFUException("DFU: erase failed")
 
 
 def page_erase(addr):
@@ -158,12 +161,12 @@ def page_erase(addr):
 
     # Execute last command
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
-        raise Exception("DFU: erase failed")
+        raise DFUException("DFU: erase failed")
 
     # Check command state
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
 
-        raise Exception("DFU: erase failed")
+        raise DFUException("DFU: erase failed")
 
 
 def set_address(addr):
@@ -174,11 +177,11 @@ def set_address(addr):
 
     # Execute last command
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
-        raise Exception("DFU: set address failed")
+        raise DFUException("DFU: set address failed")
 
     # Check command state
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
-        raise Exception("DFU: set address failed")
+        raise DFUException("DFU: set address failed")
 
 
 def read_memory(addr,length):
@@ -196,7 +199,7 @@ def read_memory(addr,length):
     # Execute last command
     #if get_status() != __DFU_STATE_DFU_UPLOAD_IDLE:
     if get_status() == __DFU_STATE_DFU_ERROR:
-        raise Exception("DFU: read memory failed")
+        raise DFUException("DFU: read memory failed")
 
     return readbuffer
     
@@ -231,11 +234,11 @@ def write_memory(addr, buf, progress=None, progress_addr=0, progress_size=0):
 
         # Execute last command
         if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
-            raise Exception("DFU: write memory failed")
+            raise DFUException("DFU: write memory failed")
 
         # Check command state
         if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
-            raise Exception("DFU: write memory failed")
+            raise DFUException("DFU: write memory failed")
 
         xfer_count += 1
         xfer_bytes += chunk
@@ -256,11 +259,11 @@ def write_page(buf, xfer_offset):
 
     # Execute last command
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
-        raise Exception("DFU: write memory failed")
+        raise DFUException("DFU: write memory failed")
 
     # Check command state
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
-        raise Exception("DFU: write memory failed")
+        raise DFUException("DFU: write memory failed")
 
     if __verbose:
         print ("Write: 0x%x " % (xfer_base + xfer_offset))
@@ -537,7 +540,7 @@ def write_bin(path, progress=None):
     try:
         with open(path, 'rb') as f:
             buf = f.read()
-    except Exception as e:
+    except OSError as e:
         print(e)
         return
 

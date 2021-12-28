@@ -1,14 +1,12 @@
 from base_ui import WidgetUI,CommunicationHandler
-from PyQt6.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+import PyQt6.QtWidgets
 from PyQt6.QtCore import QAbstractTableModel,Qt,QModelIndex
 
 
 
 class ActiveClassModel(QAbstractTableModel):
-    def __init__(self,parent):
+    def __init__(self):
         super(ActiveClassModel, self).__init__()
-        self.parent = parent
         self.items = []
         self.header = ["Name", "Class","Instance","Class ID","Handler ID"]
  
@@ -66,38 +64,33 @@ class ActiveClassModel(QAbstractTableModel):
         self.items = items
         self.endResetModel()
 
-class ActiveClassDialog(QDialog):
-    def __init__(self,main=None):
-        QDialog.__init__(self, main)
-        self.main = main
-        self.ui = ActiveClassUI(main,self)
-        self.layout = QVBoxLayout()
+class ActiveClassDialog(PyQt6.QtWidgets.QDialog):
+    def __init__(self, parent = None):
+        PyQt6.QtWidgets.QDialog.__init__(self, parent)
+        self.active_class_ui = ActiveClassUI(parent)
+        self.layout = PyQt6.QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.ui)
+        self.layout.addWidget(self.active_class_ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Active modules")
 
-class ActiveClassUI(WidgetUI,CommunicationHandler):
-    
-    def __init__(self, main=None,parent = None):
-        WidgetUI.__init__(self, parent,'activelist.ui')
+class ActiveClassUI(WidgetUI, CommunicationHandler):
+    def __init__(self, parent = None):
+        WidgetUI.__init__(self, parent, 'activelist.ui')
         CommunicationHandler.__init__(self)
-        self.main = main
         self.parent = parent
         self.pushButton_refresh.clicked.connect(self.read)
-        self.items = ActiveClassModel(self.tableView)
+        self.items = ActiveClassModel()
         self.tableView.setModel(self.items)
         header = self.tableView.horizontalHeader()
-        header.setSectionResizeMode(0,QHeaderView.ResizeMode.Stretch)# Stretch first section
-
-
+        header.setSectionResizeMode(0,PyQt6.QtWidgets.QHeaderView.ResizeMode.Stretch) # Stretch first section
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
         self.read()
 
     def read(self):
-        self.getValueAsync("sys","lsactive",self.updateCb)
+        self.get_value_async("sys","lsactive",self.updateCb)
 
     def updateCb(self,string):
         self.parent.show()
@@ -110,8 +103,3 @@ class ActiveClassUI(WidgetUI,CommunicationHandler):
             items.append(item)
         self.items.setItems(items)
         self.tableView.resizeColumnsToContents()
-        
-
-            
-
-    

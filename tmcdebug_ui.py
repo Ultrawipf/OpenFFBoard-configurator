@@ -14,9 +14,9 @@ class TMCDebugUI(WidgetUI):
         WidgetUI.__init__(self, main,'tmcdebug.ui')
         self.main = main #type: main.MainUi
 
-        self.initUi()
+        self.init_ui()
 
 
-    def initUi(self):
+    def init_ui(self):
         pass
     

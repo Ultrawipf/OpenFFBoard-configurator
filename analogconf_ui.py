@@ -26,16 +26,18 @@ class AnalogOptionsDialog(OptionsDialog):
 
 
 class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
-    analogbtns = QButtonGroup()
-    axes = 0
+
     def __init__(self,name,main):
         self.main = main
         OptionsDialogGroupBox.__init__(self,name,main)
         CommunicationHandler.__init__(self)
+        self.analogbtns = QButtonGroup()
         self.analogbtns.setExclusive(False)
         self.buttonBox = QGroupBox("Pins")
         self.buttonBoxLayout = QVBoxLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
+
+        self.axes = 0
 
         self.pgb_list=[]
         self.axismask=0
@@ -61,7 +63,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.timer.stop()
         
     def updateTimer(self):
-        self.sendCommands("apin",["values"],self.prefix)
+        self.send_commands("apin",["values"],self.prefix)
 
     def readValues(self):
         self.getValueAsync("apin","pins",self.createAinButtons,0,conversion=int)
@@ -96,7 +98,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
             self.axismask = axismask
             for i in range(self.axes):
                 self.analogbtns.button(i).setChecked(axismask & (1 << i))
-        self.getValueAsync("apin","mask",f,0,conversion=int)
+        self.get_value_async("apin","mask",f,0,conversion=int)
 
     def valueCb(self, str):
         val_list = str.split("\n")
@@ -120,10 +122,10 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.sendValue("apin","filter",1 if self.filterBox.isChecked() else 0)
 
     def onshown(self):
-        self.registerCallback("apin","values",self.valueCb,self.prefix,str)
+        self.register_callback("apin","values",self.valueCb,self.prefix,str)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
 
 class CANAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
@@ -162,7 +164,7 @@ class CANAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.setLayout(vbox)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
     def amountChanged(self,_):
         amount = self.numAinBox.value()
@@ -179,17 +181,17 @@ class CANAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.infoLabel.setText(text)
 
     def apply(self):
-        self.sendValue("cananalog","canid",self.canIdBox.value())
-        self.sendValue("cananalog","amount",self.numAinBox.value())
+        self.send_value("cananalog","canid",self.canIdBox.value())
+        self.send_value("cananalog","amount",self.numAinBox.value())
 
     def maximumCb(self,val):
         self.numAinBox.setMaximum(val)
         self.canIdBox.setMaximum(0x7ff - int((val-1)/4))
     
     def readValues(self):
-        self.getValueAsync("cananalog","amount",self.numAinBox.setValue,0,conversion=int)
-        self.getValueAsync("cananalog","maxamount",self.maximumCb,0,conversion=int)
-        self.getValueAsync("cananalog","canid",self.canIdBox.setValue,0,conversion=int)
+        self.get_value_async("cananalog","amount",self.numAinBox.setValue,0,conversion=int)
+        self.get_value_async("cananalog","maxamount",self.maximumCb,0,conversion=int)
+        self.get_value_async("cananalog","canid",self.canIdBox.setValue,0,conversion=int)
 
         
  
