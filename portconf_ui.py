@@ -20,8 +20,8 @@ class CanOptionsDialog(OptionsDialog):
             self.speedBox = QComboBox()
             layout.addWidget(QLabel("CAN baud rate:"))
             layout.addWidget(self.speedBox)
-            self.getValueAsync("can","speed",self.updateSpeedCb,self.instance,typechar='!')
-            self.getValueAsync("can","speed",self.speedBox.setCurrentIndex,self.instance,typechar='?',conversion=int)
+            self.get_value_async("can","speed",self.updateSpeedCb,self.instance,typechar='!')
+            self.get_value_async("can","speed",self.speedBox.setCurrentIndex,self.instance,typechar='?',conversion=int)
             self.setLayout(layout)
 
         def updateSpeedCb(self,val):
@@ -31,10 +31,10 @@ class CanOptionsDialog(OptionsDialog):
                 self.speedBox.addItem(name,id)
 
         def apply(self):
-            self.sendValue("can","speed",self.speedBox.currentData(),instance=self.instance)
+            self.send_value("can","speed",self.speedBox.currentData(),instance=self.instance)
 
         def onclose(self):
-            self.removeCallbacks()
+            self.remove_callbacks()
 
     def getSpeedName(self):
         return self.conf_ui.speedBox.currentText()
@@ -57,8 +57,8 @@ class I2COptionsDialog(OptionsDialog):
             self.speedBox = QComboBox()
             layout.addWidget(QLabel("I2C baud rate:"))
             layout.addWidget(self.speedBox)
-            self.getValueAsync("i2c","speed",self.updateSpeedCb,self.instance,typechar='!')
-            self.getValueAsync("i2c","speed",self.speedBox.setCurrentIndex,self.instance,typechar='?',conversion=int)
+            self.get_value_async("i2c","speed",self.updateSpeedCb,self.instance,typechar='!')
+            self.get_value_async("i2c","speed",self.speedBox.setCurrentIndex,self.instance,typechar='?',conversion=int)
             self.setLayout(layout)
 
         def updateSpeedCb(self,val):
@@ -68,10 +68,10 @@ class I2COptionsDialog(OptionsDialog):
                 self.speedBox.addItem(name,id)
 
         def apply(self):
-            self.sendValue("i2c","speed",self.speedBox.currentData(),instance=self.instance)
+            self.send_value("i2c","speed",self.speedBox.currentData(),instance=self.instance)
 
         def onclose(self):
-            self.removeCallbacks()
+            self.remove_callbacks()
 
     def __init__(self,instance,name, main):
         self.main = main

@@ -66,13 +66,13 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.timer.stop()
         
     def updateTimer(self):
-        self.sendCommands("dpin",["values"],self.prefix)
+        self.send_commands("dpin",["values"],self.prefix)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
     def onshown(self):
-        self.registerCallback("dpin","values",self.valueCb,self.prefix,int)
+        self.register_callback("dpin","values",self.valueCb,self.prefix,int)
 
     def valueCb(self, val):
         j=0
@@ -111,7 +111,7 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             self.btn_mask = mask
             for i in range(self.num):
                 self.buttongroup.button(i).setChecked(mask & (1 << i))
-        self.getValueAsync("dpin","mask",localcb,0,conversion=int)
+        self.get_value_async("dpin","mask",localcb,0,conversion=int)
         
  
     def apply(self):
@@ -119,12 +119,12 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(self.num):
             if(self.buttongroup.button(i).isChecked()):
                 self.btn_mask |= 1 << i
-        self.sendValue("dpin","mask",self.btn_mask)
-        self.sendValue("dpin","polarity",(1 if self.polBox.isChecked() else 0))
+        self.send_value("dpin","mask",self.btn_mask)
+        self.send_value("dpin","polarity",(1 if self.polBox.isChecked() else 0))
     
     def readValues(self):
-        self.getValueAsync("dpin","pins",self.initButtons,0,conversion=int)
-        self.getValueAsync("dpin","polarity",self.polBox.setChecked,0,conversion=int)
+        self.get_value_async("dpin","pins",self.initButtons,0,conversion=int)
+        self.get_value_async("dpin","polarity",self.polBox.setChecked,0,conversion=int)
  
 
 class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
@@ -159,13 +159,13 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         vbox.addWidget(self.csBox)
 
     def apply(self):
-        self.sendValue("spibtn","mode",self.modeBox.currentData(),instance=self.id)
-        self.sendValue("spibtn","btnnum",self.numBtnBox.value(),instance=self.id)
-        self.sendValue("spibtn","btnpol",1 if self.polBox.isChecked() else 0,instance=self.id)
-        self.sendValue("spibtn","btn_cs",self.csBox.value(),instance=self.id)
+        self.send_value("spibtn","mode",self.modeBox.currentData(),instance=self.id)
+        self.send_value("spibtn","btnnum",self.numBtnBox.value(),instance=self.id)
+        self.send_value("spibtn","btnpol",1 if self.polBox.isChecked() else 0,instance=self.id)
+        self.send_value("spibtn","btn_cs",self.csBox.value(),instance=self.id)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
      
     def readValues(self):
@@ -176,12 +176,12 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             modes = [m.split(":") for m in modes if m]
             for m in modes:
                 self.modeBox.addItem(m[0],m[1])
-            self.getValueAsync("spibtn","mode",self.modeBox.setCurrentIndex,self.id,conversion=int)
+            self.get_value_async("spibtn","mode",self.modeBox.setCurrentIndex,self.id,conversion=int)
             
-        self.getValueAsync("spibtn","btnnum",self.numBtnBox.setValue,self.id,conversion=int)
-        self.getValueAsync("spibtn","mode",modecb,self.id,conversion=str,typechar='!')
-        self.getValueAsync("spibtn","btnpol",self.polBox.setChecked,self.id,conversion=int)
-        self.getValueAsync("spibtn","cs",self.csBox.setValue,self.id,conversion=int)
+        self.get_value_async("spibtn","btnnum",self.numBtnBox.setValue,self.id,conversion=int)
+        self.get_value_async("spibtn","mode",modecb,self.id,conversion=str,typechar='!')
+        self.get_value_async("spibtn","btnpol",self.polBox.setChecked,self.id,conversion=int)
+        self.get_value_async("spibtn","cs",self.csBox.setValue,self.id,conversion=int)
 
 
 class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
@@ -268,7 +268,7 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def onclose(self):
         self.timer.stop()
-        self.removeCallbacks()
+        self.remove_callbacks()
 
     def modeBoxChanged(self, _):
         mode = self.modeBox.currentData()
@@ -280,15 +280,15 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             self.csPinBox.setVisible(mode.uses_spi)
  
     def apply(self):
-        self.sendValue("shifter","mode",self.modeBox.currentData().index)
-        self.sendValue("shifter","xchan",self.xChannel.value())
-        self.sendValue("shifter","ychan",self.yChannel.value())
-        self.sendValue("shifter","x12",self.x12.value())
-        self.sendValue("shifter","x56",self.x56.value())
-        self.sendValue("shifter","y135",self.y135.value())
-        self.sendValue("shifter","y246",self.y246.value())
-        self.sendValue("shifter","revbtn",self.revBtnBox.value())
-        self.sendValue("shifter","cspin",self.csPinBox.value())
+        self.send_value("shifter","mode",self.modeBox.currentData().index)
+        self.send_value("shifter","xchan",self.xChannel.value())
+        self.send_value("shifter","ychan",self.yChannel.value())
+        self.send_value("shifter","x12",self.x12.value())
+        self.send_value("shifter","x56",self.x56.value())
+        self.send_value("shifter","y135",self.y135.value())
+        self.send_value("shifter","y246",self.y246.value())
+        self.send_value("shifter","revbtn",self.revBtnBox.value())
+        self.send_value("shifter","cspin",self.csPinBox.value())
 
     def readXYPosition(self):
         def updatePosition(valueStr: str):
@@ -304,8 +304,8 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
                 value = "R"
             
             self.gear.setText(value)
-        self.getValueAsync("shifter","vals",updatePosition,0,conversion=str)
-        self.getValueAsync("shifter","gear",updateGear,0,conversion=str)  
+        self.get_value_async("shifter","vals",updatePosition,0,conversion=str)
+        self.get_value_async("shifter","gear",updateGear,0,conversion=str)  
 
     def readValues(self):
         self.modeBox.clear()
@@ -315,18 +315,18 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             for m in modes:
                 index, uses_spi, uses_local_reverse = m[1].split(',')
                 self.modeBox.addItem(m[0], ShifterButtonsConf.Mode(int(index), m[0], uses_spi == "1", uses_local_reverse == "1"))
-            self.getValueAsync("shifter","mode",self.modeBox.setCurrentIndex,0,conversion=int)
-        self.getValueAsync("shifter","mode",modecb,0,conversion=str,typechar = '!')
-        self.getValueAsync("shifter","xchan",self.xChannel.setValue,0,conversion=int)
-        self.getValueAsync("shifter","ychan",self.yChannel.setValue,0,conversion=int)
+            self.get_value_async("shifter","mode",self.modeBox.setCurrentIndex,0,conversion=int)
+        self.get_value_async("shifter","mode",modecb,0,conversion=str,typechar = '!')
+        self.get_value_async("shifter","xchan",self.xChannel.setValue,0,conversion=int)
+        self.get_value_async("shifter","ychan",self.yChannel.setValue,0,conversion=int)
 
-        self.getValueAsync("shifter","x12",self.x12.setValue,0,conversion=int)
-        self.getValueAsync("shifter","x56",self.x56.setValue,0,conversion=int)
-        self.getValueAsync("shifter","y135",self.y135.setValue,0,conversion=int)
-        self.getValueAsync("shifter","y246",self.y246.setValue,0,conversion=int)
+        self.get_value_async("shifter","x12",self.x12.setValue,0,conversion=int)
+        self.get_value_async("shifter","x56",self.x56.setValue,0,conversion=int)
+        self.get_value_async("shifter","y135",self.y135.setValue,0,conversion=int)
+        self.get_value_async("shifter","y246",self.y246.setValue,0,conversion=int)
 
-        self.getValueAsync("shifter","revbtn",self.revBtnBox.setValue,0,conversion=int)
-        self.getValueAsync("shifter","cspin",self.csPinBox.setValue,0,conversion=int)
+        self.get_value_async("shifter","revbtn",self.revBtnBox.setValue,0,conversion=int)
+        self.get_value_async("shifter","cspin",self.csPinBox.setValue,0,conversion=int)
 
         self.readXYPosition()
 
@@ -390,17 +390,17 @@ class CANButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.infoLabel.setText(text)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
     def apply(self):
-        self.sendValue("canbtn","canid",self.canIdBox.value())
-        self.sendValue("canbtn","btnnum",self.numBtnBox.value())
-        self.sendValue("canbtn","invert",(1 if self.polBox.isChecked() else 0))
+        self.send_value("canbtn","canid",self.canIdBox.value())
+        self.send_value("canbtn","btnnum",self.numBtnBox.value())
+        self.send_value("canbtn","invert",(1 if self.polBox.isChecked() else 0))
     
     def readValues(self):
-        self.getValueAsync("canbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
-        self.getValueAsync("canbtn","invert",self.polBox.setChecked,0,conversion=int)
-        self.getValueAsync("canbtn","canid",self.canIdBox.setValue,0,conversion=int)
+        self.get_value_async("canbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
+        self.get_value_async("canbtn","invert",self.polBox.setChecked,0,conversion=int)
+        self.get_value_async("canbtn","canid",self.canIdBox.setValue,0,conversion=int)
  
 class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
@@ -425,16 +425,16 @@ class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.setLayout(vbox)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
     def apply(self):
 
-        self.sendValue("pcfbtn","btnnum",self.numBtnBox.value())
-        self.sendValue("pcfbtn","invert",(1 if self.polBox.isChecked() else 0))
-        self.sendValue("i2c","speed",(1 if self.fastBox.isChecked() else 0))
+        self.send_value("pcfbtn","btnnum",self.numBtnBox.value())
+        self.send_value("pcfbtn","invert",(1 if self.polBox.isChecked() else 0))
+        self.send_value("i2c","speed",(1 if self.fastBox.isChecked() else 0))
     
     def readValues(self):
-        self.getValueAsync("pcfbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
-        self.getValueAsync("pcfbtn","invert",self.polBox.setChecked,0,conversion=int)
-        self.getValueAsync("i2c","speed",self.fastBox.setChecked,0,conversion=int)
+        self.get_value_async("pcfbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
+        self.get_value_async("pcfbtn","invert",self.polBox.setChecked,0,conversion=int)
+        self.get_value_async("i2c","speed",self.fastBox.setChecked,0,conversion=int)
  

@@ -21,17 +21,7 @@ source is not recommended"""
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
-    states = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
-
-    max_datapoints = 10000
-    max_datapointsVisibleTime = 30
-    adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
-
-    hwversion = 0
-    hwversions = []
-    versionWarningShow = True
-    vext = 0
-    vint = 0
+    STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
 
     def __init__(self, main=None, unique=0):
         self.axis = 0
@@ -40,6 +30,16 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.main = main #type: main.MainUi
 
         self.axis = unique
+
+        self.max_datapoints = 10000
+        self.max_datapointsVisibleTime = 30
+        self.adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
+
+        self.hwversion = 0
+        self.hwversions = []
+        self.versionWarningShow = True
+        self.vext = 0
+        self.vint = 0
 
         self.timer = QTimer(self)
         self.timer_status = QTimer(self)
@@ -123,48 +123,48 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.checkBox_abnpol.stateChanged.connect(self.abnpolClicked)
 
-        self.pushButton_calibrate.clicked.connect(lambda : self.sendCommand("tmc","calibrate",self.axis))
+        self.pushButton_calibrate.clicked.connect(lambda : self.send_command("tmc","calibrate",self.axis))
 
         # Callbacks
-        self.registerCallback("tmc","temp",self.updateTemp,self.axis,int)
-        self.registerCallback("sys","vint",self.vintCb,0,int)
-        self.registerCallback("sys","vext",self.vextCb,0,int)
-        self.registerCallback("tmc","acttrq",self.updateCurrent,self.axis,str)
+        self.register_callback("tmc","temp",self.updateTemp,self.axis,int)
+        self.register_callback("sys","vint",self.vintCb,0,int)
+        self.register_callback("sys","vext",self.vextCb,0,int)
+        self.register_callback("tmc","acttrq",self.updateCurrent,self.axis,str)
 
-        self.registerCallback("tmc","pidPrec",self.precisionCb,self.axis,int)
-        self.registerCallback("tmc","torqueP",self.spinBox_tp.setValue,self.axis,int)
-        self.registerCallback("tmc","torqueI",self.spinBox_ti.setValue,self.axis,int)
-        self.registerCallback("tmc","fluxP",self.spinBox_fp.setValue,self.axis,int)
-        self.registerCallback("tmc","fluxI",self.spinBox_fi.setValue,self.axis,int)
-        self.registerCallback("tmc","fluxoffset",self.spinBox_fluxoffset.setValue,self.axis,int)
-        self.registerCallback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
+        self.register_callback("tmc","pidPrec",self.precisionCb,self.axis,int)
+        self.register_callback("tmc","torqueP",self.spinBox_tp.setValue,self.axis,int)
+        self.register_callback("tmc","torqueI",self.spinBox_ti.setValue,self.axis,int)
+        self.register_callback("tmc","fluxP",self.spinBox_fp.setValue,self.axis,int)
+        self.register_callback("tmc","fluxI",self.spinBox_fi.setValue,self.axis,int)
+        self.register_callback("tmc","fluxoffset",self.spinBox_fluxoffset.setValue,self.axis,int)
+        self.register_callback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
 
-        self.registerCallback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
-        self.registerCallback("tmc","state",self.stateCb,self.axis,str,typechar='?')
+        self.register_callback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
+        self.register_callback("tmc","state",self.stateCb,self.axis,str,typechar='?')
 
-        self.registerCallback("tmc","mtype",lambda x : self.comboBox_mtype.setCurrentIndex(self.motor_type_to_index.get(x,0)),self.axis,int)
-        self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
-        self.registerCallback("tmc","encsrc",lambda x : self.comboBox_enc.setCurrentIndex(self.encoder_type_to_index.get(x,0)),self.axis,int)
-        self.registerCallback("tmc","cpr",self.spinBox_cpr.setValue,self.axis,int)
+        self.register_callback("tmc","mtype",lambda x : self.comboBox_mtype.setCurrentIndex(self.motor_type_to_index.get(x,0)),self.axis,int)
+        self.register_callback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
+        self.register_callback("tmc","encsrc",lambda x : self.comboBox_enc.setCurrentIndex(self.encoder_type_to_index.get(x,0)),self.axis,int)
+        self.register_callback("tmc","cpr",self.spinBox_cpr.setValue,self.axis,int)
 
-        self.registerCallback("tmc","iScale",self.setCurrentScaler,self.axis,float)
+        self.register_callback("tmc","iScale",self.setCurrentScaler,self.axis,float)
 
-        self.registerCallback("tmc","encsrc",self.encsCb,self.axis,str,typechar='!')
-        self.registerCallback("tmc","mtype",self.motsCb,self.axis,str,typechar='!')
-        self.registerCallback("tmc","tmcHwType",self.hwVersionsCb,self.axis,str,typechar='!')
-        self.registerCallback("tmc","tmcHwType",self.hwtcb,self.axis,int,typechar='?')
-        self.registerCallback("tmc","abnindex",self.checkBox_abnIndex.setChecked,self.axis,int,typechar='?')
-        self.registerCallback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
-        self.registerCallback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
-        self.registerCallback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","encsrc",self.encsCb,self.axis,str,typechar='!')
+        self.register_callback("tmc","mtype",self.motsCb,self.axis,str,typechar='!')
+        self.register_callback("tmc","tmcHwType",self.hwVersionsCb,self.axis,str,typechar='!')
+        self.register_callback("tmc","tmcHwType",self.hwtcb,self.axis,int,typechar='?')
+        self.register_callback("tmc","abnindex",self.checkBox_abnIndex.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
     
-        self.registerCallback("tmc","calibrated",self.calibrated,instance=self.axis,conversion=int)
+        self.register_callback("tmc","calibrated",self.calibrated,instance=self.axis,conversion=int)
         
         self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
 
     # TODO do not send updates when window is moved. Blocks serial port receive on windows
     def showEvent(self,event):
-        self.initUi()
+        self.init_ui()
         if self.isEnabled():
             self.timer.start(50)
             self.timer_status.start(250)
@@ -186,7 +186,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if not val:
             self.checkBox_invertForce.setChecked(False)
         else:
-            self.sendCommand("tmc","invertForce",self.axis)
+            self.send_command("tmc","invertForce",self.axis)
 
 
     def abnpolClicked(self,val):
@@ -288,57 +288,57 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def stateCb(self,state):
         intstate = int(state)
-        if(len(self.states) > intstate):
-            self.label_state.setText(self.states[intstate])
+        if(len(self.STATES) > intstate):
+            self.label_state.setText(self.STATES[intstate])
         else:
             self.label_state.setText(state)
 
     def updateTimer(self):
-        self.sendCommand("tmc","acttrq",self.axis)
+        self.send_command("tmc","acttrq",self.axis)
         
         
     def updateStatus(self):
-        self.sendCommand("tmc","temp",self.axis)
-        self.sendCommand("tmc","state",self.axis)
-        self.sendCommands("sys",["vint","vext"])
+        self.send_command("tmc","temp",self.axis)
+        self.send_command("tmc","state",self.axis)
+        self.send_commands("sys",["vint","vext"])
 
     def submitMotor(self):
         mtype = self.comboBox_mtype.currentIndex()
-        self.sendValue("tmc","mtype",val=mtype,instance=self.axis)
+        self.send_value("tmc","mtype",val=mtype,instance=self.axis)
 
         poles = self.spinBox_poles.value()
-        self.sendValue("tmc","poles",val=poles,instance=self.axis)
+        self.send_value("tmc","poles",val=poles,instance=self.axis)
 
-        self.sendValue("tmc","cpr",val=self.spinBox_cpr.value(),instance=self.axis)
+        self.send_value("tmc","cpr",val=self.spinBox_cpr.value(),instance=self.axis)
 
         enc = self.comboBox_enc.currentIndex()
-        self.sendValue("tmc","encsrc",val=enc,instance=self.axis)
+        self.send_value("tmc","encsrc",val=enc,instance=self.axis)
 
-        self.sendValue("tmc","abnindex",val = 1 if self.checkBox_abnIndex.isChecked() else 0,instance=self.axis)
-        self.sendValue("tmc","abnpol",val = 1 if self.checkBox_abnpol.isChecked() else 0,instance=self.axis)
+        self.send_value("tmc","abnindex",val = 1 if self.checkBox_abnIndex.isChecked() else 0,instance=self.axis)
+        self.send_value("tmc","abnpol",val = 1 if self.checkBox_abnpol.isChecked() else 0,instance=self.axis)
 
-        self.sendValue("tmc","combineEncoder",val = 1 if self.checkBox_combineEncoders.isChecked() else 0,instance=self.axis)
-        self.sendValue("tmc","invertForce",val = 1 if self.checkBox_invertForce.isChecked() else 0,instance=self.axis)
+        self.send_value("tmc","combineEncoder",val = 1 if self.checkBox_combineEncoders.isChecked() else 0,instance=self.axis)
+        self.send_value("tmc","invertForce",val = 1 if self.checkBox_invertForce.isChecked() else 0,instance=self.axis)
         
     def submitPid(self):
         # PIDs
         seq = 1 if self.checkBox_advancedpid.isChecked() else 0
-        self.sendValue("tmc","seqpi",val=seq,instance=self.axis)
+        self.send_value("tmc","seqpi",val=seq,instance=self.axis)
 
         tp = self.spinBox_tp.value()
-        self.sendValue("tmc","torqueP",val=tp,instance=self.axis)
+        self.send_value("tmc","torqueP",val=tp,instance=self.axis)
 
         ti = self.spinBox_ti.value()
-        self.sendValue("tmc","torqueI",val=ti,instance=self.axis)
+        self.send_value("tmc","torqueI",val=ti,instance=self.axis)
 
         fp = self.spinBox_fp.value()
-        self.sendValue("tmc","fluxP",val=fp,instance=self.axis)
+        self.send_value("tmc","fluxP",val=fp,instance=self.axis)
 
         fi = self.spinBox_fi.value()
-        self.sendValue("tmc","fluxI",val=fi,instance=self.axis)
+        self.send_value("tmc","fluxI",val=fi,instance=self.axis)
 
         prec = self.checkBox_I_Precision.isChecked() | (self.checkBox_P_Precision.isChecked() << 1)
-        self.sendValue("tmc","pidPrec",val=prec,instance=self.axis)
+        self.send_value("tmc","pidPrec",val=prec,instance=self.axis)
         
     def changePrecision(self,button,checked):
         rescale = (16 if checked else 1/16)
@@ -370,8 +370,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     def showVersionSelectorPopup(self):
         selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self,self.axis),self.main)
         selectorPopup.exec()
-        self.sendCommand("tmc","tmcHwType",self.axis,'!')
-        self.sendCommand("tmc","tmcHwType",self.axis,'?')
+        self.send_command("tmc","tmcHwType",self.axis,'!')
+        self.send_command("tmc","tmcHwType",self.axis,'?')
        
     def hwVersionsCb(self,v):
         entriesList = v.split("\n")
@@ -382,7 +382,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
         # change scaler
-        self.sendCommand("tmc","iScale",self.axis) # request scale update
+        self.send_command("tmc","iScale",self.axis) # request scale update
         if self.hwversion == 0 and self.versionWarningShow and len(self.hwversions) > 0:
             # no version set. ask user to select version
             self.versionWarningShow = False
@@ -391,7 +391,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         else:
             self.versionWarningShow = False
 
-    def initUi(self):
+    def init_ui(self):
         # clear graph
         self.startTime = QTime.currentTime()
         self.chartLastX = 0
@@ -403,12 +403,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Temps.setMax(90)
         try:
             # Fill encoder source types
-            self.sendCommands("tmc",["mtype","encsrc","tmcHwType"],self.axis,'!')
-            self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated"],self.axis)
+            self.send_commands("tmc",["mtype","encsrc","tmcHwType"],self.axis,'!')
+            self.send_commands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated"],self.axis)
             self.getMotor()
             self.getPids()
 
-            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.sendValue("tmc","fluxoffset",v,instance=self.axis))
+            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.send_value("tmc","fluxoffset",v,instance=self.axis))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
 
@@ -441,7 +441,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             ret = msg.exec()
             # Warning displayed
             if ret == QMessageBox.StandardButton.Ok:
-                self.sendCommand("tmc","calibrate",self.axis)
+                self.send_command("tmc","calibrate",self.axis)
 
 
     def encsCb(self,encsrcs):
@@ -472,18 +472,18 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
                 msg = QMessageBox(QMessageBox.Icon.Information,"Encoder align",res)
                 msg.exec()
 
-        res = self.getValueAsync("tmc","encalign",f,self.axis,typechar='?')
+        res = self.get_value_async("tmc","encalign",f,self.axis,typechar='?')
         self.main.log("Started encoder alignment")
         
 
     def getMotor(self):
         commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce"]
-        self.sendCommands("tmc",commands,self.axis)
+        self.send_commands("tmc",commands,self.axis)
 
 
     def getPids(self):
         commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","fluxoffset","seqpi"]
-        self.sendCommands("tmc",commands,self.axis)
+        self.send_commands("tmc",commands,self.axis)
 
         
 
@@ -514,11 +514,11 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
         self.setLayout(vbox)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
 
     def apply(self):
-        self.sendValue("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
+        self.send_value("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
     
     def typeCb(self,entries):
         #print("Reply",entries)
@@ -526,7 +526,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
         entriesList = [m.split(":") for m in entriesList if m]
         for m in entriesList:
             self.combobox.addItem(m[1],m[0])
-        self.getValueAsync("tmc","tmcHwType",self.combobox.setCurrentIndex,self.axis,int)
+        self.get_value_async("tmc","tmcHwType",self.combobox.setCurrentIndex,self.axis,int)
 
     def readValues(self):
-        self.getValueAsync("tmc","tmcHwType",self.typeCb,self.axis,str,typechar='!')
+        self.get_value_async("tmc","tmcHwType",self.typeCb,self.axis,str,typechar='!')

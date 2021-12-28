@@ -1,4 +1,4 @@
-import queue,time
+import queue,time, traceback, sys
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QApplication
 from collections import deque
@@ -15,7 +15,6 @@ GRP_CMDVAL2     = 5
 GRP_REPLY       = 6
 
 class SerialComms(QObject):
-    replytext = ""
     cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d+))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
     rawReply = pyqtSignal(str)
@@ -26,7 +25,7 @@ class SerialComms(QObject):
         self.main=main
         self.serial.readyRead.connect(self.serialReceive)
         self.serial.aboutToClose.connect(self.reset)
-
+        self.replytext = ""
 
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
         if cls not in SerialComms.callbackDict:
@@ -75,9 +74,11 @@ class SerialComms(QObject):
             self.main.log(reply)
 
     def serialWriteRaw(self,cmdraw):
-        if(self.serial.isOpen()):
+        if self.serial.isOpen():
             #print(f"{cmdraw}")
             self.serial.write(bytes(cmdraw,"utf-8"))
+        else:
+            raise OSError(1, "Serial is not opened.")
 
     def serialReceive(self):
         data = self.serial.readAll()
@@ -108,6 +109,7 @@ class SerialComms(QObject):
                     break
         except Exception as e:
             print("Can not process:",e)
+            traceback.print_exception(*sys.exc_info())
         
 
 

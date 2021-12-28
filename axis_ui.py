@@ -10,61 +10,65 @@ import buttonconf_ui
 import analogconf_ui
 from base_ui import WidgetUI,CommunicationHandler
 from encoderconf_ui import EncoderOptions
+import encoder_tuning_ui
 
 
 class AxisUI(WidgetUI,CommunicationHandler):
-    adc_to_amps = 0.0
-    
-    drvClasses = {}
-    drvIds = []
 
-    encClasses = {}
-    encIds = []
-
-    drvId = 0
-    encId = 0
-
-    axis = 0
-    encWidgets = {}
-
-    def __init__(self, main=None, unique=0):
+    def __init__(self, main: 'main.MainUi'=None, unique=0):
         WidgetUI.__init__(self, main, 'axis_ui.ui')
         CommunicationHandler.__init__(self)
 
+        self.main = main
+        self.adc_to_amps = 0.0
+
+        self.driver_classes = {}
+        self.driver_ids = []
+
+        self.encoder_classes = {}
+        self.encoder_ids = []
+
+        self.driver_id = 0
+        self.encoder_id = 0
+
+        self.encoder_widgets = {}
         self.axis = unique
 
         self.timer = QTimer(self)
-
+        self.encoder_tuning_dlg = encoder_tuning_ui.AdvancedTuningDialog(self, self.axis)
 
         self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
 
         self.spinBox_range.editingFinished.connect(lambda : self.horizontalSlider_degrees.setValue(self.spinBox_range.value())) # don't update while typing
-        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.sendValue("axis","degrees",(val),instance=self.axis))
+        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.send_value("axis","degrees",(val),instance=self.axis))
 
-        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.sendValue("axis","esgain",(val),instance=self.axis))
+        self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.send_value("axis","esgain",(val),instance=self.axis))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
-        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.sendValue("axis","idlespring",(val),instance=self.axis))
-        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sendValue("axis","axisdamper",val,instance=self.axis))
-        self.pushButton_center.clicked.connect(lambda : self.sendCommand("axis","zeroenc",instance=self.axis))
+        self.horizontalSlider_idle.valueChanged.connect(lambda val : self.send_value("axis","idlespring",(val),instance=self.axis))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.send_value("axis","axisdamper",val,instance=self.axis))
+        self.pushButton_center.clicked.connect(lambda : self.send_command("axis","zeroenc",instance=self.axis))
         
-        self.checkBox_invert.stateChanged.connect(lambda val : self.sendValue("axis","invert",(0 if val == 0 else 1),instance=self.axis))
+        self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
 
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
-        tabId = self.main.addTab(self,"FFB Axis")
+        tabId = self.main.add_tab(self,"FFB Axis")
         # Callbacks must prevent sending a value change command
-        self.registerCallback("axis","power",self.updatePowerSlider,self.axis,int)
-        self.registerCallback("axis","degrees",self.rangeChanged,self.axis,int)
+        self.register_callback("axis","power",self.updatePowerSlider,self.axis,int)
+        self.register_callback("axis","degrees",self.rangeChanged,self.axis,int)
 
-        self.registerCallback("axis","invert",lambda val : qtBlockAndCall(self.checkBox_invert,self.checkBox_invert.setChecked,val),self.axis,int)
+        self.register_callback("axis","invert",lambda val : qtBlockAndCall(self.checkBox_invert,self.checkBox_invert.setChecked,val),self.axis,int)
         
-        self.registerCallback("axis","fxratio",lambda val : self.updateFxratio(val),self.axis,int)
+        self.register_callback("axis","fxratio",lambda val : self.updateFxratio(val),self.axis,int)
 
-        self.registerCallback("axis","esgain",lambda val : self.updateEsgain(val),self.axis,int)
-        self.registerCallback("axis","idlespring",lambda val : self.updateIdlespring(val),self.axis,int)
+        self.register_callback("axis","esgain",lambda val : self.updateEsgain(val),self.axis,int)
+        self.register_callback("axis","idlespring",lambda val : self.updateIdlespring(val),self.axis,int)
 
-        self.registerCallback("axis","axisdamper",lambda val : self.updateDamper(val),self.axis,int)
+        self.register_callback("axis","axisdamper",lambda val : self.updateDamper(val),self.axis,int)
+
+        self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
+        #TODO ? self.serialchooser.connected.connect(self.effectsTweaks.setEnabled)
     
     def updateEsgain(self,val):
         qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
@@ -77,12 +81,12 @@ class AxisUI(WidgetUI,CommunicationHandler):
         qtBlockAndCall(self.spinBox_damper,self.spinBox_damper.setValue,val)
         qtBlockAndCall(self.horizontalSlider_damper,self.horizontalSlider_damper.setValue,val)
 
-    def initUi(self):
+    def init_ui(self):
         try:
             self.getMotorDriver()
             self.getEncoder()
             #self.updateSliders()
-            self.sendCommand("axis","invert",self.axis)
+            self.send_command("axis","invert",self.axis)
        
         except:
             self.main.log("Error initializing Axis tab")
@@ -91,11 +95,12 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     # Tab is currently shown
     def showEvent(self,event):
-        self.initUi() # update everything
+        self.init_ui() # update everything
         self.timer.start(500)
 
     # Tab is hidden
     def hideEvent(self,event):
+        self.encoder_tuning_dlg.close()
         self.timer.stop()
 
     def rangeChanged(self,val):
@@ -110,7 +115,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def updatePowerLabel(self,val):
         text = str(val)
         # If tmc is used show a current estimate
-        if(self.drvId == 1 and self.adc_to_amps != 0):
+        if(self.driver_id == 1 and self.adc_to_amps != 0):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
         self.label_power.setText(text)
@@ -118,7 +123,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
-        self.sendValue("axis","fxratio",val,instance=self.axis)
+        self.send_value("axis","fxratio",val,instance=self.axis)
         self.updateFxratioText(val)
 
     def updateFxratio(self,val):
@@ -142,7 +147,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
     # Power slider is very high resolution. throttle update calls to prevent flooding
     @throttle(50)
     def powerSiderMovedUpdate(self,val):
-        self.sendValue("axis","power",val,instance=self.axis)
+        self.send_value("axis","power",val,instance=self.axis)
 
     @throttle(50)  
     def updateDegSlider(self,val):
@@ -150,7 +155,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     @throttle(50)
     def degSiderMoved(self,val):
-        self.sendValue("axis","degrees",(val),instance=self.axis)
+        self.send_value("axis","degrees",(val),instance=self.axis)
 
     def submitEnc(self):
         self.encoderChanged(self.comboBox_encoder.currentIndex())
@@ -162,58 +167,58 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def driverChanged(self,idx):
         if idx == -1:
             return
-        id = self.drvClasses[idx][0]
-        if(self.drvId != id):
-            self.sendValue("axis","drvtype",id,instance=self.axis)
+        id = self.driver_classes[idx][0]
+        if(self.driver_id != id):
+            self.send_value("axis","drvtype",id,instance=self.axis)
             self.getMotorDriver()
             self.getEncoder()
-            self.main.updateTabs()
+            self.main.update_tabs()
             
    
     def encoderChanged(self,idx):
         if idx == -1:
             return
-        id = self.encClasses[idx][0]
-        if(self.encId != id):
-            self.sendValue("axis","enctype",id,instance=self.axis)
+        id = self.encoder_classes[idx][0]
+        if(self.encoder_id != id):
+            self.send_value("axis","enctype",id,instance=self.axis)
             self.getEncoder()
-            self.main.updateTabs()
+            self.main.update_tabs()
             #self.encoderIndexChanged(id)
     
     def updateSliders(self):
-        if(self.drvId == 1 or self.drvId == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
+        if(self.driver_id == 1 or self.driver_id == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
-            self.getValueAsync("tmc","iScale",self.setCurrentScaler,self.drvId - 1,float)  
+            self.get_value_async("tmc","iScale",self.setCurrentScaler,self.driver_id - 1,float)  
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
 
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper"] # requests updates
-        self.sendCommands("axis",commands,self.axis)
+        self.send_commands("axis",commands,self.axis)
 
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def drvtypecb(self,i):
-        self.drvId = int(i)
+        self.driver_id = int(i)
         if(i == None):
             self.main.log("Error getting driver")
             return
-        updateClassComboBox(self.comboBox_driver,self.drvIds,self.drvClasses,self.drvId)
+        updateClassComboBox(self.comboBox_driver,self.driver_ids,self.driver_classes,self.driver_id)
         self.updateSliders()
 
     def drvlistcb(self,l):
-            self.drvIds,self.drvClasses = classlistToIds(l)
+            self.driver_ids,self.driver_classes = classlistToIds(l)
             #print("drv",l)
-            self.getValueAsync("axis","drvtype",self.drvtypecb,self.axis,int,typechar='?',delete=False)
+            self.get_value_async("axis","drvtype",self.drvtypecb,self.axis,int,typechar='?',delete=False)
 
     def getMotorDriver(self):
-        self.getValueAsync("axis","drvtype",self.drvlistcb,self.axis,str,typechar='!')
+        self.get_value_async("axis","drvtype",self.drvlistcb,self.axis,str,typechar='!')
         
        
     def encoderIndexChanged(self,idx):
         id = self.comboBox_encoder.currentData()
-        if(id not in self.encWidgets):
+        if(id not in self.encoder_widgets):
             return
-        self.stackedWidget_encoder.setCurrentWidget(self.encWidgets[id])
+        self.stackedWidget_encoder.setCurrentWidget(self.encoder_widgets[id])
 
     def getEncoder(self):
        
@@ -224,17 +229,17 @@ class AxisUI(WidgetUI,CommunicationHandler):
             # self.comboBox_encoder.clear()
             # self.encWidgets.clear()
 
-            self.encIds,self.encClasses = classlistToIds(dat)
-            for c in self.encClasses:
+            self.encoder_ids,self.encoder_classes = classlistToIds(dat)
+            for c in self.encoder_classes:
                 id = c[0]
                 creatable = c[2]
-                if(id not in self.encWidgets or self.stackedWidget_encoder.indexOf(self.encWidgets[id]) == -1):
-                    self.encWidgets[id] = EncoderOptions(self.main,id)
-                    self.stackedWidget_encoder.addWidget(self.encWidgets[id])
+                if(id not in self.encoder_widgets or self.stackedWidget_encoder.indexOf(self.encoder_widgets[id]) == -1):
+                    self.encoder_widgets[id] = EncoderOptions(self.main,id)
+                    self.stackedWidget_encoder.addWidget(self.encoder_widgets[id])
                     self.comboBox_encoder.addItem(c[1],c[0])
-                self.comboBox_encoder.model().item(self.encIds[c[0]][0]).setEnabled(creatable)
+                self.comboBox_encoder.model().item(self.encoder_ids[c[0]][0]).setEnabled(creatable)
 
-        self.getValueAsync("axis","enctype",f,self.axis,str,typechar='!')
+        self.get_value_async("axis","enctype",f,self.axis,str,typechar='!')
         
         def encid_f(id):
             if(id == 255):
@@ -245,9 +250,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
             if(id == None):
                 self.main.log("Error getting encoder")
                 return
-            self.encId = int(id)
+            self.encoder_id = int(id)
             
-            idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
+            idx = self.encoder_ids[self.encoder_id][0] if self.encoder_id in self.encoder_ids else 0
             self.comboBox_encoder.setCurrentIndex(idx)
             self.encoderIndexChanged(idx)
-        self.getValueAsync("axis","enctype",encid_f,self.axis,int,typechar='?')
+        self.get_value_async("axis","enctype",encid_f,self.axis,int,typechar='?')

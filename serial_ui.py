@@ -1,68 +1,101 @@
-import PyQt6
-from PyQt6.QtGui import QColor
-from PyQt6.QtSerialPort import QSerialPortInfo 
-from PyQt6.QtCore import QIODevice,pyqtSignal,Qt
+"""Serial UI module.
+
+Regroup all required classes to manage the Serial Connection UI
+and the link with the communication module.
+
+Module : serial_ui
+Authors : yannick
+"""
+import PyQt6.QtGui
+import PyQt6.QtSerialPort
+import PyQt6.QtCore
+import PyQt6.QtWidgets
+import base_ui
 import main
-from base_ui import WidgetUI,CommunicationHandler
-from helper import classlistToIds,updateClassComboBox
-from PyQt6.QtWidgets import QMessageBox
+import helper
 
-officialVidPids = [(0x1209,0xFFB0)] # Highlighted in serial selector
 
-class SerialChooser(WidgetUI,CommunicationHandler):
-    connected = pyqtSignal(bool)
-    classes = []
-    classIds = {}
-    port = None
-    mainID = None
-    
-    def __init__(self,serial, main):
-        WidgetUI.__init__(self, main,'serialchooser.ui')
-        CommunicationHandler.__init__(main.comms)
-        self.serial = serial
-        self.pushButton_refresh.clicked.connect(self.getPorts)
-        self.pushButton_connect.clicked.connect(self.serialConnectButton)
-        self.pushButton_send.clicked.connect(self.sendLine)
-        self.lineEdit_cmd.returnPressed.connect(self.sendLine)
-        self.pushButton_ok.clicked.connect(self.mainBtn)
-        
-        self.getPorts()
+class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
+    """This classe is the main Serial Chooser manager.
 
-        self.ports = []
+    *) Display the UI
+    *) Manage the user interraction : connect/disconnect
+    *) Manage the serial port status
+    """
+
+    OFFICIAL_VID_PID = [(0x1209, 0xFFB0)]  # Highlighted in serial selector
+    connected = PyQt6.QtCore.pyqtSignal(bool)
+
+    def __init__(self, serial: PyQt6.QtSerialPort.QSerialPort, main_ui: main.MainUi):
+        """Initialize the manager with the QSerialPort for serial commmunication and the mainUi."""
+        base_ui.WidgetUI.__init__(self, main_ui, "serialchooser.ui")
+        base_ui.CommunicationHandler.__init__(self)
+        self._serial = serial
+        self.main = main_ui
+        #VMA self.connected = PyQt6.QtCore.pyqtSignal(bool)
+        self.main_id = None
+        self._classes = []
+        self._class_ids = {}
+        self._port = None
+        self._ports = []
+
+        self.pushButton_refresh.clicked.connect(self.get_ports)
+        self.pushButton_connect.clicked.connect(self.serial_connect_button)
+        self.pushButton_send.clicked.connect(self.send_line)
+        self.lineEdit_cmd.returnPressed.connect(self.send_line)
+        self.pushButton_ok.clicked.connect(self.main_btn)
+
+        self.get_ports()
         self.update()
 
-    def showEvent(self,event):
-        self.main.comms.rawReply.connect(self.serialLog)
+    def showEvent(self, event): # pylint: disable=unused-argument, invalid-name
+        """On show event, init the param.
+
+        Connect the communication module with the history widget to load the board response.
+        """
+        self.main.comms.rawReply.connect(self.serial_log)
 
     # Tab is hidden
-    def hideEvent(self,event):
-        self.main.comms.rawReply.disconnect(self.serialLog)
+    def hideEvent(self, event): # pylint: disable=unused-argument, invalid-name
+        """On hide event, disconnect the event.
 
-    def serialLog(self,txt):
-        if(type(txt) == list):
+        Disconnect the communication module with the history widget
+        to stop to log the board response.
+        """
+        self.main.comms.rawReply.disconnect(self.serial_log)
+
+    def serial_log(self, txt):
+        """Add a new text in the history widget."""
+        if isinstance(txt, list):
             txt = "\n".join(txt)
         else:
             txt = str(txt)
         self.serialLogBox.append(txt)
 
-
-    def sendLine(self):
-        cmd = self.lineEdit_cmd.text()+"\n"
-        self.serialLog(">"+cmd)
+    def send_line(self):
+        """Read the command input text, display it in history widget and send it to the board."""
+        cmd = self.lineEdit_cmd.text() + "\n"
+        self.serial_log(">" + cmd)
         self.main.comms.serialWriteRaw(cmd)
 
-    def write(self,data):
-        self.serial.write(data)
+    def write(self, data):
+        """Write data to the serial port."""
+        self._serial.write(data)
 
     def update(self):
-        if(self.serial.isOpen()):
+        """Update the UI when a connection is successfull.
+
+        Disable connection button, dropbox, etc.
+        Emit for all the UI the [connected] event.
+        """
+        if self._serial.isOpen():
             self.pushButton_connect.setText("Disconnect")
             self.comboBox_port.setEnabled(False)
             self.pushButton_refresh.setEnabled(False)
             self.pushButton_send.setEnabled(True)
             self.lineEdit_cmd.setEnabled(True)
             self.connected.emit(True)
-            self.getMainClasses()
+            self.get_main_classes()
         else:
             self.pushButton_connect.setText("Connect")
             self.comboBox_port.setEnabled(True)
@@ -72,87 +105,125 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.connected.emit(False)
             self.groupBox_system.setEnabled(False)
 
-    def serialConnectButton(self):
-        if(not self.serial.isOpen() and self.port != None):
-            self.serialConnect()
+    def serial_connect_button(self):
+        """Check if it's not connected, and call start the serial connection."""
+        if not self._serial.isOpen() and self._port is not None:
+            self.serial_connect()
         else:
-            self.serial.close()
+            self._serial.close()
             self.update()
 
-    def serialConnect(self):
-        self.selectPort(self.comboBox_port.currentIndex())
-           
-        if(not self.serial.isOpen() and self.port != None):
+    def serial_connect(self):
+        """Check if port is not open and open it with right settings."""
+        self.select_port(self.comboBox_port.currentIndex())
+
+        if not self._serial.isOpen() and self._port is not None:
             self.main.log("Connecting...")
-            self.serial.setPort(self.port)
-            self.serial.setBaudRate(500000)
-            self.serial.open(QIODevice.OpenModeFlag.ReadWrite)
-            if(not self.serial.isOpen()):
+            self._serial.setPort(self._port)
+            self._serial.setBaudRate(500000)
+            self._serial.open(PyQt6.QtCore.QIODevice.OpenModeFlag.ReadWrite)
+            if not self._serial.isOpen():
                 self.main.log("Can not open port")
-            
+
         self.update()
-        
-        
-    def selectPort(self,id):
-        if(id != -1):
-            self.port = self.ports[id]
+
+    def select_port(self, port_id):
+        """Change the selected port."""
+        if port_id != -1:
+            self._port = self._ports[port_id]
         else:
-            self.port = None
-   
-    def getPorts(self):
-        oldport = self.port if self.port else None
-        
-        self.ports = QSerialPortInfo().availablePorts()
+            self._port = None
+
+    def get_ports(self):
+        """Get all the serial port available on the computer.
+
+        If the VID.VIP is compatible with openFFBoard color the text in green,
+        else put it in red.
+        """
+        oldport = self._port if self._port else None
+
+        self._ports = PyQt6.QtSerialPort.QSerialPortInfo().availablePorts()
         self.comboBox_port.clear()
-        selIdx = 0
-        for i,port in enumerate(self.ports):
-            supportedVidPid =  (port.vendorIdentifier() ,port.productIdentifier()) in officialVidPids
+        sel_idx = 0
+        for i, port in enumerate(self._ports):
+            supported_vid_pid = (
+                port.vendorIdentifier(),
+                port.productIdentifier(),
+            ) in self.OFFICIAL_VID_PID
             name = port.portName() + " : " + port.description()
-            if (supportedVidPid):
+            if supported_vid_pid:
                 name += " (FFBoard device)"
             else:
                 name += " (Unsupported device)"
             self.comboBox_port.addItem(name)
-            if(supportedVidPid):
-                selIdx = i
-                self.comboBox_port.setItemData(i,QColor("green"),Qt.ItemDataRole.ForegroundRole)
+            if supported_vid_pid:
+                sel_idx = i
+                self.comboBox_port.setItemData(
+                    i,
+                    PyQt6.QtGui.QColor("green"),
+                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
+                )
             else:
-                self.comboBox_port.setItemData(i,QColor("red"),Qt.ItemDataRole.ForegroundRole)
+                self.comboBox_port.setItemData(
+                    i,
+                    PyQt6.QtGui.QColor("red"),
+                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
+                )
 
-        
-        plist = [p.portName() for p in self.ports]
-        if (oldport is not None) and ((oldport.vendorIdentifier() ,oldport.productIdentifier()) in officialVidPids) and (oldport.portName() in plist):
+        plist = [p.portName() for p in self._ports]
+        if (
+            (oldport is not None)
+            and (
+                (oldport.vendorIdentifier(), oldport.productIdentifier())
+                in self.OFFICIAL_VID_PID
+            )
+            and (oldport.portName() in plist)
+        ):
             self.comboBox_port.setCurrentIndex(plist.index(oldport.portName()))
         else:
-            self.comboBox_port.setCurrentIndex(selIdx) # preselect found entry
-        self.selectPort(self.comboBox_port.currentIndex())
+            self.comboBox_port.setCurrentIndex(sel_idx)  # preselect found entry
+        self.select_port(self.comboBox_port.currentIndex())
         self.update()
 
-    def updateMains(self,dat):
+    def update_mains(self, dat):
+        """Parse the list of main classes received from board, and update the combobox."""
         self.comboBox_main.clear()
-        self.classIds,self.classes = classlistToIds(dat)
-        
-        if(self.mainID == None):
-            #self.main.resetPort()
+        self._class_ids, self._classes = helper.classlistToIds(dat)
+
+        if self.main_id is None:
+            # self.main.resetPort()
             self.groupBox_system.setEnabled(False)
             return
         self.groupBox_system.setEnabled(True)
 
-        updateClassComboBox(self.comboBox_main,self.classIds,self.classes,self.mainID)
+        helper.updateClassComboBox(
+            self.comboBox_main, self._class_ids, self._classes, self.main_id
+        )
 
-        self.main.log("Detected mode: "+self.comboBox_main.currentText())
-        self.main.updateTabs()
+        self.main.log("Detected mode: " + self.comboBox_main.currentText())
+        self.main.update_tabs()
 
-    def getMainClasses(self):
-    
-        def f(i):
-            self.mainID = i
-        self.getValueAsync("main","id",f,conversion=int,delete=True)
-        self.getValueAsync("sys","lsmain",self.updateMains,delete=True)
+    def get_main_classes(self):
+        """Get the main classes available from the board in Async."""
 
-    def mainBtn(self):
-        id = self.classes[self.comboBox_main.currentIndex()][0]
-        self.sendValue("sys","main",id)
+        def fct(i):
+            """Store the main currently selected to refresh the UI."""
+            self.main_id = i
+
+        self.get_value_async("main", "id", fct, conversion=int, delete=True)
+        self.get_value_async("sys", "lsmain", self.update_mains, delete=True)
+
+    def main_btn(self):
+        """Read the select main class in the combobox.
+
+        Push it to the board and display the reload warning.
+        """
+        index = self._classes[self.comboBox_main.currentIndex()][0]
+        self.send_value("sys", "main", index)
         self.main.reconnect()
-        msg = QMessageBox(QMessageBox.Icon.Information,"Main class changed","Chip is rebooting. Please reconnect.")
+        msg = PyQt6.QtWidgets.QMessageBox(
+            PyQt6.QtWidgets.QMessageBox.Icon.Information,
+            "Main class changed",
+            "Chip is rebooting. Please reconnect.",
+        )
         msg.exec()

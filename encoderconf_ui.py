@@ -9,9 +9,9 @@ from helper import res_path,classlistToIds
 from base_ui import CommunicationHandler
 
 class EncoderOptions(QGroupBox):
-    widget = None
     def __init__(self,main,id):
         super().__init__()
+        self.widget = None
         self.main = main
         self.setType(id)
         
@@ -88,11 +88,11 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
         self.setLayout(layout)
 
     def onshown(self):
-        self.getValueAsync("localenc","cpr",self.spinBox_cpr.setValue,0,int)
+        self.get_value_async("localenc","cpr",self.spinBox_cpr.setValue,0,int)
 
     def apply(self):
         val = self.spinBox_cpr.value()
-        self.sendValue("localenc","cpr",val=val)
+        self.send_value("localenc","cpr",val=val)
 
 
 class MtEncoderConf(EncoderOption,CommunicationHandler):
@@ -113,11 +113,11 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
         self.setLayout(layout)
 
     def onshown(self):
-        self.getValueAsync("mtenc","cs",self.spinBox_cs.setValue,0,int)
+        self.get_value_async("mtenc","cs",self.spinBox_cs.setValue,0,int)
 
     def apply(self):
         val = self.spinBox_cs.value()
-        self.sendValue("mtenc","cs",val=val)
+        self.send_value("mtenc","cs",val=val)
 
 class BissEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
@@ -139,7 +139,7 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
         self.setLayout(layout)
 
     def onshown(self):
-        self.getValueAsync("bissenc","bits",self.spinBox_bits.setValue,0,int)
+        self.get_value_async("bissenc","bits",self.spinBox_bits.setValue,0,int)
 
     def apply(self):
-        self.sendValue("bissenc","bits",val=self.spinBox_bits.value())
+        self.send_value("bissenc","bits",val=self.spinBox_bits.value())
