@@ -6,6 +6,8 @@ from PyQt5.QtCore import QIODevice,pyqtSignal
 from PyQt5.QtCore import QTimer,QThread
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
+from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtGui import QIcon
 import sys,itertools
 import config 
 from helper import res_path
@@ -317,17 +319,47 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-        
+
+def onTrayIconActivated(reason):
+    if reason == QSystemTrayIcon.DoubleClick:
+        mainapp.show()
             
 if __name__ == '__main__':
     #appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
 
     app = QApplication(sys.argv)
+
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp
     mainapp = window
+
+    app.setQuitOnLastWindowClosed(False)
+  
+    # Adding an icon
+    icon = QIcon("app.png")
+
+    # Adding item on the menu bar
+    tray = QSystemTrayIcon()
+    tray.setIcon(icon)
+    tray.setVisible(True)
+    tray.activated.connect(onTrayIconActivated)
+
+    # Creating the options
+    menu = QMenu()
+    option1 = QAction("Open")
+    option1.triggered.connect(mainapp.show)
+    menu.addAction(option1)
+
+    # To quit the app
+    quit = QAction("Quit")
+    quit.triggered.connect(app.quit)
+    menu.addAction(quit)
+
+    # Adding options to the System Tray
+    tray.setContextMenu(menu)
+
     #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
     #sys.exit(exit_code)
     sys.exit(app.exec_())
