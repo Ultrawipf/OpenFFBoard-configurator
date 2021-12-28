@@ -2,10 +2,12 @@
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QMainWindow, QSizePolicy, QSpacerItem
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
-from PyQt6.QtCore import QIODevice,pyqtSignal
+from PyQt6.QtCore import QEvent, QIODevice, Qt,pyqtSignal
 from PyQt6.QtCore import QTimer,QThread
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
+from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
+from PyQt6.QtGui import QAction, QFont, QIcon, QCloseEvent, QActionEvent
 import sys,itertools
 import config 
 from helper import res_path
@@ -39,6 +41,7 @@ class MainUi(QMainWindow,CommunicationHandler):
     mainClassUi = None
     timeouting = False
     connected = False
+    notMinimizeAndClose = True
     
     def __init__(self):
         QMainWindow.__init__(self)
@@ -60,7 +63,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.setup()
         self.activeClasses = {}
         self.fwverstr = None
-        
         
     def setup(self):
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial,main = self)
@@ -322,15 +324,15 @@ class MainUi(QMainWindow,CommunicationHandler):
         if(cmd=="OK"):
             self.sendValue("sys","format",1)
             self.sendCommand("sys","reboot")
-            self.main.resetPort()
+            self.resetPort()
 
     def factoryResetBtn(self):
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
+        msg.setIcon(QMessageBox.Icon.Warning)
         msg.setText("Format flash and reset?")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
         msg.buttonClicked.connect(self.factoryReset)
-        msg.exec_()
+        msg.exec()
 
 class WrapperStatusBar():
     labelValueMem = None
@@ -389,15 +391,47 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-        
+
+def onTrayIconActivated(reason):
+    if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+        mainapp.show()
             
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp
     mainapp = window
+  
+    # Adding an icon
+    icon = QIcon("app.png")
 
+    # Adding item on the menu bar
+    tray = QSystemTrayIcon()
+    tray.setIcon(icon)
+    tray.setVisible(True)
+    tray.activated.connect(onTrayIconActivated)
+    tray.setToolTip("Open FFBoard Configurator")
+
+    # Creating the options
+    menu = QMenu()
+    option1 = QAction("Open console")
+    option1.triggered.connect(mainapp.show)
+    menu.addAction(option1)
+
+    menu.addSeparator()
+
+    # To quit the app
+    quit = QAction("Quit")
+    quit.triggered.connect(app.quit)
+    menu.addAction(quit)
+
+    # Adding options to the System Tray
+    tray.setContextMenu(menu)
+
+    #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
+    #sys.exit(exit_code)
     sys.exit(app.exec())
