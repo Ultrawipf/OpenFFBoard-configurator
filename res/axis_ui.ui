@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
+    <width>850</width>
     <height>472</height>
    </rect>
   </property>
@@ -75,6 +75,13 @@
            </property>
            <property name="text">
             <string>Set center position</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_encoderTuning">
+           <property name="text">
+            <string>Encoder tuning...</string>
            </property>
           </widget>
          </item>

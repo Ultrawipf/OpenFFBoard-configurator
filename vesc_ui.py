@@ -22,7 +22,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.pushButton_apply.clicked.connect(self.apply)
         self.pushButton_manualRead.clicked.connect(self.manualEncPosRead)
         self.pushButton_eraseOffset.clicked.connect(self.eraseOffset)
-        self.pushButton_refresh.clicked.connect(self.initUi)
+        self.pushButton_refresh.clicked.connect(self.init_ui)
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
         self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",main)
@@ -34,14 +34,14 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
         self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
 
-        self.registerCallback("vesc","errorflags",self.errorCb,self.prefix,int)
-        self.registerCallback("vesc","encrate",self.label_encoder_rate.setText,self.prefix,str)
-        self.registerCallback("vesc","voltage",lambda mv : self.label_voltage.setText(f"{mv/1000}V"),self.prefix,int)
-        self.registerCallback("vesc","pos",self.posCb,self.prefix,int)
-        self.registerCallback("vesc","vescstate",self.stateCb,self.prefix,int)
-        self.registerCallback("vesc","torque",self.torqueCb,self.prefix,int)
+        self.register_callback("vesc","errorflags",self.errorCb,self.prefix,int)
+        self.register_callback("vesc","encrate",self.label_encoder_rate.setText,self.prefix,str)
+        self.register_callback("vesc","voltage",lambda mv : self.label_voltage.setText(f"{mv/1000}V"),self.prefix,int)
+        self.register_callback("vesc","pos",self.posCb,self.prefix,int)
+        self.register_callback("vesc","vescstate",self.stateCb,self.prefix,int)
+        self.register_callback("vesc","torque",self.torqueCb,self.prefix,int)
         
-        self.initUi()
+        self.init_ui()
 
     def vescstate(self,i):
         _result = "Invalid state"
@@ -62,7 +62,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         
     # Tab is currently shown
     def showEvent(self,event):
-        self.initUi()
+        self.init_ui()
         self.timer.start(500)
 
     # Tab is hidden
@@ -83,8 +83,8 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.pushButton_eraseOffset.setVisible(visible)
 
 
-    def initUi(self):
-        self.sendCommands("vesc",["offbcanid", "vesccanid",  "useencoder", "offset"],self.prefix)
+    def init_ui(self):
+        self.send_commands("vesc",["offbcanid", "vesccanid",  "useencoder", "offset"],self.prefix)
     
     def updateOffset(self, preset):
         self.doubleSpinBox_encoderOffset.setValue(preset / 10000)
@@ -126,7 +126,7 @@ class VescUI(WidgetUI,CommunicationHandler):
 
 
     def updateTimer(self):
-        self.sendCommands("vesc",["vescstate","errorflags","voltage","pos","encrate","torque"],self.prefix)
+        self.send_commands("vesc",["vescstate","errorflags","voltage","pos","encrate","torque"],self.prefix)
  
     def apply(self):
         OpenFFBoardCANId = str(self.spinBox_OFFB_can_id.value())
@@ -137,8 +137,8 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.initUi() # Update UI
     
     def manualEncPosRead(self):
-        self.sendCommand("vesc","forceposread",instance=self.prefix)
+        self.send_command("vesc","forceposread",instance=self.prefix)
 
     def eraseOffset(self):
-        self.sendValue("vesc","offset",0,instance=self.prefix)
-        self.initUi()
+        self.send_value("vesc","offset",0,instance=self.prefix)
+        self.init_ui()

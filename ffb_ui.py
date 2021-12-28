@@ -13,32 +13,26 @@ from serial_comms import SerialComms
 
 class FfbUI(WidgetUI,CommunicationHandler):
 
-    btnClasses = {}
-    btnIds = []
-
-    axisClasses = {}
-    axisIds = []
-
-    
-    buttonbtns = QButtonGroup()
-    buttonconfbuttons = []
-
-    axisbtns = QButtonGroup()
-    axisconfbuttons = []
-
-
-    #values
-    active = 0
-    rate = 0
-
-    springgain = 4
-    dampergain = 2
-    inertiagain = 2
-    frictiongain = 2
-
-    def __init__(self, main=None,title = "FFB main"):
+    def __init__(self, main : 'main.MainUi'=None,  title = "FFB main"):
         WidgetUI.__init__(self, main,'ffbclass.ui')
-        CommunicationHandler.__init__(main.comms)
+        CommunicationHandler.__init__(self)
+
+        self.main = main 
+        self.btnClasses = []
+        self.btnIds = []
+        self.axisClasses = {}
+        self.axisIds = []
+        self.buttonbtns = QButtonGroup()
+        self.buttonconfbuttons = []
+        self.axisbtns = QButtonGroup()
+        self.axisconfbuttons = []
+        self.active = 0
+        self.rate = 0
+        self.springgain = 4
+        self.dampergain = 2
+        self.inertiagain = 2
+        self.frictiongain = 2
+
         self.timer = QTimer(self)
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
@@ -60,57 +54,57 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 256/self.inertiagain))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,self.inertiagain/256,"inertia"))
         
-        self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.sendValue("main","hidsendspd",str(val)))
+        self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.send_value("main","hidsendspd",str(val)))
 
         self.timer.timeout.connect(self.updateTimer)
 
         #self.registerCallback("main","axes",self.setAxisCheckBoxes,0,int)
-        self.registerCallback("main","hidsendspd",self.hidreportrate_cb,0,typechar='!')
-        self.registerCallback("main","hidsendspd",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
-        self.registerCallback("main","hidrate",self.ffbRateCB,0,int)
-        self.registerCallback("main","ffbactive",self.ffbActiveCB,0,int)
+        self.register_callback("main","hidsendspd",self.hidreportrate_cb,0,typechar='!')
+        self.register_callback("main","hidsendspd",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
+        self.register_callback("main","hidrate",self.ffbRateCB,0,int)
+        self.register_callback("main","ffbactive",self.ffbActiveCB,0,int)
 
-        self.registerCallback("main","lsbtn",self.updateButtonClassesCB,0)
-        self.registerCallback("main","btntypes",self.updateButtonSources,0,int)
-        self.registerCallback("main","lsain",self.updateAnalogClassesCB,0)
-        self.registerCallback("main","aintypes",self.updateAnalogSources,0,int)
+        self.register_callback("main","lsbtn",self.updateButtonClassesCB,0)
+        self.register_callback("main","btntypes",self.updateButtonSources,0,int)
+        self.register_callback("main","lsain",self.updateAnalogClassesCB,0)
+        self.register_callback("main","aintypes",self.updateAnalogSources,0,int)
 
-        self.registerCallback("fx","filterCfFreq",lambda val : self.cffilter_changed(val,send=False),0,int)
+        self.register_callback("fx","filterCfFreq",lambda val : self.cffilter_changed(val,send=False),0,int)
 
-        self.registerCallback("fx","filterCfQ",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_CFq,self.horizontalSlider_CFq,0.01),0,int)
+        self.register_callback("fx","filterCfQ",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_CFq,self.horizontalSlider_CFq,0.01),0,int)
         
-        self.registerCallback("fx","spring",self.setSpringScalerCb,0,str,typechar="!")
-        self.registerCallback("fx","damper",self.setDamperScalerCb,0,str,typechar="!")
-        self.registerCallback("fx","inertia",self.setInertiaScalerCb,0,str,typechar="!")
-        self.registerCallback("fx","friction",self.setFrictionScalerCb,0,str,typechar="!")
+        self.register_callback("fx","spring",self.setSpringScalerCb,0,str,typechar="!")
+        self.register_callback("fx","damper",self.setDamperScalerCb,0,str,typechar="!")
+        self.register_callback("fx","inertia",self.setInertiaScalerCb,0,str,typechar="!")
+        self.register_callback("fx","friction",self.setFrictionScalerCb,0,str,typechar="!")
 
-        self.registerCallback("fx","spring",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_spring,self.horizontalSlider_spring,self.springgain/256),0,int)
-        self.registerCallback("fx","damper",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_damper,self.horizontalSlider_damper,self.dampergain/256),0,int)
-        self.registerCallback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,self.frictiongain/256),0,int)
-        self.registerCallback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,self.inertiagain/256),0,int)
+        self.register_callback("fx","spring",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_spring,self.horizontalSlider_spring,self.springgain/256),0,int)
+        self.register_callback("fx","damper",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_damper,self.horizontalSlider_damper,self.dampergain/256),0,int)
+        self.register_callback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,self.frictiongain/256),0,int)
+        self.register_callback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,self.inertiagain/256),0,int)
         
 
-        if(self.initUi()):
-            tabId = self.main.addTab(self,title)
-            self.main.selectTab(tabId)
+        if(self.init_ui()):
+            tabId = self.main.add_tab(self,title)
+            self.main.select_tab(tabId)
 
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
         
 
     
-    def initUi(self):
+    def init_ui(self):
         try:
-            self.sendCommands("main",["hidrate","ffbactive"],0)
+            self.send_commands("main",["hidrate","ffbactive"],0)
 
-            self.sendCommand("main","lsbtn",0,'?') # get button types
-            self.sendCommand("main","btntypes",0,'?') # get active buttons
+            self.send_command("main","lsbtn",0,'?') # get button types
+            self.send_command("main","btntypes",0,'?') # get active buttons
 
-            self.sendCommand("main","lsain",0,'?') # get analog types
-            self.sendCommand("main","aintypes",0,'?') # get active analog
+            self.send_command("main","lsain",0,'?') # get analog types
+            self.send_command("main","aintypes",0,'?') # get active analog
 
             self.updateSliders()
-            self.sendCommand("main","hidsendspd",0,'!') # get speed
+            self.send_command("main","hidsendspd",0,'!') # get speed
             
         except:
             self.main.log("Error initializing FFB tab")
@@ -144,7 +138,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
  
     def updateTimer(self):
         try:
-            self.sendCommands("main",["hidrate","ffbactive"],0)
+            self.send_commands("main",["hidrate","ffbactive"],0)
         except:
             self.main.log("Update error")
     
@@ -157,7 +151,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             spinbox.setValue(newVal)
             spinbox.blockSignals(False)
         if(command):
-            self.sendValue("fx",command,val)
+            self.send_value("fx",command,val)
 
     def updateSpinboxAndSlider(self,val,spinbox : QSlider,slider,factor):
         slider.setValue(val)
@@ -170,7 +164,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         modes = [m.split(":") for m in modes.split(",") if m]
         for m in modes:
             self.comboBox_reportrate.addItem(m[0],m[1])
-        self.sendCommand("main","hidsendspd",0,'?') # get speed
+        self.send_command("main","hidsendspd",0,'?') # get speed
         self.comboBox_reportrate.blockSignals(False)
 
     # Button selector
@@ -180,7 +174,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             if(b.isChecked()):
                 mask |= 1 << self.buttonbtns.id(b)
 
-        self.sendValue("main","btntypes",str(mask))
+        self.send_value("main","btntypes",str(mask))
 
     # Analog selector
     def axesChanged(self,id):
@@ -189,7 +183,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             if(b.isChecked()):
                 mask |= 1 << self.axisbtns.id(b)
 
-        self.sendValue("main","aintypes",str(mask))
+        self.send_value("main","aintypes",str(mask))
         
     def updateButtonClassesCB(self,reply):
         self.btnIds,self.btnClasses = classlistToIds(reply)
@@ -198,7 +192,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         # btns = dat[0]
         # types = int(dat[1])
         if not self.btnClasses:
-            self.sendCommand("main","lsbtn",0,'?')
+            self.send_command("main","lsbtn",0,'?')
             #print("Buttons missing")
             return
         
@@ -245,7 +239,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def updateAnalogSources(self,types):
  
         if not self.axisClasses:
-            self.sendCommand("main","lsain",0,'?')
+            self.send_command("main","lsain",0,'?')
             #print("Analog missing")
             return
         
@@ -292,7 +286,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def cffilter_changed(self,v,send=True):
         freq = max(min(v,500),0)
         if(send):
-            self.sendValue("fx","filterCfFreq",(freq))
+            self.send_value("fx","filterCfFreq",(freq))
         else:
             self.horizontalSlider_cffilter.setValue(v)
         lbl = str(freq)+"Hz"
@@ -325,8 +319,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
     
     def updateSliders(self):
-        self.sendCommands("fx",["spring","damper","friction","inertia"],0,typechar="!")
-        self.sendCommands("fx",["filterCfQ","filterCfFreq","spring","damper","friction","inertia"],0)
+        self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
+        self.send_commands("fx",["filterCfQ","filterCfFreq","spring","damper","friction","inertia"],0)
 
 
 
