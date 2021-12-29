@@ -116,8 +116,3 @@ class ErrorsUI(WidgetUI,CommunicationHandler):
             errors.append(error)
         self.errors.setErrors(errors)
         self.tableView.resizeColumnsToContents()
-        
-
-            
-
-    
