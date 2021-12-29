@@ -1,17 +1,22 @@
-from base_ui import WidgetUI
+from PyQt6.QtGui import QTextCursor
+from base_ui import WidgetUI,CommunicationHandler
 import pydfu
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets  import QFileDialog,QMessageBox,QApplication
 
-class DFUModeUI(WidgetUI):
+class DFUModeUI(WidgetUI, CommunicationHandler):
     selectedFile = None
     dfuDevice = None
     firstFail = True
-    def __init__(self, main=None,device = None):
-            WidgetUI.__init__(self, main,'dfu.ui')
+    mainUI = None
+    def __init__(self, main=None,device = None, mainUI = None):
+            WidgetUI.__init__(self, main, 'dfu.ui')
+            CommunicationHandler.__init__(self)
             self.groupbox_controls.setEnabled(False)
             self.main = main #type: main.MainUi
+            self.mainUI = mainUI
 
+            self.pushButton_DFU.clicked.connect(self.dfu)
             self.pushButton_filechooser.clicked.connect(self.fileClicked)
             self.pushButton_fullerase.clicked.connect(self.fullEraseClicked)
             self.pushButton_upload.clicked.connect(self.uploadClicked)
@@ -30,18 +35,24 @@ class DFUModeUI(WidgetUI):
 
 
     def initUi(self):
-        self.log("Searching devices...")
-        
         dfu_devices = pydfu.get_dfu_devices(idVendor=0x0483, idProduct=0xdf11)
         if not dfu_devices:
             # No devices found
-            self.log("No DFU device found. Retrying")
             if self.firstFail:
-                self.log("Make sure the bootloader is detected and drivers installed. Short boot0 to force the bootloader when connecting")
+                self.log("Searching devices...\n")
+                self.log("Make sure the bootloader is detected and drivers installed. Short boot0 to force the bootloader when connecting\n")
+                self.log("No DFU device found.\nRetrying..")
                 self.firstFail = False
+            else:
+                self.log(".")
+            # Enable the DFU button if the serial is connected
+            if self.mainUI.connected:
+                self.pushButton_DFU.setEnabled(True)
+            else:
+                self.pushButton_DFU.setEnabled(False)
         elif len(dfu_devices) > 1:
-            self.log("Found multiple DFU devices:" + str(dfu_devices))
-            self.log("Please disconnect other DFU devices to avoid mistakes")
+            self.log("Found multiple DFU devices:" + str(dfu_devices) + "\n")
+            self.log("Please disconnect other DFU devices to avoid mistakes\n")
 
         else:
             self.timer.stop()
@@ -56,6 +67,13 @@ class DFUModeUI(WidgetUI):
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
+            self.pushButton_DFU.setEnabled(False)
+
+    def dfu(self):
+        self.sendCommand("sys","dfu")
+        self.log("\nEntering DFU...\n")
+        self.mainUI.resetPort()
+
 
     def fileClicked(self):
         dlg = QFileDialog()
@@ -76,14 +94,14 @@ class DFUModeUI(WidgetUI):
         elif(self.selectedFile.endswith("hex")):
             elements = pydfu.read_hex_file(self.selectedFile)
         else:
-            self.log("Not a known firmware file")
+            self.log("Not a known firmware file\n")
             return
 
         if not elements:
-            self.log("Error parsing file")
+            self.log("Error parsing file\n")
             return
         size = sum([e["size"] for e in elements])
-        self.log("Loaded {} segments with {} bytes".format(len(elements), size))
+        self.log("Loaded {} segments with {} bytes\n".format(len(elements), size))
         self.elements = elements
 
     def uploadClicked(self):
@@ -94,16 +112,16 @@ class DFUModeUI(WidgetUI):
         if(mass_erase):
             self.fullErase()
         
-        self.log("Uploading {} segments... Do NOT close this window or disconnect until done!".format(len(elements)))
+        self.log("Uploading {} segments... Do NOT close this window or disconnect until done!\n".format(len(elements)))
         try:
             pydfu.write_elements(elements, mass_erase, progress=self.progress)
-            self.log("Uploaded!")
+            self.log("Uploaded!\n")
         except Exception as e:
             self.log(str(e))
-            self.log("USB Exception during flashing... Please reflash firmware!")
+            self.log("USB Exception during flashing... Please reflash firmware!\n")
 
         pydfu.exit_dfu()
-        self.log("Done. Please reset")
+        self.log("Done. Please reset\n")
         self.groupbox_controls.setEnabled(True)
         self.dfuDevice = None
 
@@ -118,21 +136,24 @@ class DFUModeUI(WidgetUI):
         # Warning displayed. Erase!
         if ret == QMessageBox.StandardButton.Ok:
             self.fullErase()
-        
 
     def fullErase(self):
         if self.dfuDevice:
-            self.log("Full chip erase started...")
+            self.log("Full chip erase started...\n")
             try:
+                self.progress(0,25,100)
                 pydfu.mass_erase()
-                self.log("Chip erased")
+                self.progress(0,100,100)
+                self.log("Chip erased\n")
             except Exception as e:
+                self.progress(0,100,100)
                 self.log(str(e))
-                self.log("USB Exception during erasing... Please reflash firmware!")
-            
+                self.log("USB Exception during erasing... Please reflash firmware!\n")
 
     def log(self,txt):
-        self.textBrowser_dfu.append(txt)
+        self.textBrowser_dfu.moveCursor(QTextCursor.MoveOperation.End)
+        self.textBrowser_dfu.insertPlainText(txt)
+        self.textBrowser_dfu.moveCursor(QTextCursor.MoveOperation.End)
         self.update()
         QApplication.processEvents()
 

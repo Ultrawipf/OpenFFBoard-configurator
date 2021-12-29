@@ -44,7 +44,6 @@ class SerialComms(QObject):
     def removeAllCallbacks(self):
         SerialComms.callbackDict.clear()
 
-
     def getValueAsync(self,handler,cls,cmd,callback,instance=0,conversion=None,adr=None,typechar='?',delete=True):
         if typechar == None:
             typechar = ''
@@ -65,8 +64,6 @@ class SerialComms(QObject):
         cmdstring += ";"
         SerialComms.registerCallback(handler=handler,cls=cls,cmd=cmd,callback=self.checkOk,instance=instance,adr=adr,delete=True,typechar='=')
         self.serialWriteRaw(cmdstring)
-
-    
 
     def reset(self):
         self.replytext = ""

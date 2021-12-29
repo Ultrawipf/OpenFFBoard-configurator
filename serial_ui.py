@@ -100,7 +100,7 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.port = None
    
     def getPorts(self):
-        oldport = self.port.portName() if self.port else None
+        oldport = self.port if self.port else None
         
         self.ports = QSerialPortInfo().availablePorts()
         self.comboBox_port.clear()
@@ -115,14 +115,14 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.comboBox_port.addItem(name)
             if(supportedVidPid):
                 selIdx = i
-                self.comboBox_port.setItemData(i,QColor("lime"),Qt.ItemDataRole.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("green"),Qt.ItemDataRole.ForegroundRole)
             else:
-                self.comboBox_port.setItemData(i,QColor("orangered"),Qt.ItemDataRole.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("red"),Qt.ItemDataRole.ForegroundRole)
 
         
         plist = [p.portName() for p in self.ports]
-        if oldport in plist:
-            self.comboBox_port.setCurrentIndex(plist.index(oldport))
+        if (oldport is not None) and ((oldport.vendorIdentifier() ,oldport.productIdentifier()) in officialVidPids) and (oldport.portName() in plist):
+            self.comboBox_port.setCurrentIndex(plist.index(oldport.portName()))
         else:
             self.comboBox_port.setCurrentIndex(selIdx) # preselect found entry
         self.selectPort(self.comboBox_port.currentIndex())
