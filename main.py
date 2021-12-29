@@ -7,7 +7,7 @@ from PyQt5.QtCore import QTimer,QThread
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QFont, QIcon
 import sys,itertools
 import config 
 from helper import res_path
@@ -345,12 +345,15 @@ if __name__ == '__main__':
     tray.setIcon(icon)
     tray.setVisible(True)
     tray.activated.connect(onTrayIconActivated)
+    tray.setToolTip("Open FFBoard Configurator")
 
     # Creating the options
     menu = QMenu()
-    option1 = QAction("Open")
+    option1 = QAction("Open console")
     option1.triggered.connect(mainapp.show)
     menu.addAction(option1)
+
+    menu.addSeparator()
 
     # To quit the app
     quit = QAction("Quit")
