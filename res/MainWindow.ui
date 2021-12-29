@@ -68,7 +68,7 @@
      <x>0</x>
      <y>0</y>
      <width>644</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -81,11 +81,15 @@
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Extras</string>
+     <string>Hardware</string>
     </property>
     <addaction name="actionDFU_Uploader"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_Factory_Config"/>
     <addaction name="actionSave_chip_config"/>
     <addaction name="actionRestore_chip_config"/>
+    <addaction name="separator"/>
+    <addaction name="actionReboot"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -102,8 +106,11 @@
    </property>
   </action>
   <action name="actionDFU_Uploader">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>DFU Uploader</string>
+    <string>Firmware Update...</string>
    </property>
   </action>
   <action name="actionSave_chip_config">
@@ -136,6 +143,22 @@
    </property>
    <property name="text">
     <string>Active features</string>
+   </property>
+  </action>
+  <action name="actionReboot">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reboot</string>
+   </property>
+  </action>
+  <action name="actionReset_Factory_Config">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Reset factory config</string>
    </property>
   </action>
  </widget>

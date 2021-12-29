@@ -1,5 +1,5 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QMainWindow, QSizePolicy, QSpacerItem
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
 from PyQt6.QtCore import QIODevice,pyqtSignal
@@ -79,6 +79,7 @@ class MainUi(QMainWindow,CommunicationHandler):
 
         # Toolbar menu items
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
+        self.serialchooser.connected.connect(self.actionDFU_Uploader.setEnabled)
 
         self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
         self.serialchooser.connected.connect(self.actionErrors.setEnabled)
@@ -91,17 +92,31 @@ class MainUi(QMainWindow,CommunicationHandler):
 
         self.actionSave_chip_config.triggered.connect(self.saveConfig)
         self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
-        
+
+        self.actionReboot.triggered.connect(self.reboot)
+        self.serialchooser.connected.connect(self.actionReboot.setEnabled)
+
+        self.actionReset_Factory_Config.triggered.connect(self.factoryResetBtn)
+        self.serialchooser.connected.connect(self.actionReset_Factory_Config.setEnabled)
+
+        # Status Bar
+        self.wrapperStatusBar = WrapperStatusBar(self.statusBar())
+        self.serialchooser.connected.connect(self.wrapperStatusBar.serialConnected)
+
+        # Main Panel
         layout = QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.systemUi)
         self.groupBox_main.setLayout(layout)
 
+    def reboot(self):
+        self.sendCommand("sys","reboot")
+        self.reconnect()
 
     def dfuUploader(self):
         msg = QDialog()
-        msg.setWindowTitle("DFU Mode")
-        dfu = DFUModeUI(msg)
+        msg.setWindowTitle("Firmware")
+        dfu = DFUModeUI(msg, mainUI=self)
         l = QVBoxLayout()
         l.addWidget(dfu)
         msg.setLayout(l)
@@ -144,12 +159,12 @@ class MainUi(QMainWindow,CommunicationHandler):
                 self.timeouting = True
                 #print("Timeouting")
                 self.getValueAsync("main","id",self.timeoutCheckCB,conversion=int)
-                self.getValueAsync("sys","heapfree",self.systemUi.updateRamUse)
+                self.getValueAsync("sys","heapfree",self.wrapperStatusBar.updateRamUse)
                 
             
 
     def log(self,s):
-        self.systemUi.logBox_1.append(s)
+        self.systemUi.log(s)
 
     def tabChanged(self,id):
         pass
@@ -162,7 +177,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
         CommunicationHandler.removeCallbacks(widget)
         del widget
-        
 
     def selectTab(self,idx):
         self.tabWidget_main.setCurrentIndex(idx)
@@ -234,9 +248,8 @@ class MainUi(QMainWindow,CommunicationHandler):
                     self.addTab(c,n)
                     self.systemUi.setSaveBtn(True)
 
-                    
         self.getValueAsync("sys","lsactive",updateTabs_cb,delete=True)
-        self.getValueAsync("sys","heapfree",self.systemUi.updateRamUse,delete=True)
+        self.getValueAsync("sys","heapfree",self.wrapperStatusBar.updateRamUse,delete=True)
 
     def reconnect(self):
         self.resetPort()
@@ -304,6 +317,68 @@ class MainUi(QMainWindow,CommunicationHandler):
  
         self.getValueAsync("sys","swver",self.versionCheck)
 
+    def factoryReset(self, btn):
+        cmd = btn.text()
+        if(cmd=="OK"):
+            self.sendValue("sys","format",1)
+            self.sendCommand("sys","reboot")
+            self.main.resetPort()
+
+    def factoryResetBtn(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Warning)
+        msg.setText("Format flash and reset?")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.buttonClicked.connect(self.factoryReset)
+        msg.exec_()
+
+class WrapperStatusBar():
+    labelValueMem = None
+    labelStatus = None
+    labelMem = None
+    def __init__(self, statusBar = None):
+        self.labelMem = QLabel(text="Free rtos RAM :")
+        self.labelValueMem = QLabel(text="0")
+        self.labelStatus = QLabel(text="") 
+        horizontalSpacer = QSpacerItem(1, 1, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)    
+
+        widget = QWidget()
+        widgetLayout = QHBoxLayout()
+        widget.setLayout(widgetLayout)
+        widget.layout().setContentsMargins(10,0,0,0)
+        widget.layout().addWidget(self.labelMem)
+        widget.layout().addWidget(self.labelValueMem)
+        widget.layout().addItem(horizontalSpacer)
+        widget.layout().addWidget(self.labelStatus)
+
+        self.serialConnected(False)
+        statusBar.addWidget(widget,1)
+    
+    def updateRamUse(self,reply):
+        usage = reply.split(":")
+        use = int(usage[0])
+        minuse = None
+        if(len(usage) == 2):
+            minuse = int(usage[1])
+        if use:
+            use = round(int(use)/1000.0,2)
+            if minuse:
+                minuse = round(int(minuse)/1000.0,2)
+                self.labelValueMem.setText("{}k ({}k min)".format(use,minuse))
+            else:
+                self.labelValueMem.setText("{}k".format(use))
+    
+    def updateStatus(self,msg):
+        self.labelStatus.setText(msg)
+
+    def serialConnected(self,connected):
+        self.labelMem.setEnabled(connected)
+        self.labelStatus.setEnabled(connected)
+        self.labelValueMem.setEnabled(connected)
+        if(connected):
+            self.updateStatus("Connected")
+        else:
+            self.updateStatus("Disconnected")
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
