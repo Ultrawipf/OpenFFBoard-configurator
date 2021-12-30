@@ -3,11 +3,11 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
 from PyQt5.QtCore import QIODevice,pyqtSignal
-from PyQt5.QtCore import QTimer,QThread
+from PyQt5.QtCore import QTimer,QThread, QEvent, Qt, pyqtSlot
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QCloseEvent, QActionEvent
 import sys,itertools
 import config 
 from helper import res_path
@@ -41,6 +41,7 @@ class MainUi(QMainWindow,CommunicationHandler):
     mainClassUi = None
     timeouting = False
     connected = False
+    notMinimizeAndClose = True
     
     def __init__(self):
         QMainWindow.__init__(self)
@@ -62,7 +63,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.setup()
         self.activeClasses = {}
         self.fwverstr = None
-        
         
     def setup(self):
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial,main = self)
@@ -309,6 +309,25 @@ class MainUi(QMainWindow,CommunicationHandler):
  
         self.getValueAsync("sys","swver",self.versionCheck)
 
+    #override the changeEffect to detect if the windows is minimized. we ask close event on it
+    def changeEvent(self, event: QEvent) -> None:
+        if event.type() == QEvent.WindowStateChange:
+            if self.windowState() & Qt.WindowMinimized:
+                self.showNormal()
+                self.notMinimizeAndClose = False
+                self.close()
+                event.ignore()
+
+    #if minimize before close, we just hide, else quit
+    def closeEvent(self, a0: QCloseEvent) -> None:
+        if self.notMinimizeAndClose:
+            a0.ignore()
+            app.quit()
+        else:
+            self.notMinimizeAndClose = True
+            a0.ignore()
+            self.hide()
+
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
@@ -334,8 +353,6 @@ if __name__ == '__main__':
     window.show()
     global mainapp
     mainapp = window
-
-    app.setQuitOnLastWindowClosed(False)
   
     # Adding an icon
     icon = QIcon("app.png")
