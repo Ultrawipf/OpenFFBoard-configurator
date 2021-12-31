@@ -110,7 +110,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
                 amps = round(100*current / 0x7fff,3) # percent
                 self.label_Current.setText(str(amps)+"%")
 
-            self.progressBar_power.setValue(current)
+            self.progressBar_power.setValue(int(current))
 
             self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData)-self.max_datapoints,0):]
             self.curveAmpData.append(amps)
@@ -220,7 +220,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
         # change scaler
         self.sendCommand("tmc","iScale",self.axis) # request scale update
-        if self.hwversion == 0 and self.versionWarningShow:
+        if self.hwversion == 0 and self.versionWarningShow and len(self.hwversions) > 0:
             # no version set. ask user to select version
             self.versionWarningShow = False
             self.showVersionSelectorPopup()
