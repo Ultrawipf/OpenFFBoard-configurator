@@ -127,6 +127,6 @@ class DFUModeUI(WidgetUI):
         QApplication.processEvents()
 
     def progress(self,addr, offset, size):
-        self.progressBar.setValue(offset * 100 / size)
+        self.progressBar.setValue(int(offset * 100 / size))
         self.update()
         QApplication.processEvents()
