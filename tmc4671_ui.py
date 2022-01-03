@@ -40,8 +40,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
    
         # Chart setup
-        self.startTime = QTime.currentTime()
-        self.chartLastX = 0
         self.chart = QChart()
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
@@ -264,6 +262,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.versionWarningShow = False
 
     def initUi(self):
+        # clear graph
+        self.startTime = QTime.currentTime()
+        self.chartLastX = 0
+        self.lines_Amps.clear()
+        self.lines_Temps.clear()
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
