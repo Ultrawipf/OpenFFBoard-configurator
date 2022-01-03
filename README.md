@@ -12,7 +12,7 @@ Be very careful when changing motor types, drivers or the power value.
 Incorrect settings may cause unintended movements or damage hardware.
 
 
-On older windows versions CDC drivers may not load automatically.
+On older windows versions (older than Windows 10) CDC drivers may not load automatically.
 
 Then you need to manually install for example the STM VCP driver for the device. (We will provide an installer later)
 
@@ -22,11 +22,15 @@ Then you need to manually install for example the STM VCP driver for the device.
 
 ![Axis Window](screenshots/Axispage.png?raw=true)
 
+
+![TMC Window](screenshots/TMC.png?raw=true)
+
 Dependencies:
 
 PyQt6
-pyqtgraph (For TMC graph)
+PyQt6-Charts (For TMC graph)
 pyusb and libusb-1.0.dll for DFU
 intelhex for uploading hex files
 
 Install dependencies with `pip install -r requirements.txt` and run `python main.py` to start the application.
+A fully executable windows version can be built using pyinstaller and the `build/build.bat` script.
