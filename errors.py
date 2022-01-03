@@ -1,7 +1,7 @@
 from base_ui import WidgetUI
-from PyQt5.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
-from PyQt5.QtCore import QAbstractTableModel,Qt,QModelIndex
+from PyQt6.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+from PyQt6.QtCore import QAbstractTableModel,Qt,QModelIndex
 from base_ui import CommunicationHandler
 
 class ErrorsModel(QAbstractTableModel):
@@ -12,7 +12,7 @@ class ErrorsModel(QAbstractTableModel):
         self.header = ["Code", "Level","Info"]
  
     def data(self, index, role):
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             idx = index.row()
 
             d = self.errors[idx]
@@ -27,8 +27,8 @@ class ErrorsModel(QAbstractTableModel):
                 return None
 
     def headerData(self,section,orientation,role):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
                 return self.header[section]
 
 

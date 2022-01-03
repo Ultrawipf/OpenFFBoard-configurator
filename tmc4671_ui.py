@@ -1,14 +1,14 @@
-from PyQt5.QtWidgets import QLabel, QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
-from PyQt5 import uic
+from PyQt6.QtWidgets import QLabel, QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
+from PyQt6 import uic
 from helper import res_path,classlistToIds
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
 import main
 from base_ui import WidgetUI
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
-from PyQt5.QtWidgets import QWidget,QGroupBox,QComboBox
+from PyQt6.QtWidgets import QWidget,QGroupBox,QComboBox
 #for graph here, need pyqtgraph and numpy
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
@@ -267,8 +267,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         def f(res):
             self.pushButton_align.setEnabled(True)
             if(res):
-                msg = QMessageBox(QMessageBox.Information,"Encoder align",res)
-                msg.exec_()
+                msg = QMessageBox(QMessageBox.Icon.Information,"Encoder align",res)
+                msg.exec()
 
         res = self.getValueAsync("tmc","encalign",f,self.axis,typechar='?')
         self.main.log("Started encoder alignment")

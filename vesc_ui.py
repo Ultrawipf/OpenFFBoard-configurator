@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
-from PyQt5 import uic
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
+from PyQt6 import uic
 from helper import res_path,classlistToIds
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
 import main
 from base_ui import WidgetUI
 import math

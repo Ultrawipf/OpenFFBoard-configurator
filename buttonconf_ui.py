@@ -1,10 +1,10 @@
 from collections import namedtuple
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QLineEdit, QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget,QGroupBox
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
-from PyQt5 import uic
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLineEdit, QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget,QGroupBox
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+from PyQt6 import uic
 import main
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from helper import res_path,classlistToIds

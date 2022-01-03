@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import QDialogButtonBox, QHBoxLayout, QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget,QGroupBox
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
-from PyQt5 import uic
+from PyQt6.QtWidgets import QDialogButtonBox, QHBoxLayout, QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget,QGroupBox
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+from PyQt6 import uic
 import main
 from helper import res_path,classlistToIds
 
@@ -31,9 +31,9 @@ class OptionsDialog(QDialog):
         applyButton.clicked.connect(self.apply)
 
         btnGroup = QDialogButtonBox()
-        btnGroup.addButton(okbtn, QDialogButtonBox.AcceptRole)
-        btnGroup.addButton(cancelButton, QDialogButtonBox.RejectRole)
-        btnGroup.addButton(applyButton, QDialogButtonBox.ApplyRole)
+        btnGroup.addButton(okbtn, QDialogButtonBox.ButtonRole.AcceptRole)
+        btnGroup.addButton(cancelButton, QDialogButtonBox.ButtonRole.RejectRole)
+        btnGroup.addButton(applyButton, QDialogButtonBox.ButtonRole.ApplyRole)
         self.layout.addWidget(btnGroup)
 
         self.setLayout(self.layout)
