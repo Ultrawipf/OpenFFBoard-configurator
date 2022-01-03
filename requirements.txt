@@ -1,4 +1,4 @@
 PyQt6
-pyqtgraph
+PyQt6-Charts
 pyusb
 intelhex

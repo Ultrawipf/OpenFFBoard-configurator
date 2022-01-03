@@ -2,22 +2,22 @@ from PyQt6.QtWidgets import QLabel, QMainWindow
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
-from PyQt6 import uic
 from helper import res_path,classlistToIds
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer,QRectF
+from PyQt6.QtCore import Qt
 import main
 from base_ui import WidgetUI
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from PyQt6.QtWidgets import QWidget,QGroupBox,QComboBox
-#for graph here, need pyqtgraph and numpy
-from pyqtgraph import PlotWidget, plot
-import pyqtgraph as pg
+
+from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
 from base_ui import CommunicationHandler
 
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     max_datapoints = 1000
+    max_datapointsVisible = 100
     adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
 
     hwversion = 0
@@ -43,8 +43,39 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.timer.timeout.connect(self.updateTimer)
         self.timer_status.timeout.connect(self.updateStatus)
 
-        self.curveAmp = self.graphWidget_Amps.plot(pen='y')
-        self.curveAmpData = [0]
+   
+        # Chart setup
+        self.chart = QChart()
+        self.chartXaxis = QValueAxis()
+        self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
+
+        self.chartYaxis_Amps = QValueAxis()
+        self.chartYaxis_Temps = QValueAxis()
+
+        self.lines_Amps = QLineSeries()
+        self.lines_Amps.setName("Amps A")
+        self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
+        self.chart.addSeries(self.lines_Amps)
+        self.lines_Amps.attachAxis(self.chartYaxis_Amps)
+        self.lines_Amps.attachAxis(self.chartXaxis)
+        
+
+
+        self.lines_Temps = QLineSeries()
+        self.lines_Temps.setName("Temp °C")
+        self.chart.addAxis(self.chartYaxis_Temps,Qt.AlignmentFlag.AlignRight)
+        self.chart.addSeries(self.lines_Temps)
+        self.lines_Temps.attachAxis(self.chartYaxis_Temps)
+        self.lines_Temps.attachAxis(self.chartXaxis)
+        self.chartYaxis_Temps.setMax(100)
+
+        #self.chart.createDefaultAxes()
+
+        self.chartXaxis.setMax(10)
+        self.chartYaxis_Amps.setMax(20)
+        self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
+        self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
+        # self.curveAmpData = [0]
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
@@ -112,9 +143,14 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
             self.progressBar_power.setValue(int(current))
 
-            self.curveAmpData = self.curveAmpData[max(len(self.curveAmpData)-self.max_datapoints,0):]
-            self.curveAmpData.append(amps)
-            self.curveAmp.setData(self.curveAmpData)
+            self.lines_Amps.append(self.lines_Amps.count()+1,amps)
+            self.chartXaxis.setMax(self.lines_Amps.count())
+
+            if(self.lines_Amps.count() > self.max_datapointsVisible):
+                self.chart.scroll(1,0)
+
+            if(self.lines_Amps.count() > self.max_datapoints):
+                self.lines_Amps.remove(0)
 
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
@@ -124,6 +160,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if(t > 150 or t < -20):
             return
         self.label_Temp.setText(str(round(t,2)) + "°C")
+
+        # Amps updates faster and gives the current timestamp
+        self.lines_Temps.append(self.lines_Amps.count()+1,t)
+        if(self.lines_Amps.count() > self.max_datapoints):
+            self.lines_Temps.remove(0)
     
     def updateVolt(self):
         t = "Mot: {:2.2f}V".format(self.vint)
@@ -286,9 +327,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def setCurrentScaler(self,x):
-        if(x != self.adc_to_amps):
-            self.curveAmpData.clear()
+        # if(x != self.adc_to_amps):
+        #     self.curveAmpData.clear()
         self.adc_to_amps = x
+        if(x > 0):
+            self.chartYaxis_Amps.setMax(0x7fff*x)
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
