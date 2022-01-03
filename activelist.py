@@ -1,7 +1,7 @@
 from base_ui import WidgetUI,CommunicationHandler
-from PyQt5.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
-from PyQt5.QtCore import QAbstractTableModel,Qt,QModelIndex
+from PyQt6.QtWidgets import QDialog,QTableWidgetItem ,QHeaderView
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+from PyQt6.QtCore import QAbstractTableModel,Qt,QModelIndex
 
 
 
@@ -13,7 +13,7 @@ class ActiveClassModel(QAbstractTableModel):
         self.header = ["Name", "Class","Instance","Class ID","Handler ID"]
  
     def data(self, index, role):
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             idx = index.row()
 
             d = self.items[idx]
@@ -33,8 +33,8 @@ class ActiveClassModel(QAbstractTableModel):
                 return None
 
     def headerData(self,section,orientation,role):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
                 return self.header[section]
 
 
@@ -88,7 +88,7 @@ class ActiveClassUI(WidgetUI,CommunicationHandler):
         self.items = ActiveClassModel(self.tableView)
         self.tableView.setModel(self.items)
         header = self.tableView.horizontalHeader()
-        header.setResizeMode(0,QHeaderView.ResizeMode.Stretch)# Stretch first section
+        header.setSectionResizeMode(0,QHeaderView.ResizeMode.Stretch)# Stretch first section
 
 
 

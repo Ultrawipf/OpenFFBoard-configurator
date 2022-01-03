@@ -1,5 +1,5 @@
 import json
-from PyQt5.QtWidgets  import QFileDialog,QMessageBox
+from PyQt6.QtWidgets  import QFileDialog,QMessageBox
 
 def saveDump(buf):
     dump = {"flash":[]} 
@@ -12,11 +12,11 @@ def saveDump(buf):
     try:
         with open(fname,"w") as f:
             json.dump(dump,f)
-        msg = QMessageBox(QMessageBox.Information,"Save flash dump","Saved successfully.")
-        msg.exec_()
+        msg = QMessageBox(QMessageBox.Icon.Information,"Save flash dump","Saved successfully.")
+        msg.exec()
     except Exception as e:
-        msg = QMessageBox(QMessageBox.Warning,"Save flash dump","Error while saving flash dump:\n"+str(e))
-        msg.exec_()
+        msg = QMessageBox(QMessageBox.Icon.Warning,"Save flash dump","Error while saving flash dump:\n"+str(e))
+        msg.exec()
 
 
 def loadDump():

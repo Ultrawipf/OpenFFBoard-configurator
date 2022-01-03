@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow, QSlider
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget,QToolButton 
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
-from PyQt5 import uic
+from PyQt6.QtWidgets import QMainWindow, QSlider
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget,QToolButton 
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
+from PyQt6 import uic
 from helper import res_path,classlistToIds,splitListReply
-from PyQt5.QtCore import QTimer,QEvent
+from PyQt6.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
 import analogconf_ui
@@ -182,11 +182,11 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.pushButton_changeAxes.setEnabled(False)
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
+        msg.setIcon(QMessageBox.Icon.Warning)
         msg.setText("Changing the number of axis may cause or require a reboot!")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
         msg.buttonClicked.connect(f)
-        msg.exec_()
+        msg.exec()
 
     def hidreportrate_cb(self,modes):
         self.comboBox_reportrate.blockSignals(True)

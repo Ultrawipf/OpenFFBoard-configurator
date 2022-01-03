@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget,QToolButton 
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
-from PyQt5 import uic
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget,QToolButton 
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
+from PyQt6 import uic
 from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall
-from PyQt5.QtCore import QTimer,QEvent
+from PyQt6.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
 import analogconf_ui

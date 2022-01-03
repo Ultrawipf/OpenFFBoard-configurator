@@ -1,7 +1,7 @@
 from os import path
 import sys
 
-from PyQt5.QtCore import QObject
+from PyQt6.QtCore import QObject
 
 respath = "res"
 def res_path(file):

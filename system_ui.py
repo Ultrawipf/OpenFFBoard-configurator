@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QWidget,QDialog,QVBoxLayout,QMessageBox
-from PyQt5 import uic
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QWidget,QDialog,QVBoxLayout,QMessageBox
+from PyQt6 import uic
 from helper import res_path
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
 from base_ui import WidgetUI,CommunicationHandler
 import re
 
@@ -61,11 +61,11 @@ class SystemUI(WidgetUI,CommunicationHandler):
 
     def factoryResetBtn(self):
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
+        msg.setIcon(QMessageBox.Icon.Warning)
         msg.setText("Format flash and reset?")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
         msg.buttonClicked.connect(self.factoryReset)
-        msg.exec_()
+        msg.exec()
 
 
   
