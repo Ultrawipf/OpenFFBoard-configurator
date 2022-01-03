@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel
 from helper import res_path,classlistToIds
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTime, QTimer
 from PyQt6.QtCore import Qt,QMargins
 import main
 from base_ui import WidgetUI
@@ -11,8 +11,8 @@ from base_ui import CommunicationHandler
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
-    max_datapoints = 1000
-    max_datapointsVisible = 100
+    max_datapoints = 10000
+    max_datapointsVisibleTime = 30
     adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
 
     hwversion = 0
@@ -40,6 +40,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
    
         # Chart setup
+        self.startTime = QTime.currentTime()
+        self.chartLastX = 0
         self.chart = QChart()
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
@@ -66,7 +68,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.chartXaxis.setMax(10)
         self.chartYaxis_Amps.setMax(20)
-        self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
+        self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.VerticalRubberBand)
         self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
  
 
@@ -135,14 +137,14 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
             self.progressBar_power.setValue(int(current))
 
-            self.lines_Amps.append(self.lines_Amps.count()+1,amps)
-            self.chartXaxis.setMax(self.lines_Amps.count())
-
-            if(self.lines_Amps.count() > self.max_datapointsVisible):
-                self.chart.scroll(1,0)
-
+            self.chartLastX = self.startTime.msecsTo(QTime.currentTime()) / 1000
+            self.lines_Amps.append(self.chartLastX,amps)
+            
             if(self.lines_Amps.count() > self.max_datapoints):
                 self.lines_Amps.remove(0)
+            
+            self.chartXaxis.setMax(self.chartLastX)
+            self.chartXaxis.setMin(max(self.lines_Amps.at(0).x(),max(0,self.chartLastX-self.max_datapointsVisibleTime)))
 
         except Exception as e:
             self.main.log("TMC update error: " + str(e)) 
@@ -154,8 +156,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.label_Temp.setText(str(round(t,2)) + "°C")
 
         # Amps updates faster and gives the current timestamp
-        self.lines_Temps.append(self.lines_Amps.count()+1,t)
-        if(self.lines_Amps.count() > self.max_datapoints):
+        self.lines_Temps.append(self.chartLastX+1,t)
+        if(self.lines_Temps.count() > self.max_datapoints):
             self.lines_Temps.remove(0)
     
     def updateVolt(self):
