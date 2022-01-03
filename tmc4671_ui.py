@@ -1,18 +1,13 @@
-from PyQt6.QtWidgets import QLabel, QMainWindow
-from PyQt6.QtWidgets import QDialog
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup 
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel
 from helper import res_path,classlistToIds
-from PyQt6.QtCore import QTimer,QRectF
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import Qt,QMargins
 import main
 from base_ui import WidgetUI
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
-from PyQt6.QtWidgets import QWidget,QGroupBox,QComboBox
 
 from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
 from base_ui import CommunicationHandler
-
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
@@ -46,6 +41,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
    
         # Chart setup
         self.chart = QChart()
+        self.chart.setBackgroundRoundness(5)
+        self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis()
         self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
 
@@ -59,8 +56,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Amps.attachAxis(self.chartYaxis_Amps)
         self.lines_Amps.attachAxis(self.chartXaxis)
         
-
-
         self.lines_Temps = QLineSeries()
         self.lines_Temps.setName("Temp °C")
         self.chart.addAxis(self.chartYaxis_Temps,Qt.AlignmentFlag.AlignRight)
@@ -69,13 +64,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Temps.attachAxis(self.chartXaxis)
         self.chartYaxis_Temps.setMax(100)
 
-        #self.chart.createDefaultAxes()
-
         self.chartXaxis.setMax(10)
         self.chartYaxis_Amps.setMax(20)
         self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.RectangleRubberBand)
         self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
-        # self.curveAmpData = [0]
+ 
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
@@ -83,7 +76,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.buttonGroup_precision.buttonToggled.connect(self.changePrecision)
 
         self.pushButton_hwversion.clicked.connect(self.showVersionSelectorPopup)
-
         self.comboBox_mtype.currentIndexChanged.connect(self.motorselChanged)
 
         # Callbacks

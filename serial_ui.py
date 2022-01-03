@@ -1,9 +1,6 @@
 import PyQt6
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QMainWindow
-from PyQt6.QtWidgets import QDialog
-from PyQt6.QtWidgets import QWidget
-from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
+from PyQt6.QtSerialPort import QSerialPortInfo 
 from PyQt6.QtCore import QIODevice,pyqtSignal,Qt
 import main
 from base_ui import WidgetUI,CommunicationHandler
@@ -25,7 +22,6 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         self.serial = serial
         self.pushButton_refresh.clicked.connect(self.getPorts)
         self.pushButton_connect.clicked.connect(self.serialConnectButton)
-        #self.comboBox_port.currentIndexChanged.connect(self.selectPort)
         self.pushButton_send.clicked.connect(self.sendLine)
         self.lineEdit_cmd.returnPressed.connect(self.sendLine)
         self.pushButton_ok.clicked.connect(self.mainBtn)
@@ -54,7 +50,6 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         cmd = self.lineEdit_cmd.text()+"\n"
         self.serialLog(">"+cmd)
         self.main.comms.serialWriteRaw(cmd)
-        #self.main.comms.serialGetAsync(cmd,self.serialLog)
 
     def write(self,data):
         self.serial.write(data)
