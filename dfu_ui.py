@@ -1,6 +1,5 @@
 from base_ui import WidgetUI
 import pydfu
-import threading
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets  import QFileDialog,QMessageBox,QApplication
 
