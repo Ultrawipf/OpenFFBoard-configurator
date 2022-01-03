@@ -1,11 +1,11 @@
-#from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
-from PyQt5.QtCore import QIODevice,pyqtSignal
-from PyQt5.QtCore import QTimer,QThread
-from PyQt5 import uic
-from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
+#from fbs_runtime.application_context.PyQt6 import ApplicationContext
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
+from PyQt6.QtCore import QIODevice,pyqtSignal
+from PyQt6.QtCore import QTimer,QThread
+from PyQt6 import uic
+from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
 import config 
 from helper import res_path
@@ -105,11 +105,11 @@ class MainUi(QMainWindow,CommunicationHandler):
         l = QVBoxLayout()
         l.addWidget(dfu)
         msg.setLayout(l)
-        msg.exec_()
+        msg.exec()
         dfu.deleteLater()
 
     def openAbout(self):
-        AboutDialog(self).exec_()
+        AboutDialog(self).exec()
 
     def saveConfig(self):
         self.getValueAsync("sys","flashdump",config.saveDump)
@@ -121,8 +121,8 @@ class MainUi(QMainWindow,CommunicationHandler):
         for e in dump["flash"]:
             self.comms.sendValue(self,"sys","flashraw",e["val"],e["addr"],0)
         # Message
-        msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
-        msg.exec_()
+        msg = QMessageBox(QMessageBox.Icon.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
+        msg.exec()
 
 
     def timeoutCheckCB(self,i):
@@ -275,11 +275,11 @@ class MainUi(QMainWindow,CommunicationHandler):
         guioutdated = min_fw_t[0] < fwver[0] or min_fw_t[1] < fwver[1]
 
         if guioutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
+            msg.exec()
         elif fwoutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\n("+min_fw+" required)\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
-            msg.exec_()
+            msg = QMessageBox(QMessageBox.Icon.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\n("+min_fw+" required)\nPlease make sure both firmware and GUI are up to date if you encounter errors.")
+            msg.exec()
 
 
     def serialConnected(self,connected):
@@ -330,4 +330,4 @@ if __name__ == '__main__':
     mainapp = window
     #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
     #sys.exit(exit_code)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

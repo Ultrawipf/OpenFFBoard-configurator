@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget,QGroupBox
-from PyQt5.QtWidgets import QMessageBox,QVBoxLayout,QHBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
-from PyQt5 import uic
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget,QGroupBox
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QHBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
+from PyQt6 import uic
 import main
-from PyQt5.QtCore import QObjectCleanupHandler
+from PyQt6.QtCore import QObjectCleanupHandler
 from helper import res_path,classlistToIds
 from base_ui import CommunicationHandler
 

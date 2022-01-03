@@ -1,9 +1,9 @@
 import queue,time
-from PyQt5.QtCore import QObject
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtCore import QObject
+from PyQt6.QtWidgets import QApplication
 from collections import deque
 import re
-from PyQt5.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 
 # Regex group indices:
 GRP_CLS         = 0
