@@ -140,7 +140,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             
             if(self.lines_Amps.count() > self.max_datapoints):
                 self.lines_Amps.remove(0)
-            
+
+            if(amps > self.chartYaxis_Amps.max()):
+                self.chartYaxis_Amps.setMax(round(amps,2)) # increase range
+
             self.chartXaxis.setMax(self.chartLastX)
             self.chartXaxis.setMin(max(self.lines_Amps.at(0).x(),max(0,self.chartLastX-self.max_datapointsVisibleTime)))
 
@@ -157,6 +160,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Temps.append(self.chartLastX+1,t)
         if(self.lines_Temps.count() > self.max_datapoints):
             self.lines_Temps.remove(0)
+
+        
+        if(t > self.chartYaxis_Temps.max()):
+            self.chartYaxis_Temps.setMax(round(t)) # increase range
     
     def updateVolt(self):
         t = "Mot: {:2.2f}V".format(self.vint)
@@ -267,6 +274,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartLastX = 0
         self.lines_Amps.clear()
         self.lines_Temps.clear()
+        self.chartYaxis_Amps.setMin(0)
+        self.chartYaxis_Temps.setMin(0)
+        self.chartYaxis_Temps.setMax(90)
         try:
             # Fill encoder source types
             self.comboBox_enc.clear()
@@ -324,11 +334,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def setCurrentScaler(self,x):
-        # if(x != self.adc_to_amps):
-        #     self.curveAmpData.clear()
-        self.adc_to_amps = x
-        if(x > 0):
-            self.chartYaxis_Amps.setMax(0x7fff*x)
+        if(x != self.adc_to_amps):
+            self.adc_to_amps = x
+            if(x > 0):
+                self.chartYaxis_Amps.setMax(round((0x7fff*x) / 10))
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
