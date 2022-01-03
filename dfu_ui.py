@@ -1,8 +1,8 @@
 from base_ui import WidgetUI
 import pydfu
 import threading
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets  import QFileDialog,QMessageBox,QApplication
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets  import QFileDialog,QMessageBox,QApplication
 
 class DFUModeUI(WidgetUI):
     selectedFile = None
@@ -52,7 +52,7 @@ class DFUModeUI(WidgetUI):
         dlg = QFileDialog()
         dlg.setFileMode(QFileDialog.ExistingFile)
         dlg.setNameFilters(["Firmware files (*.hex *.dfu)","DFU files (*.dfu)","Intel hex files (*.hex)"])
-        if dlg.exec_():
+        if dlg.exec():
             filenames = dlg.selectedFiles()
             self.selectFile(filenames[0])
             self.pushButton_upload.setEnabled(True)
@@ -99,14 +99,14 @@ class DFUModeUI(WidgetUI):
 
     def fullEraseClicked(self):
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Warning)
+        msg.setIcon(QMessageBox.Icon.Warning)
         msg.setWindowTitle("Full chip erase")
         msg.setText("Fully erase the chip?")
         msg.setInformativeText("This erases EVERYTHING.\nFirmware and settings.\nYou may need a programmer or short the boot0 pins to reflash it!")
-        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
         ret = msg.exec()
         # Warning displayed. Erase!
-        if ret == QMessageBox.Ok:
+        if ret == QMessageBox.StandardButton.Ok:
             self.fullErase()
         
 

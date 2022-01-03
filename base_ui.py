@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget
 from helper import res_path
-from PyQt5 import uic
+from PyQt6 import uic
 import main
 from serial_comms import SerialComms
 

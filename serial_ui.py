@@ -1,14 +1,14 @@
-import PyQt5
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
-from PyQt5.QtCore import QIODevice,pyqtSignal,Qt
+import PyQt6
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
+from PyQt6.QtCore import QIODevice,pyqtSignal,Qt
 import main
 from base_ui import WidgetUI,CommunicationHandler
 from helper import classlistToIds,updateClassComboBox
-from PyQt5.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 
 officialVidPids = [(0x1209,0xFFB0)] # Highlighted in serial selector
 
@@ -91,7 +91,7 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.main.log("Connecting...")
             self.serial.setPort(self.port)
             self.serial.setBaudRate(500000)
-            self.serial.open(QIODevice.ReadWrite)
+            self.serial.open(QIODevice.OpenModeFlag.ReadWrite)
             if(not self.serial.isOpen()):
                 self.main.log("Can not open port")
             
@@ -120,9 +120,9 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.comboBox_port.addItem(name)
             if(supportedVidPid):
                 selIdx = i
-                self.comboBox_port.setItemData(i,QColor(Qt.green),Qt.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("green"),Qt.ItemDataRole.BackgroundRole)
             else:
-                self.comboBox_port.setItemData(i,QColor(Qt.red),Qt.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("red"),Qt.ItemDataRole.BackgroundRole)
 
         
         plist = [p.portName() for p in self.ports]
@@ -159,5 +159,5 @@ class SerialChooser(WidgetUI,CommunicationHandler):
         id = self.classes[self.comboBox_main.currentIndex()][0]
         self.sendValue("sys","main",id)
         self.main.reconnect()
-        msg = QMessageBox(QMessageBox.Information,"Main class changed","Chip is rebooting. Please reconnect.")
-        msg.exec_()
+        msg = QMessageBox(QMessageBox.Icon.Information,"Main class changed","Chip is rebooting. Please reconnect.")
+        msg.exec()
