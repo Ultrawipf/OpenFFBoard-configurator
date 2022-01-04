@@ -263,8 +263,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if self.hwversion == 0 and self.versionWarningShow and len(self.hwversions) > 0:
             # no version set. ask user to select version
             self.versionWarningShow = False
-            self.showVersionSelectorPopup()
-            
+            QTimer.singleShot(100,self.showVersionSelectorPopup()) # return this function but show popup with a tiny delay
+             
         else:
             self.versionWarningShow = False
 

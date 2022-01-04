@@ -14,11 +14,11 @@ from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 
 # This GUIs version
-version = "1.5.3"
+version = "1.6.0"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.5.1"
+min_fw = "1.6.0"
 
 # UIs
 import system_ui
@@ -159,7 +159,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         return self.tabWidget_main.addTab(widget,name)
 
     def delTab(self,widget):
-        #print("DEL",widget)
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
         CommunicationHandler.removeCallbacks(widget)
         del widget
@@ -242,7 +241,6 @@ class MainUi(QMainWindow,CommunicationHandler):
     def reconnect(self):
         self.resetPort()
         QTimer.singleShot(1000,self.serialchooser.serialConnect)
-        #self.serialchooser.serialConnect()
 
     def resetPort(self):
         self.log("Reset port")
@@ -262,7 +260,6 @@ class MainUi(QMainWindow,CommunicationHandler):
             self.log("Communication error")
             self.resetPort()
         
-        #minVerGui = [int(i) for i in minVerGuiStr.split(".")]
         fwver = [int(i) for i in self.fwverstr.split(".")]
         min_fw_t = [int(i) for i in min_fw.split(".")]
         guiVersion = [int(i) for i in version.split(".")]
@@ -320,7 +317,6 @@ class AboutDialog(QDialog):
         
             
 if __name__ == '__main__':
-    #appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
 
     app = QApplication(sys.argv)
     window = MainUi()
@@ -328,6 +324,5 @@ if __name__ == '__main__':
     window.show()
     global mainapp
     mainapp = window
-    #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-    #sys.exit(exit_code)
+
     sys.exit(app.exec())
