@@ -49,7 +49,7 @@ class DFUModeUI(WidgetUI):
 
     def fileClicked(self):
         dlg = QFileDialog()
-        dlg.setFileMode(QFileDialog.ExistingFile)
+        dlg.setFileMode(QFileDialog.FileMode.ExistingFile)
         dlg.setNameFilters(["Firmware files (*.hex *.dfu)","DFU files (*.dfu)","Intel hex files (*.hex)"])
         if dlg.exec():
             filenames = dlg.selectedFiles()
