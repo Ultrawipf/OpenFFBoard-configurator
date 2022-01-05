@@ -25,7 +25,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
 
-        self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
+        #self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
         self.registerCallback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
         self.registerCallback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
         self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
@@ -78,7 +78,6 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.line.setVisible(visible)
         self.label_9.setVisible(visible)
         self.doubleSpinBox_encoderOffset.setVisible(visible)
-        self.pushButton_manualRead.setVisible(visible)
         self.pushButton_eraseOffset.setVisible(visible)
 
 
@@ -134,6 +133,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.sendValue("vesc","canspd",spdPreset,instance=self.prefix)
         self.sendValue("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
         self.sendValue("vesc","vesccanid",VESCCANId,instance=self.prefix)
+        self.sendValue("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)
         self.initUi() # Update UI
     
     def manualEncPosRead(self):
