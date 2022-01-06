@@ -31,6 +31,11 @@ class FfbUI(WidgetUI,CommunicationHandler):
     active = 0
     rate = 0
 
+    springgain = 4
+    dampergain = 2
+    inertiagain = 2
+    frictiongain = 2
+
     def __init__(self, main=None):
         WidgetUI.__init__(self, main,'ffbclass.ui')
         CommunicationHandler.__init__(main.comms)
@@ -43,17 +48,17 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"filterCfQ"))
         self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(val * 100))
 
-        self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(val * 64))
-        self.horizontalSlider_spring.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_spring,4/255,"spring"))
+        self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(round(val * 256/self.springgain)))
+        self.horizontalSlider_spring.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_spring,self.springgain/256,"spring"))
 
-        self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(val * 128))
-        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_damper,2/255,"damper"))
+        self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(val * 256/self.dampergain))
+        self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_damper,self.dampergain/256,"damper"))
 
-        self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 128))
-        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,2/255,"friction"))
+        self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 256/self.frictiongain))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,self.frictiongain/256,"friction"))
 
-        self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 128))
-        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,2/255,"inertia"))
+        self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 256/self.inertiagain))
+        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,self.inertiagain/256,"inertia"))
         
         self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.sendValue("main","hidsendspd",str(val)))
 
@@ -74,10 +79,15 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.registerCallback("fx","filterCfQ",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_CFq,self.horizontalSlider_CFq,0.01),0,int)
         
-        self.registerCallback("fx","spring",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_spring,self.horizontalSlider_spring,4/255),0,int)
-        self.registerCallback("fx","damper",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_damper,self.horizontalSlider_damper,2/255),0,int)
-        self.registerCallback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,2/255),0,int)
-        self.registerCallback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,2/255),0,int)
+        self.registerCallback("fx","spring",self.setSpringScalerCb,0,str,typechar="!")
+        self.registerCallback("fx","damper",self.setDamperScalerCb,0,str,typechar="!")
+        self.registerCallback("fx","inertia",self.setInertiaScalerCb,0,str,typechar="!")
+        self.registerCallback("fx","friction",self.setFrictionScalerCb,0,str,typechar="!")
+
+        self.registerCallback("fx","spring",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_spring,self.horizontalSlider_spring,self.springgain/256),0,int)
+        self.registerCallback("fx","damper",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_damper,self.horizontalSlider_damper,self.dampergain/256),0,int)
+        self.registerCallback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,self.frictiongain/256),0,int)
+        self.registerCallback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,self.inertiagain/256),0,int)
         
 
         if(self.initUi()):
@@ -92,7 +102,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.axisbtns.buttonClicked.connect(self.axesChanged)
         
 
-
+    
     def initUi(self):
         try:
             self.sendCommand("main","axes",0,'?') # get axes
@@ -326,8 +336,26 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.doubleSpinBox_CFq.setEnabled(qOn)
         self.label_cffilter.setText(lbl)
 
+    def setGainScaler(self,slider : QSlider,spinbox : QSpinBox, gain, repl):
+        infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
+        if "scale" in infos:
+            gain = float(infos["scale"]) if float(infos["scale"]) > 0 else gain
+        spinbox.setMaximum(gain)
+        self.sliderChangedUpdateSpinbox(slider.value(),spinbox,gain)
+        return gain
+
+    def setSpringScalerCb(self,repl):
+        self.springgain = self.setGainScaler(self.horizontalSlider_spring,self.doubleSpinBox_spring,self.springgain,repl)
+    def setDamperScalerCb(self,repl):
+        self.dampergain = self.setGainScaler(self.horizontalSlider_damper,self.doubleSpinBox_damper,self.dampergain,repl)
+    def setFrictionScalerCb(self,repl):
+        self.frictiongain = self.setGainScaler(self.horizontalSlider_friction,self.doubleSpinBox_friction,self.frictiongain,repl)
+    def setInertiaScalerCb(self,repl):
+        self.inertiagain = self.setGainScaler(self.horizontalSlider_inertia,self.doubleSpinBox_inertia,self.inertiagain,repl)
+
     
     def updateSliders(self):
+        self.sendCommands("fx",["spring","damper","friction","inertia"],0,typechar="!")
         self.sendCommands("fx",["filterCfQ","filterCfFreq","spring","damper","friction","inertia"],0)
 
 
