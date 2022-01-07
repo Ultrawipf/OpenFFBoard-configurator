@@ -1,4 +1,6 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
+import PyQt6
+from PyQt6 import QtCore
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QMainWindow, QSizePolicy, QSpacerItem
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
@@ -6,14 +8,15 @@ from PyQt6.QtCore import QEvent, QIODevice, Qt,pyqtSignal
 from PyQt6.QtCore import QTimer,QThread
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
-from PyQt6.QtWidgets import QSystemTrayIcon, QMenu
-from PyQt6.QtGui import QAction, QFont, QIcon, QCloseEvent, QActionEvent
+from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QStyle
+from PyQt6.QtGui import QAction, QActionGroup, QColor, QFont, QIcon, QCloseEvent, QActionEvent
 import sys,itertools
 import config 
 from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
+import functools
 
 # This GUIs version
 version = "1.6.2"
@@ -42,6 +45,8 @@ class MainUi(QMainWindow,CommunicationHandler):
     timeouting = False
     connected = False
     notMinimizeAndClose = True
+
+    systray = None
     
     def __init__(self):
         QMainWindow.__init__(self)
@@ -60,18 +65,24 @@ class MainUi(QMainWindow,CommunicationHandler):
 
         self.errorsDialog = errors.ErrorsDialog(self)
         self.activeClassDialog = activelist.ActiveClassDialog(self)
-        self.setup()
         self.activeClasses = {}
         self.fwverstr = None
+
+        self.setup()
         
     def setup(self):
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial,main = self)
         self.tabWidget_main.addTab(self.serialchooser,"Serial")
+
+        # Systray
+        self.systray = SystrayWrapper(self)
+        self.serialchooser.connected.connect(self.systray.setConnected)
         
         #self.serial.readyRead.connect(self.serialReceive)
         self.serialchooser.getPorts()
         self.actionAbout.triggered.connect(self.openAbout)
         self.serialchooser.connected.connect(self.serialConnected)
+
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
         self.serialchooser.connected.connect(self.systemUi.setEnabled)
@@ -334,6 +345,70 @@ class MainUi(QMainWindow,CommunicationHandler):
         msg.buttonClicked.connect(self.factoryReset)
         msg.exec()
 
+    def changeProfile(self, profilename:str):
+        if self.connected :
+            self.systemUi.selectProfile(profilename)
+
+class SystrayWrapper():
+    _mainUI : MainUi = None
+    _submenu_profiles : QMenu = None
+
+    def __init__(self, main:MainUi):
+        self._mainUI = main
+
+        # Adding an icon
+        icon = QIcon("app.png")
+
+        # Adding item on the menu bar
+        tray = QSystemTrayIcon(self._mainUI)
+        tray.setIcon(icon)
+        tray.setVisible(True)
+        tray.activated.connect(self._onTrayIconActivated)
+        tray.setToolTip("Open FFBoard Configurator")
+
+        # Creating the options
+        
+        menu = QMenu(self._mainUI)
+        option1 = QAction("Open console", self._mainUI)
+        option1.triggered.connect(self._mainUI.show)
+        menu.addAction(option1)
+        menu.addSeparator()
+
+        # profiles selection
+        submenu = QMenu("Profiles", self._mainUI)
+        menu.addMenu(submenu)
+        self._submenu_profiles = submenu
+        
+        menu.addSeparator()
+
+        # To quit the app
+        quit = menu.addAction("Quit")
+        quit.triggered.connect(app.quit)
+
+        # Adding options to the System Tray
+        tray.setContextMenu(menu)
+
+    def _onTrayIconActivated(self, reason):
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self._mainUI.show()
+
+    def refreshProfiles(self, listprofile):
+        self._submenu_profiles.clear()
+        actions = []
+        for profilename in listprofile:
+            action = QAction(profilename, self._submenu_profiles)
+            action.triggered.connect(functools.partial(self._mainUI.changeProfile, profilename))
+            action.setEnabled(False)
+            actions.append(action)
+        self._submenu_profiles.addActions(actions)
+
+    def setConnected(self, val):
+        self._submenu_profiles.setEnabled(val)
+
+    def selectProfiles(self, profilename):
+        for action in self._submenu_profiles.actions():
+            action.setEnabled(action.text()!=profilename)
+
 class WrapperStatusBar():
     labelValueMem = None
     labelStatus = None
@@ -391,47 +466,13 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-
-def onTrayIconActivated(reason):
-    if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
-        mainapp.show()
             
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
-
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
-    global mainapp
-    mainapp = window
   
-    # Adding an icon
-    icon = QIcon("app.png")
-
-    # Adding item on the menu bar
-    tray = QSystemTrayIcon()
-    tray.setIcon(icon)
-    tray.setVisible(True)
-    tray.activated.connect(onTrayIconActivated)
-    tray.setToolTip("Open FFBoard Configurator")
-
-    # Creating the options
-    menu = QMenu()
-    option1 = QAction("Open console")
-    option1.triggered.connect(mainapp.show)
-    menu.addAction(option1)
-
-    menu.addSeparator()
-
-    # To quit the app
-    quit = QAction("Quit")
-    quit.triggered.connect(app.quit)
-    menu.addAction(quit)
-
-    # Adding options to the System Tray
-    tray.setContextMenu(menu)
-
     #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
     #sys.exit(exit_code)
     sys.exit(app.exec())

@@ -1,11 +1,14 @@
 import os
 import json
 
-from PyQt6 import QtCore
+import PyQt6.QtCore
+
 import profile_manager
 import base_ui
 
 class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
+    profilesUpdated = PyQt6.QtCore.pyqtSignal(list)
+    profileSelected = PyQt6.QtCore.pyqtSignal(str)
     
     profile_setup = {}
     profiles = {}
@@ -26,11 +29,15 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         base_ui.WidgetUI.__init__(self, main,'baseclass.ui')
         base_ui.CommunicationHandler.__init__(self)
         self.profilesDialog = profile_manager.ProfilesDialog(self)
+        self.profilesDialog.closeSignal.connect(self.closeProfileManager)
 
         self.pushButton_save.clicked.connect(self.saveClicked)
         self.toolButton_save.clicked.connect(self.saveCurrentSettingsInProfile)
         self.comboBox_profiles.currentIndexChanged.connect(self.changeSelectedProfile)
         self.toolButton_manage.clicked.connect(self.openProfileManager)
+
+        self.profilesUpdated.connect(self.main.systray.refreshProfiles)
+        self.profileSelected.connect(self.main.systray.selectProfiles)
         
         self.setEnabled(False)
         self.initSetup()
@@ -54,7 +61,7 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.profilesDialog.setProfiles(self.profiles)
         self.profilesDialog.show()
 
-    def closeProfileManagerEventLike(self):
+    def closeProfileManager(self):
         self.createOrUpdateProfileFile()
         self.refreshComboxList()
 
@@ -73,8 +80,14 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def refreshComboxList(self):
         self.comboBox_profiles.clear()
+        #for profilename in self.profiles["profiles"]:
+            #self.comboBox_profiles.addItem(profilename["name"])
+        listprofile = []
         for profilename in self.profiles["profiles"]:
-            self.comboBox_profiles.addItem(profilename["name"])
+            listprofile.append(profilename["name"])
+
+        self.profilesUpdated.emit(listprofile)
+        self.comboBox_profiles.addItems(listprofile)
 
     def loadFileProfiles(self):
         with open(self.__PROFILES_FILENAME,"r") as profileFile:
@@ -103,7 +116,7 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if profilename == '':
             return
         if profilename != str(self.comboBox_profiles.currentText()):
-            index = self.comboBox_profiles.findText(profilename, QtCore.Qt.MatchFlag.MatchFixedString)
+            index = self.comboBox_profiles.findText(profilename, PyQt6.QtCore.Qt.MatchFlag.MatchFixedString)
             if index >= 0:
                 self.comboBox_profiles.setCurrentIndex(index)
 
@@ -113,6 +126,7 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if profilename == '':
             return
 
+        # read the setting and push all settings to 
         profile_json_entry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
         if profile_json_entry is not None:
             for data in profile_json_entry["data"]:
@@ -121,6 +135,8 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             for data in profile_json_entry["data"]:
                 self.sendCommand(cls=data["cls"], cmd=data["cmd"], instance=data["instance"])
 
+        # send message that announce new profile is selected
+        self.profileSelected.emit(profilename)
         self.log("Profile: '" + profilename + "' is active")
 
     def saveCurrentSettingsInProfile(self, profile_name:str = ''):

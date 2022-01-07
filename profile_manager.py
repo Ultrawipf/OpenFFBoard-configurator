@@ -1,4 +1,5 @@
 from PyQt6 import QtGui
+from PyQt6 import QtCore
 from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from base_ui import WidgetUI
 from PyQt6.QtWidgets import QApplication, QDialog, QInputDialog,QTableWidgetItem ,QHeaderView
@@ -10,6 +11,8 @@ import copy
 
 class ProfilesDialog(QDialog):
     profiles = None
+    closeSignal = QtCore.pyqtSignal(bool)
+
     def __init__(self,main=None):
         QDialog.__init__(self, main)
         self.main = main
@@ -25,7 +28,7 @@ class ProfilesDialog(QDialog):
         self.profiles = profiles
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        self.main.closeProfileManagerEventLike()
+        self.closeSignal.emit(True)
         return super().closeEvent(a0)
 
 class ProfilesManagerUI(WidgetUI,CommunicationHandler):
