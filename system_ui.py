@@ -158,24 +158,39 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.getValueAsync("sys", "lsactive", self._readProfileCallBack)
 
     def _buildRunningMap(self, buffer:str):
+        all_class_running = []
         splitted_running_class = [x.split(":") for x in buffer.split("\n")]
         for running_class in splitted_running_class:
+            fullname = running_class[0]
             classname = running_class[1]
             instance = running_class[2]
             # search if this class is already register, if not we add the class and instance number
             # else add the instance number 
-            config_class = next(filter(lambda x:x["classname"]==classname, self._map_class_running), None)
+            config_class = next(filter(lambda x:x["classname"]==classname, all_class_running), None)
             if (config_class is None) :
-                self._map_class_running.append({"classname":classname, "instance":[instance]})
+                all_class_running.append({"classname":classname, "fullname":fullname ,"instance":[instance]})
             else:
                 config_class["instance"].append(instance)
+
+        # filter on active class the classes in the setup file to export
+        self._map_class_running = []
+        for classes in all_class_running:
+            # search in setup list for this classes if not present or for another Class, remove it
+            profileJSonEntry = next(filter(lambda x:x["classname"]==classes["classname"],self.profile_setup["callOrder"]), None)
+            if (profileJSonEntry is not None) and profileJSonEntry["fullname"]==classes["fullname"]:
+                self._map_class_running.append(classes)
+
 
     def _getInstanceRunning(self, indexclass:int, indexinstance:int):
         if indexclass > len(self.profile_setup['callOrder']) :
             return None
         
         classname = self.profile_setup['callOrder'][indexclass]['classname']
-        class_running = next(filter(lambda x:x["classname"]==classname, self._map_class_running), None)
+        fullname = self.profile_setup['callOrder'][indexclass]['fullname']
+        class_running = \
+            next(filter(lambda x:
+                            x["classname"]==classname and x["fullname"]==fullname,
+                            self._map_class_running), None)
         if (class_running is None):                                # the request instance is not on a running classes
             return None 
         elif (indexinstance >= len(class_running["instance"])):    # the next instance not exist
@@ -232,10 +247,11 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         else :
             # each time we received a value, we store the value and awe asked the next one in the config file, 
             # for each instance read in the firt call
+            fullname = self.profile_setup['callOrder'][self._current_class]['fullname']
             classname = self.profile_setup['callOrder'][self._current_class]['classname']
             cmd = self.profile_setup['callOrder'][self._current_class]['key'][self._current_command]
             instance = self._getInstanceRunning(self._current_class, self._current_instance)
-            self._running_profile.append({"cls":classname, "instance":instance, "cmd":cmd, "value":buffer})
+            self._running_profile.append({"fullname":fullname ,"cls":classname, "instance":instance, "cmd":cmd, "value":buffer})
 
         # if there is another command for this class, go to next command
         if self._getNextElementToRequest():
