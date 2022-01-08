@@ -126,14 +126,43 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if profilename == '':
             return
 
-        # read the setting and push all settings to 
+        #TODO start to read the running class before set data
+        # refresh the global var when starting to read value from board
+        self._current_class = -1
+        self._current_command = -1
+        self._current_instance = -1
+        self._map_class_running = []
+        self._running_profile = []
+        # to start process get the list active class from board, after that the the callBack call recursively
+        self.getValueAsync("sys", "lsactive", self._setProfileCallBack)
+
+    def _setProfileCallBack(self, buffer:str):
+        # process the incoming buffer
+        if (self._current_class == -1):
+            # first call is sys.lsactive to get all active class that running and we extract a map of class/instances
+            self._buildRunningMap(buffer)
+
+        # read the selected profile name
+        profilename = str(self.comboBox_profiles.currentText())
+        if profilename == '':
+            return
+
+        # From the profile, filter parameters that are running
+        running_parameters = []
         profile_json_entry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
-        if profile_json_entry is not None:
-            for data in profile_json_entry["data"]:
-                self.sendValue(cls=data["cls"], cmd=data["cmd"], val=data["value"], instance=data["instance"])
- 
-            for data in profile_json_entry["data"]:
-                self.sendCommand(cls=data["cls"], cmd=data["cmd"], instance=data["instance"])
+        for parameter in profile_json_entry['data']:
+            is_class_running = next(filter(lambda x:x["classname"]==parameter['cls'],self._map_class_running), None)
+            if is_class_running is not None and is_class_running["fullname"]==parameter["fullname"]:
+                running_parameters.append(parameter)
+        
+        # sent the filter running parameter to the board and after, read a new time values to refresh UI
+        if len(running_parameters) > 0 :
+            for pararmeter in running_parameters:
+                self.sendValue(cls=pararmeter["cls"], cmd=pararmeter["cmd"], 
+                                val=pararmeter["value"], instance=pararmeter["instance"])
+
+            for pararmeter in running_parameters:
+                self.sendCommand(cls=pararmeter["cls"], cmd=pararmeter["cmd"], instance=pararmeter["instance"])
 
         # send message that announce new profile is selected
         self.profileSelected.emit(profilename)
