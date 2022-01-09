@@ -121,52 +121,17 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.comboBox_profiles.setCurrentIndex(index)
 
     def changeSelectedProfile(self):
-        # read the selected profile name
-        profilename = str(self.comboBox_profiles.currentText())
-        if profilename == '':
+        # if not enabled, don't select profile
+        if not self.isEnabled():
             return
-
-        #TODO start to read the running class before set data
-        # refresh the global var when starting to read value from board
-        self._current_class = -1
-        self._current_command = -1
-        self._current_instance = -1
-        self._map_class_running = []
-        self._running_profile = []
-        # to start process get the list active class from board, after that the the callBack call recursively
-        self.getValueAsync("sys", "lsactive", self._setProfileCallBack)
-
-    def _setProfileCallBack(self, buffer:str):
-        # process the incoming buffer
-        if (self._current_class == -1):
-            # first call is sys.lsactive to get all active class that running and we extract a map of class/instances
-            self._buildRunningMap(buffer)
 
         # read the selected profile name
         profilename = str(self.comboBox_profiles.currentText())
         if profilename == '':
             return
 
-        # From the profile, filter parameters that are running
-        running_parameters = []
-        profile_json_entry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
-        for parameter in profile_json_entry['data']:
-            is_class_running = next(filter(lambda x:x["classname"]==parameter['cls'],self._map_class_running), None)
-            if is_class_running is not None and is_class_running["fullname"]==parameter["fullname"]:
-                running_parameters.append(parameter)
-        
-        # sent the filter running parameter to the board and after, read a new time values to refresh UI
-        if len(running_parameters) > 0 :
-            for pararmeter in running_parameters:
-                self.sendValue(cls=pararmeter["cls"], cmd=pararmeter["cmd"], 
-                                val=pararmeter["value"], instance=pararmeter["instance"])
-
-            for pararmeter in running_parameters:
-                self.sendCommand(cls=pararmeter["cls"], cmd=pararmeter["cmd"], instance=pararmeter["instance"])
-
-        # send message that announce new profile is selected
-        self.profileSelected.emit(profilename)
-        self.log("Profile: '" + profilename + "' is active")
+        # get the Running Active class and process result with the write config profile
+        self._readRunningClassAndGoCallBack(self._writeProfileCallBack)
 
     def saveCurrentSettingsInProfile(self, profile_name:str = ''):
         if (profile_name is False):
@@ -177,38 +142,32 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         else:
             self._profilename_tosave = profile_name
 
+        # get the Running Active class and process result with the read config profile
+        self._readRunningClassAndGoCallBack(self._readProfileCallBack)
+
+    def _readRunningClassAndGoCallBack(self, callBack):
         # refresh the global var when starting to read value from board
         self._current_class = -1
         self._current_command = -1
         self._current_instance = -1
         self._map_class_running = []
         self._running_profile = []
-        # to start process get the list active class from board, after that the the callBack call recursively
-        self.getValueAsync("sys", "lsactive", self._readProfileCallBack)
+        # get the list active class from board, after that the the callBack call recursively
+        self.getValueAsync("sys", "lsactive", callBack)
+
+    #####################  method helper to construct and go through struct definition #####################
 
     def _buildRunningMap(self, buffer:str):
-        all_class_running = []
-        splitted_running_class = [x.split(":") for x in buffer.split("\n")]
-        for running_class in splitted_running_class:
-            fullname = running_class[0]
-            classname = running_class[1]
-            instance = running_class[2]
-            # search if this class is already register, if not we add the class and instance number
-            # else add the instance number 
-            config_class = next(filter(lambda x:x["classname"]==classname, all_class_running), None)
-            if (config_class is None) :
-                all_class_running.append({"classname":classname, "fullname":fullname ,"instance":[instance]})
-            else:
-                config_class["instance"].append(instance)
-
-        # filter on active class the classes in the setup file to export
         self._map_class_running = []
-        for classes in all_class_running:
-            # search in setup list for this classes if not present or for another Class, remove it
-            profileJSonEntry = next(filter(lambda x:x["classname"]==classes["classname"],self.profile_setup["callOrder"]), None)
-            if (profileJSonEntry is not None) and profileJSonEntry["fullname"]==classes["fullname"]:
-                self._map_class_running.append(classes)
-
+        # Split the string buffer into array
+        splitted_running_class = [x.split(":") for x in buffer.split("\n")]
+        # Format the arrray in array of object {classname, fullname, instance}
+        formated_iterator = list(map(lambda tab: {"classname":tab[1], "fullname":tab[0] ,"instance":int(tab[2])}, splitted_running_class))
+        # For each class to saved declared in the cfg file, we filter the running instance to keep only those
+        for callOrder in self.profile_setup["callOrder"]:
+            filtered_iterator = filter(lambda x: x["classname"]==callOrder["classname"] and x["fullname"]==callOrder["fullname"]
+                                    ,formated_iterator)
+            self._map_class_running.extend(list(filtered_iterator))
 
     def _getInstanceRunning(self, indexclass:int, indexinstance:int):
         if indexclass > len(self.profile_setup['callOrder']) :
@@ -216,16 +175,15 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
         classname = self.profile_setup['callOrder'][indexclass]['classname']
         fullname = self.profile_setup['callOrder'][indexclass]['fullname']
-        class_running = \
-            next(filter(lambda x:
-                            x["classname"]==classname and x["fullname"]==fullname,
-                            self._map_class_running), None)
-        if (class_running is None):                                # the request instance is not on a running classes
+        classes_running = list(filter(
+            lambda x: x["classname"]==classname and x["fullname"]==fullname, self._map_class_running))
+        
+        # To test
+        # the request instance is not on a running classes
+        if len(classes_running) == 0 or indexinstance >= len(classes_running):
             return None 
-        elif (indexinstance >= len(class_running["instance"])):    # the next instance not exist
-            return None
         else:                                                              # else return the instance number
-            return int(class_running["instance"][indexinstance])
+            return int(classes_running[indexinstance]["instance"])
 
     def _getNextElementToRequest(self):
         is_another_element = False
@@ -268,6 +226,19 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             instance = self._getInstanceRunning(indexclass, indexinstance)
             self.getValueAsync(classname, cmd, self._readProfileCallBack, instance)
 
+    def _saveProfileInFile(self, profile_data:str, profilename:str):
+        # search the profile in the json profiles and replace is content
+        profileJSonEntry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
+        if profileJSonEntry is not None:
+            profileJSonEntry["data"] = profile_data
+
+        #store new config in file
+        self.createOrUpdateProfileFile()
+        self.log("Profile: '" + profilename + "' is successfully updated")
+        self.selectProfile(profilename)
+
+    ############################# Call Back for Async Serial Communication #############################
+
     def _readProfileCallBack(self, buffer:str):
         # process the incoming buffer
         if (self._current_class == -1):
@@ -287,14 +258,42 @@ class SystemUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self._readValue(self._current_class, self._current_command, self._current_instance)
         elif self._profilename_tosave is not False:
             self._saveProfileInFile(self._running_profile, self._profilename_tosave)
+        else:
+            self.log("Profiles: profile read from board")
 
-    def _saveProfileInFile(self, profile_data:str, profilename:str):
-        # search the profile in the json profiles and replace is content
-        profileJSonEntry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
-        if profileJSonEntry is not None:
-            profileJSonEntry["data"] = profile_data
+    def _writeProfileCallBack(self, buffer:str):
+        # process the incoming buffer
+        if (self._current_class == -1):
+            # first call is sys.lsactive to get all active class that running and we extract a map of class/instances
+            self._buildRunningMap(buffer)
+        else :
+            return
 
-        #store new config in file
-        self.createOrUpdateProfileFile()
-        self.log("Profile: '" + profilename + "' is successfully updated")
-        self.selectProfile(profilename)
+        # read the selected profile name
+        profilename = str(self.comboBox_profiles.currentText())
+        if profilename == '':
+            return
+
+        # From the profile, filter parameters that are running
+        parameters_running = []
+        profile_json_entry = next(filter(lambda x:x["name"]==profilename,self.profiles["profiles"]), None)
+        for running_class in self._map_class_running:
+            parameters_running.extend(
+                list(filter(
+                    lambda x:x["fullname"]==running_class["fullname"] 
+                        and x["cls"]==running_class["classname"]
+                        and x["instance"]==running_class["instance"], profile_json_entry['data']
+                ))
+            )
+        
+        # sent the filter running parameter to the board and after, read a new time values to refresh UI
+        if len(parameters_running) > 0 :
+            for pararmeter in parameters_running:
+                self.sendValue(cls=pararmeter["cls"], cmd=pararmeter["cmd"], 
+                                val=pararmeter["value"], instance=pararmeter["instance"])
+
+                self.sendCommand(cls=pararmeter["cls"], cmd=pararmeter["cmd"], instance=pararmeter["instance"])
+
+        # send message that announce new profile is selected
+        self.profileSelected.emit(profilename)
+        self.log("Profile: '" + profilename + "' is active")
