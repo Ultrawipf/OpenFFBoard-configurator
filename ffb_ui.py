@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
-from helper import res_path,classlistToIds,splitListReply
+from helper import res_path,classlistToIds,splitListReply,throttle
 from PyQt6.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
@@ -318,7 +318,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.groupBox_analogaxes.setLayout(layout)
         
-
+    @throttle(50)
     def cffilter_changed(self,v,send=True):
         freq = max(min(v,500),0)
         if(send):

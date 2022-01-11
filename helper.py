@@ -1,7 +1,8 @@
 from os import path
 import sys
+import time
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import QObject,QTimer
 
 respath = "res"
 def res_path(file):
@@ -45,3 +46,38 @@ def qtBlockAndCall(object : QObject,function,value):
     object.blockSignals(True)
     function(value)
     object.blockSignals(False)
+
+
+def throttle(ms):
+
+    throttle.time_of_last_call = time.time()
+    throttle.t = QTimer()
+    throttle.t.setSingleShot(True)
+
+    def decorator(fn):
+        def wrapper(*args, **kwargs):
+            def call():
+                throttle.time_of_last_call = time.time()
+                fn(*args, **kwargs)
+            
+            now = time.time()
+            time_since_last_call = now - throttle.time_of_last_call
+
+            # Call immediately if last call is older than timeout
+            if time_since_last_call > ms/1000:
+                return call()
+
+            else: # delay execution
+                if throttle.t.isActive():
+                    throttle.t.stop()
+
+                # Disconnect previous call
+                try: throttle.t.timeout.disconnect()
+                except Exception: pass
+
+                # Connect timer
+                throttle.t.timeout.connect(call)
+                throttle.t.setInterval(ms)
+                throttle.t.start()     
+        return wrapper
+    return decorator
