@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
 from PyQt6 import uic
-from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall
+from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall,throttle
 from PyQt6.QtCore import QTimer,QEvent
 import main
 import buttonconf_ui
@@ -134,13 +134,21 @@ class AxisUI(WidgetUI,CommunicationHandler):
         qtBlockAndCall(self.horizontalSlider_power,self.horizontalSlider_power.setValue,val)
         self.updatePowerLabel(val)
 
+    
     def powerSiderMoved(self,val):
-        self.sendValue("axis","power",val,instance=self.axis)
+        self.powerSiderMovedUpdate(val)
         self.updatePowerLabel(val)
 
+    # Power slider is very high resolution. throttle update calls to prevent flooding
+    @throttle(50)
+    def powerSiderMovedUpdate(self,val):
+        self.sendValue("axis","power",val,instance=self.axis)
+
+    @throttle(50)  
     def updateDegSlider(self,val):
         qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
 
+    @throttle(50)
     def degSiderMoved(self,val):
         self.sendValue("axis","degrees",(val),instance=self.axis)
 
