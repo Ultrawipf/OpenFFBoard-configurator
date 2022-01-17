@@ -23,6 +23,11 @@ class DFUModeUI(WidgetUI):
 
             self.checkBox_massErase.setEnabled(False) #TODO disable checkbox for now
 
+    def hideEvent(self, a0) -> None:
+        if(self.dfuDevice):
+            pydfu.exit_dfu()
+        return super().hideEvent(a0)
+
 
     def initUi(self):
         self.log("Searching devices...")
@@ -95,6 +100,7 @@ class DFUModeUI(WidgetUI):
         pydfu.exit_dfu()
         self.log("Done. Please reset")
         self.groupbox_controls.setEnabled(True)
+        self.dfuDevice = None
 
     def fullEraseClicked(self):
         msg = QMessageBox()
