@@ -1,5 +1,5 @@
-# OpenFFBoard-configurator
-A simple GUI to configure the [Open FFBoard](https://github.com/Ultrawipf/OpenFFBoard) written in Python 3 with Qt.
+# OpenFFBoard-configurator [![Build Configurator](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build-pyinstaller.yml/badge.svg)](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build-pyinstaller.yml)
+A simple GUI to configure the [Open FFBoard](https://github.com/Ultrawipf/OpenFFBoard) written in Python 3 with Qt. 
 
 This allows complete configuration of all settings in the Open FFBoard firmware at runtime.
 
@@ -33,4 +33,7 @@ pyusb and libusb-1.0.dll for DFU
 intelhex for uploading hex files
 
 Install dependencies with `pip install -r requirements.txt` and run `python main.py` to start the application.
+
 A fully executable windows version can be built using pyinstaller and the `build/build.bat` script.
+
+Additionally an automatic build script will create a build artifact for commits on the master branch.
