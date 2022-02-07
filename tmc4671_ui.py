@@ -77,6 +77,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.pushButton_hwversion.clicked.connect(self.showVersionSelectorPopup)
         self.comboBox_mtype.currentIndexChanged.connect(self.motorselChanged)
+        self.motor_type_to_index = {}
+        self.comboBox_enc.currentIndexChanged.connect(self.encselChanged)
+        self.encoder_type_to_index = {}
 
         # Callbacks
         self.registerCallback("tmc","temp",self.updateTemp,self.axis,int)
@@ -94,16 +97,18 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.registerCallback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
 
-        self.registerCallback("tmc","mtype",self.comboBox_mtype.setCurrentIndex,self.axis,int)
+        self.registerCallback("tmc","mtype",lambda x : self.comboBox_mtype.setCurrentIndex(self.motor_type_to_index.get(x,0)),self.axis,int)
         self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
-        self.registerCallback("tmc","encsrc",self.comboBox_enc.setCurrentIndex,self.axis,int)
+        self.registerCallback("tmc","encsrc",lambda x : self.comboBox_enc.setCurrentIndex(self.encoder_type_to_index.get(x,0)),self.axis,int)
         self.registerCallback("tmc","cpr",self.spinBox_cpr.setValue,self.axis,int)
 
         self.registerCallback("tmc","iScale",self.setCurrentScaler,self.axis,float)
 
         self.registerCallback("tmc","encsrc",self.encsCb,self.axis,str,typechar='!')
+        self.registerCallback("tmc","mtype",self.motsCb,self.axis,str,typechar='!')
         self.registerCallback("tmc","tmcHwType",self.hwVersionsCb,self.axis,str,typechar='!')
         self.registerCallback("tmc","tmcHwType",self.hwtcb,self.axis,int,typechar='?')
+        self.registerCallback("tmc","abnindex",self.checkBox_abnIndex.setChecked,self.axis,int,typechar='?')
 
 
     def showEvent(self,event):
@@ -118,10 +123,16 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.timer_status.stop()
         
     def motorselChanged(self,val):
-        if(val == 2 or val == 3): # stepper or bldc
+        data = self.comboBox_mtype.currentData()
+        if(data == 2 or data == 3): # stepper or bldc
             self.spinBox_poles.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
+
+
+    def encselChanged(self,val):
+        data = self.comboBox_enc.currentData()
+        self.checkBox_abnIndex.setEnabled(data == 1) # abnIndex selectable if ABN encoder selected
 
     def updateCurrent(self,current):
         try:
@@ -196,6 +207,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         enc = self.comboBox_enc.currentIndex()
         self.sendValue("tmc","encsrc",val=enc,instance=self.axis)
+
+        self.sendValue("tmc","abnindex",val = 1 if self.checkBox_abnIndex.isChecked() else 0,instance=self.axis)
         
     def submitPid(self):
         # PIDs
@@ -279,8 +292,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Temps.setMax(90)
         try:
             # Fill encoder source types
-            self.comboBox_enc.clear()
-            self.sendCommands("tmc",["encsrc","tmcHwType"],self.axis,'!')
+            
+            self.sendCommands("tmc",["mtype","encsrc","tmcHwType"],self.axis,'!')
             self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale"],self.axis)
             self.getMotor()
             self.getPids()
@@ -306,9 +319,24 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 
     def encsCb(self,encsrcs):
+        self.comboBox_enc.clear()
+        self.encoder_type_to_index.clear()
+        i = 0
         for s in encsrcs.split(","):
             e = s.split("=")
-            self.comboBox_enc.addItem(e[0],e[1])
+            self.comboBox_enc.addItem(e[0],int(e[1]))
+            self.encoder_type_to_index[int(e[1])] = i
+            i += 1
+
+    def motsCb(self,mots):
+        self.comboBox_mtype.clear()
+        self.motor_type_to_index.clear()
+        i = 0
+        for s in mots.split(","):
+            e = s.split("=")
+            self.comboBox_mtype.addItem(e[0],int(e[1]))
+            self.motor_type_to_index[int(e[1])] = i
+            i += 1
 
     def alignEnc(self):
         self.pushButton_align.setEnabled(False)
@@ -323,7 +351,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cpr"]
+        commands=["mtype","poles","encsrc","cpr","abnindex"]
         self.sendCommands("tmc",commands,self.axis)
 
 
