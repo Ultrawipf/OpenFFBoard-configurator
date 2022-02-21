@@ -11,6 +11,8 @@ from base_ui import CommunicationHandler
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
+    states = ["uninitialized","waitPower","Shutdown","Running","ABN_init","AENC_init","HardError","OverTemp","EncoderFinished","IndexSearch","FullCalibration"]
+
     max_datapoints = 10000
     max_datapointsVisibleTime = 30
     adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
@@ -96,6 +98,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
 
         self.registerCallback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
+        self.registerCallback("tmc","state",self.stateCb,self.axis,str,typechar='?')
 
         self.registerCallback("tmc","mtype",lambda x : self.comboBox_mtype.setCurrentIndex(self.motor_type_to_index.get(x,0)),self.axis,int)
         self.registerCallback("tmc","poles",self.spinBox_poles.setValue,self.axis,int)
@@ -188,12 +191,20 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.vext = v/1000
         self.updateVolt()
 
+    def stateCb(self,state):
+        intstate = int(state)
+        if(intstate and len(self.states) > intstate):
+            self.label_state.setText(self.states[intstate])
+        else:
+            self.label_state.setText(state)
+
     def updateTimer(self):
         self.sendCommand("tmc","acttrq",self.axis)
         
         
     def updateStatus(self):
         self.sendCommand("tmc","temp",self.axis)
+        self.sendCommand("tmc","state",self.axis)
         self.sendCommands("sys",["vint","vext"])
 
     def submitMotor(self):
