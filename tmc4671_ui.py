@@ -83,6 +83,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.comboBox_enc.currentIndexChanged.connect(self.encselChanged)
         self.encoder_type_to_index = {}
 
+        self.checkBox_abnpol.stateChanged.connect(self.abnpolClicked)
+
         # Callbacks
         self.registerCallback("tmc","temp",self.updateTemp,self.axis,int)
         self.registerCallback("sys","vint",self.vintCb,0,int)
@@ -112,7 +114,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","tmcHwType",self.hwVersionsCb,self.axis,str,typechar='!')
         self.registerCallback("tmc","tmcHwType",self.hwtcb,self.axis,int,typechar='?')
         self.registerCallback("tmc","abnindex",self.checkBox_abnIndex.setChecked,self.axis,int,typechar='?')
-
+        self.registerCallback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
 
     def showEvent(self,event):
         self.initUi()
@@ -133,9 +135,17 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.spinBox_poles.setEnabled(False)
 
 
+    def abnpolClicked(self,val):
+        if val:
+            self.checkBox_abnpol.setText("ABN polarity (HIGH)")
+        else:
+            self.checkBox_abnpol.setText("ABN polarity (LOW)")
+
     def encselChanged(self,val):
         data = self.comboBox_enc.currentData()
         self.checkBox_abnIndex.setEnabled(data == 1) # abnIndex selectable if ABN encoder selected
+        self.checkBox_abnpol.setEnabled(data == 1)
+        self.spinBox_cpr.setEnabled(data == 1 or data == 2 or data == 3)
 
     def updateCurrent(self,current):
         try:
@@ -193,7 +203,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def stateCb(self,state):
         intstate = int(state)
-        if(intstate and len(self.states) > intstate):
+        if(len(self.states) > intstate):
             self.label_state.setText(self.states[intstate])
         else:
             self.label_state.setText(state)
@@ -220,6 +230,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.sendValue("tmc","encsrc",val=enc,instance=self.axis)
 
         self.sendValue("tmc","abnindex",val = 1 if self.checkBox_abnIndex.isChecked() else 0,instance=self.axis)
+        self.sendValue("tmc","abnpol",val = 1 if self.checkBox_abnpol.isChecked() else 0,instance=self.axis)
         
     def submitPid(self):
         # PIDs
@@ -362,7 +373,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cpr","abnindex"]
+        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol"]
         self.sendCommands("tmc",commands,self.axis)
 
 
