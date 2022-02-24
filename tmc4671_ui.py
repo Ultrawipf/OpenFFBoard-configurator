@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel
 from helper import res_path,classlistToIds
 from PyQt6.QtCore import QTime, QTimer
 from PyQt6.QtCore import Qt,QMargins
+from PyQt6.QtGui import QColor
 import main
 from base_ui import WidgetUI
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
@@ -11,7 +12,7 @@ from base_ui import CommunicationHandler
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
-    states = ["uninitialized","waitPower","Shutdown","Running","ABN_init","AENC_init","HardError","OverTemp","EncoderFinished","IndexSearch","FullCalibration"]
+    states = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
 
     max_datapoints = 10000
     max_datapointsVisibleTime = 30
@@ -51,15 +52,32 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Amps = QValueAxis()
         self.chartYaxis_Temps = QValueAxis()
 
-        self.lines_Amps = QLineSeries()
-        self.lines_Amps.setName("Amps A")
+        
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
+        
+        self.lines_Amps = QLineSeries()
+        self.lines_Amps.setName("Torque A")
+
         self.chart.addSeries(self.lines_Amps)
+        self.lines_Amps.setColor(QColor("cornflowerblue"))
         self.lines_Amps.attachAxis(self.chartYaxis_Amps)
         self.lines_Amps.attachAxis(self.chartXaxis)
         
+        self.lines_Flux = QLineSeries()
+        self.lines_Flux.setName("Flux A")
+        self.lines_Flux.setOpacity(0.5)
+        
+        self.chart.addSeries(self.lines_Flux)
+        self.lines_Flux.setColor(QColor("limegreen"))
+        
+        self.lines_Flux.attachAxis(self.chartYaxis_Amps)
+        self.lines_Flux.attachAxis(self.chartXaxis)
+        
+        
         self.lines_Temps = QLineSeries()
         self.lines_Temps.setName("Temp °C")
+        self.lines_Temps.setColor(QColor("orange"))
+        self.lines_Temps.setOpacity(0.5)
         self.chart.addAxis(self.chartYaxis_Temps,Qt.AlignmentFlag.AlignRight)
         self.chart.addSeries(self.lines_Temps)
         self.lines_Temps.attachAxis(self.chartYaxis_Temps)
@@ -89,7 +107,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","temp",self.updateTemp,self.axis,int)
         self.registerCallback("sys","vint",self.vintCb,0,int)
         self.registerCallback("sys","vext",self.vextCb,0,int)
-        self.registerCallback("tmc","acttrq",self.updateCurrent,self.axis,int)
+        self.registerCallback("tmc","acttrq",self.updateCurrent,self.axis,str)
 
         self.registerCallback("tmc","pidPrec",self.precisionCb,self.axis,int)
         self.registerCallback("tmc","torqueP",self.spinBox_tp.setValue,self.axis,int)
@@ -147,26 +165,40 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.checkBox_abnpol.setEnabled(data == 1)
         self.spinBox_cpr.setEnabled(data == 1 or data == 2 or data == 3)
 
-    def updateCurrent(self,current):
+    def updateCurrent(self,torqueflux):
+        tflist = [(int(v)) for v in torqueflux.split(":")]
+        
+        flux = None
+        torque = abs(tflist[0])
+        if(len(tflist) == 2):
+            flux = tflist[1]
+        currents = complex(torque,flux)
         try:
-            current = abs(float(current))
+            torque = abs(float(torque))
+            
             if self.adc_to_amps != 0:
-                amps = round(current * self.adc_to_amps,3)
-                self.label_Current.setText(str(amps)+"A")
-            else:
-                amps = round(100*current / 0x7fff,3) # percent
-                self.label_Current.setText(str(amps)+"%")
+                amps = currents * self.adc_to_amps
+                txt = f"Torque: {round(amps.real,3)}A"
+                if(flux != None):
+                    txt += f"\nFlux: {round(amps.imag,3)}A"
+                    txt += f"\nTotal: {round(abs(amps),3)}A"
+                self.label_Current.setText(txt)
 
-            self.progressBar_power.setValue(int(current))
+            else:
+                amps = 100*currents / 0x7fff # percent
+                self.label_Current.setText(str(round(amps.real,3))+"%")
+                
+            self.progressBar_power.setValue(int(abs(currents)))
 
             self.chartLastX = self.startTime.msecsTo(QTime.currentTime()) / 1000
-            self.lines_Amps.append(self.chartLastX,amps)
+            self.lines_Amps.append(self.chartLastX,amps.real)
+            self.lines_Flux.append(self.chartLastX,abs(amps.imag))
             
             if(self.lines_Amps.count() > self.max_datapoints):
                 self.lines_Amps.remove(0)
-
-            if(amps > self.chartYaxis_Amps.max()):
-                self.chartYaxis_Amps.setMax(round(amps,2)) # increase range
+            scalemax = max(abs(amps.imag),abs(amps.real))
+            if(scalemax > self.chartYaxis_Amps.max()):
+                self.chartYaxis_Amps.setMax(round(scalemax,2)) # increase range
 
             self.chartXaxis.setMax(self.chartLastX)
             self.chartXaxis.setMin(max(self.lines_Amps.at(0).x(),max(0,self.chartLastX-self.max_datapointsVisibleTime)))
