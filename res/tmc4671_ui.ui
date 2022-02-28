@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>707</width>
-    <height>572</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -186,7 +186,7 @@
           </widget>
          </item>
          <item row="1" column="0">
-          <widget class="QLabel" name="label_8">
+          <widget class="QLabel" name="label_cpr">
            <property name="text">
             <string>CPR (4*PPR)</string>
            </property>
@@ -195,7 +195,7 @@
          <item row="1" column="1">
           <widget class="QSpinBox" name="spinBox_cpr">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder resolution after quadrature (4 * PPR = CPR)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -205,23 +205,33 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBox_abnpol">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="text">
+            <string>ABN polarity (LOW)</string>
+           </property>
+          </widget>
+         </item>
          <item row="3" column="0" colspan="2">
           <widget class="QCheckBox" name="checkBox_abnIndex">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Home with ABN index</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QCheckBox" name="checkBox_abnpol">
+         <item row="4" column="0" colspan="2">
+          <widget class="QLabel" name="label_encoder_notice">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
-            <string>ABN polarity (LOW)</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;External encoder forwards the encoder&lt;/p&gt;&lt;p&gt;selection of the Axis (if available).&lt;br/&gt;Please select the encoder there.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
