@@ -10,6 +10,13 @@ from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
 from base_ui import CommunicationHandler
 
+ext_notice = """External encoder forwards the encoder
+selection of the Axis (if available).
+Please select the encoder there."""
+
+hall_notice = """Using hall sensors as the main position
+source is not recommended"""
+
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     states = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
@@ -161,9 +168,22 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def encselChanged(self,val):
         data = self.comboBox_enc.currentData()
-        self.checkBox_abnIndex.setEnabled(data == 1) # abnIndex selectable if ABN encoder selected
-        self.checkBox_abnpol.setEnabled(data == 1)
-        self.spinBox_cpr.setEnabled(data == 1 or data == 2 or data == 3)
+        self.checkBox_abnIndex.setVisible(data == 1) # abnIndex selectable if ABN encoder selected
+        #self.checkBox_abnIndex.setEnabled(data == 1)
+
+        self.checkBox_abnpol.setVisible(data == 1)
+        
+        
+        if(data == 5):
+            self.label_encoder_notice.setText(ext_notice)
+        if(data == 4):
+            self.label_encoder_notice.setText(hall_notice)
+
+        self.label_encoder_notice.setVisible(data == 5 or data == 4)
+        #self.checkBox_abnpol.setEnabled(data == 1)
+
+        self.spinBox_cpr.setVisible(data == 1 or data == 2 or data == 3)
+        self.label_cpr.setVisible(data == 1 or data == 2 or data == 3)
 
     def updateCurrent(self,torqueflux):
         tflist = [(int(v)) for v in torqueflux.split(":")]
@@ -196,6 +216,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             
             if(self.lines_Amps.count() > self.max_datapoints):
                 self.lines_Amps.remove(0)
+                self.lines_Flux.remove(0)
             scalemax = max(abs(amps.imag),abs(amps.real))
             if(scalemax > self.chartYaxis_Amps.max()):
                 self.chartYaxis_Amps.setMax(round(scalemax,2)) # increase range
@@ -341,6 +362,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartLastX = 0
         self.lines_Amps.clear()
         self.lines_Temps.clear()
+        self.lines_Flux.clear()
         self.chartYaxis_Amps.setMin(0)
         self.chartYaxis_Temps.setMin(0)
         self.chartYaxis_Temps.setMax(90)
