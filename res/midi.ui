@@ -47,7 +47,7 @@
       <item row="1" column="1">
        <widget class="QSlider" name="horizontalSlider_amp">
         <property name="maximum">
-         <number>65535</number>
+         <number>16383</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

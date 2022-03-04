@@ -11,10 +11,14 @@ class MidiUI(WidgetUI,CommunicationHandler):
         CommunicationHandler.__init__(self)
         
         self.initUi()
-        self.horizontalSlider_power.valueChanged.connect(lambda val : self.sendValue("midi","power",val))
-        self.horizontalSlider_amp.valueChanged.connect(lambda val : self.sendValue("midi","range",val))
+        self.horizontalSlider_power.valueChanged.connect(lambda val : self.sendValue("main","power",val))
+        self.horizontalSlider_amp.valueChanged.connect(lambda val : self.sendValue("main","range",val))
 
 
     def initUi(self):
-        self.registerCallback("midi","power",self.horizontalSlider_power.setValue,0,int)
-        self.registerCallback("midi","range",self.horizontalSlider_amp.setValue,0,int)
+        self.registerCallback("main","power",self.horizontalSlider_power.setValue,0,int)
+        self.registerCallback("main","range",self.horizontalSlider_amp.setValue,0,int)
+    
+    def showEvent(self, a0) -> None:
+        self.sendCommands("main",["power","range"])
+        return super().showEvent(a0)
