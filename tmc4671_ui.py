@@ -143,7 +143,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","abnindex",self.checkBox_abnIndex.setChecked,self.axis,int,typechar='?')
         self.registerCallback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
         self.registerCallback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
+        self.registerCallback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
         
+        self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
 
     def showEvent(self,event):
         self.initUi()
@@ -162,6 +164,13 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.spinBox_poles.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
+
+    def extEncoderChanged(self,val):
+        self.checkBox_invertForce.setEnabled(val)
+        if not val:
+            self.checkBox_invertForce.setChecked(False)
+        else:
+            self.sendCommand("tmc","invertForce",self.axis)
 
 
     def abnpolClicked(self,val):
@@ -188,6 +197,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.label_cpr.setVisible(data == 1 or data == 2 or data == 3)
 
         self.checkBox_combineEncoders.setVisible(data == 1 or data == 2 or data == 3 or data == 4)
+        self.checkBox_invertForce.setVisible(data == 1 or data == 2 or data == 3 or data == 4)
+        self.checkBox_invertForce.setEnabled(self.checkBox_combineEncoders.isChecked())
+        
 
     def updateCurrent(self,torqueflux):
         tflist = [(int(v)) for v in torqueflux.split(":")]
@@ -290,6 +302,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.sendValue("tmc","abnpol",val = 1 if self.checkBox_abnpol.isChecked() else 0,instance=self.axis)
 
         self.sendValue("tmc","combineEncoder",val = 1 if self.checkBox_combineEncoders.isChecked() else 0,instance=self.axis)
+        self.sendValue("tmc","invertForce",val = 1 if self.checkBox_invertForce.isChecked() else 0,instance=self.axis)
         
     def submitPid(self):
         # PIDs
@@ -433,7 +446,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder"]
+        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce"]
         self.sendCommands("tmc",commands,self.axis)
 
 
