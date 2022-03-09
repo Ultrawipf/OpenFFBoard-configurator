@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>707</width>
-    <height>612</height>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -294,6 +294,16 @@
           <widget class="QSpinBox" name="spinBox_poles">
            <property name="value">
             <number>50</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBox_invertForce">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Inverts forces received by the driver when combine with ext. encoder is active if the internal and external encoder directions don't match&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Invert forces (ext. encoder)</string>
            </property>
           </widget>
          </item>
