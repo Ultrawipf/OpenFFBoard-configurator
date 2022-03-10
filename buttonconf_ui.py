@@ -24,6 +24,8 @@ class ButtonOptionsDialog(OptionsDialog):
             self.dialog = (SPIButtonsConf(name,self.main,1))
         elif(id == 3):
             self.dialog = (ShifterButtonsConf(name,self.main))
+        elif(id == 4):
+            self.dialog = (PCFButtonsConf(name,self.main))
         
         OptionsDialog.__init__(self, self.dialog,main)
 
@@ -291,3 +293,35 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.readXYPosition()
 
+class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
+
+    def __init__(self,name,main):
+        self.main = main
+        OptionsDialogGroupBox.__init__(self,name,main)
+        CommunicationHandler.__init__(self)
+
+
+    def initUI(self):
+        vbox = QVBoxLayout()
+        self.polBox = QCheckBox("Invert")
+        vbox.addWidget(self.polBox)
+        vbox.addWidget(QLabel("Requires num/8 PCF8574 w. increasing addresses.\nNot more than 4 recommended (Takes 200µs per module).\nNumber of buttons:"))
+        self.numBtnBox = QSpinBox()
+        self.numBtnBox.setMinimum(1)
+        self.numBtnBox.setMaximum(64)
+        vbox.addWidget(self.numBtnBox)
+        
+        self.setLayout(vbox)
+
+    def onclose(self):
+        self.removeCallbacks()
+
+    def apply(self):
+
+        self.sendValue("pcfbtn","btnnum",self.numBtnBox.value())
+        self.sendValue("pcfbtn","invert",(1 if self.polBox.isChecked() else 0))
+    
+    def readValues(self):
+        self.getValueAsync("pcfbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
+        self.getValueAsync("pcfbtn","invert",self.polBox.setChecked,0,conversion=int)
+ 
