@@ -144,6 +144,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.registerCallback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
         self.registerCallback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
         self.registerCallback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
+    
+        self.registerCallback("tmc","calibrated",self.calibrated,instance=self.axis,conversion=int)
         
         self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
 
@@ -387,15 +389,16 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Temps.setMax(90)
         try:
             # Fill encoder source types
-            
             self.sendCommands("tmc",["mtype","encsrc","tmcHwType"],self.axis,'!')
-            self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale"],self.axis)
+            self.sendCommands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated"],self.axis)
             self.getMotor()
             self.getPids()
 
             self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.sendValue("tmc","fluxoffset",v,instance=self.axis))
             self.pushButton_submitmotor.clicked.connect(self.submitMotor)
             self.pushButton_submitpid.clicked.connect(self.submitPid)
+
+            # Check if calibrated
         except Exception as e:
             self.main.log("Error initializing TMC tab. Please reconnect: " + str(e))
             return False
@@ -411,6 +414,20 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         else:
             self.groupBox_tmc.setTitle(type)
             self.setEnabled(True)
+
+    def calibrated(self,v):
+        v = int(v)
+        if not v:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Calibration required")
+            msg.setText("A calibration of ADC offsets and encoder settings is required.")
+            msg.setInformativeText("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or manually later.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done.")
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            ret = msg.exec()
+            # Warning displayed
+            if ret == QMessageBox.StandardButton.Ok:
+                self.sendCommand("tmc","calibrate",self.axis)
 
 
     def encsCb(self,encsrcs):
