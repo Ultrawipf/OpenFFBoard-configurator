@@ -115,9 +115,9 @@ class SerialChooser(WidgetUI,CommunicationHandler):
             self.comboBox_port.addItem(name)
             if(supportedVidPid):
                 selIdx = i
-                self.comboBox_port.setItemData(i,QColor("green"),Qt.ItemDataRole.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("lime"),Qt.ItemDataRole.BackgroundRole)
             else:
-                self.comboBox_port.setItemData(i,QColor("red"),Qt.ItemDataRole.BackgroundRole)
+                self.comboBox_port.setItemData(i,QColor("orangered"),Qt.ItemDataRole.BackgroundRole)
 
         
         plist = [p.portName() for p in self.ports]
