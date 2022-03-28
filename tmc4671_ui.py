@@ -149,6 +149,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
 
+    # TODO do not send updates when window is moved. Blocks serial port receive on windows
     def showEvent(self,event):
         self.initUi()
         if self.isEnabled():
