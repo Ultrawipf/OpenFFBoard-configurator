@@ -185,15 +185,16 @@ class MainUi(QMainWindow,CommunicationHandler):
             newActiveClasses = {i[1]+":"+i[2]:{"name":i[0],"clsname":i[1],"id":int(i[3]),"unique":int(i[2]),"ui":None,"cmdaddr":[4]} for i in lines}
             deleteClasses = [(c,name) for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
+            
             for c,name in deleteClasses:
                 self.delTab(c)
                 del self.activeClasses[name]
             for name,cl in newActiveClasses.items():
                 if name in self.activeClasses:
                     continue
-                
-                if cl["id"] == 1:
-                    self.mainClassUi = ffb_ui.FfbUI(main = self)
+                classname = cl["name"]
+                if cl["id"] == 1 or cl["id"] == 2:
+                    self.mainClassUi = ffb_ui.FfbUI(main = self,title=classname)
                     self.activeClasses[name] = self.mainClassUi
                     self.systemUi.setSaveBtn(True)
                 elif  cl["id"] == 0xA01:
