@@ -94,10 +94,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
             tabId = self.main.addTab(self,title)
             self.main.selectTab(tabId)
 
-        # self.pushButton_changeAxes.clicked.connect(self.changeFFBAxesCount)
-        # self.checkBox_axisY.stateChanged.connect(self.axisCheckBoxClicked)
-#        self.checkBox_axisZ.stateChanged.connect(self.axisCheckBoxClicked)
-
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
         
@@ -105,7 +101,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
     
     def initUi(self):
         try:
-            #self.sendCommand("main","axes",0,'?') # get axes
             self.sendCommands("main",["hidrate","ffbactive"],0)
 
             self.sendCommand("main","lsbtn",0,'?') # get button types
@@ -114,7 +109,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
             self.sendCommand("main","lsain",0,'?') # get analog types
             self.sendCommand("main","aintypes",0,'?') # get active analog
 
-            #self.getAxisSources()
             self.updateSliders()
             self.sendCommand("main","hidsendspd",0,'!') # get speed
             
@@ -169,34 +163,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
         slider.setValue(val)
         self.sliderChangedUpdateSpinbox(val,spinbox,factor)
 
-    # def setAxisCheckBoxes(self,count):
-    #     self.checkBox_axisX.setChecked(True if (count>0) else False)
-    #     self.checkBox_axisY.setChecked(True if (count>1) else False)
-    #     self.checkBox_axisZ.setChecked(True if (count>2) else False)
-    #     self.pushButton_changeAxes.setEnabled(False)
-
-
-    # def axisCheckBoxClicked(self, val):
-    #     self.pushButton_changeAxes.setEnabled(True)
-
-
-    # def changeFFBAxesCount(self):
-    #     def f():
-    #         axisCount = 1
-    #         if self.checkBox_axisY.isChecked():
-    #             axisCount +=1
-    #         if self.checkBox_axisZ.isChecked():
-    #             axisCount +=1
-    #         self.sendValue("main","axes",axisCount)
-    #         self.main.updateTabs()
-
-    #     self.pushButton_changeAxes.setEnabled(False)
-    #     msg = QMessageBox()
-    #     msg.setIcon(QMessageBox.Icon.Warning)
-    #     msg.setText("Changing the number of axis may cause or require a reboot!")
-    #     msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
-    #     msg.buttonClicked.connect(f)
-    #     msg.exec()
 
     def hidreportrate_cb(self,modes):
         self.comboBox_reportrate.blockSignals(True)
