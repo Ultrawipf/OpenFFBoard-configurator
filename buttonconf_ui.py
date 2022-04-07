@@ -26,6 +26,8 @@ class ButtonOptionsDialog(OptionsDialog):
             self.dialog = (ShifterButtonsConf(name,self.main))
         elif(id == 4):
             self.dialog = (PCFButtonsConf(name,self.main))
+        elif(id == 5):
+            self.dialog = (CANButtonsConf(name,self.main))
         
         OptionsDialog.__init__(self, self.dialog,main)
 
@@ -293,6 +295,48 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.readXYPosition()
 
+
+class CANButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
+
+    def __init__(self,name,main):
+        self.main = main
+        OptionsDialogGroupBox.__init__(self,name,main)
+        CommunicationHandler.__init__(self)
+
+
+    def initUI(self):
+        vbox = QVBoxLayout()
+        self.polBox = QCheckBox("Invert")
+        vbox.addWidget(self.polBox)
+        self.numBtnBox = QSpinBox()
+        self.numBtnBox.setMinimum(1)
+        self.numBtnBox.setMaximum(64)
+        vbox.addWidget(QLabel("Number of buttons"))
+        vbox.addWidget(self.numBtnBox)
+
+        self.canIdBox = QSpinBox()
+        self.canIdBox.setMinimum(1)
+        self.canIdBox.setMaximum(0x7ff)
+        vbox.addWidget(QLabel("CAN frame ID"))
+        vbox.addWidget(self.canIdBox)
+
+        vbox.addWidget(QLabel("CAN Speed fixed to 500k"))
+        
+        self.setLayout(vbox)
+
+    def onclose(self):
+        self.removeCallbacks()
+
+    def apply(self):
+        self.sendValue("canbtn","canid",self.canIdBox.value())
+        self.sendValue("canbtn","btnnum",self.numBtnBox.value())
+        self.sendValue("canbtn","invert",(1 if self.polBox.isChecked() else 0))
+    
+    def readValues(self):
+        self.getValueAsync("canbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
+        self.getValueAsync("canbtn","invert",self.polBox.setChecked,0,conversion=int)
+        self.getValueAsync("canbtn","canid",self.canIdBox.setValue,0,conversion=int)
+ 
 class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def __init__(self,name,main):
