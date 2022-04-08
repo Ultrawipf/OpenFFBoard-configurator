@@ -308,21 +308,49 @@ class CANButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         vbox = QVBoxLayout()
         self.polBox = QCheckBox("Invert")
         vbox.addWidget(self.polBox)
+        self.polBox.stateChanged.connect(self.amountChanged)
+
         self.numBtnBox = QSpinBox()
         self.numBtnBox.setMinimum(1)
         self.numBtnBox.setMaximum(64)
         vbox.addWidget(QLabel("Number of buttons"))
         vbox.addWidget(self.numBtnBox)
+        self.numBtnBox.valueChanged.connect(self.amountChanged)
 
         self.canIdBox = QSpinBox()
         self.canIdBox.setMinimum(1)
         self.canIdBox.setMaximum(0x7ff)
         vbox.addWidget(QLabel("CAN frame ID"))
         vbox.addWidget(self.canIdBox)
+        self.canIdBox.valueChanged.connect(self.amountChanged)
+
+        self.infoLabel = QLabel("")
+        vbox.addWidget(self.infoLabel)
 
         vbox.addWidget(QLabel("CAN Speed fixed to 500k"))
         
         self.setLayout(vbox)
+
+    def amountChanged(self,_):
+        amount = self.numBtnBox.value()
+        text = ""
+        text += f"ID {self.canIdBox.value()}:\n"
+        polchar = "0" if self.polBox.isChecked() else "1"
+        for value in range(64):
+            if value < amount:
+                text += polchar
+            else:
+                text += "x"
+            if value < 63:
+                if (value+1) % 8 == 0:
+                    text += "|"
+                if (value+1) % 32 == 0:
+                    text += "\n"
+                
+
+
+
+        self.infoLabel.setText(text)
 
     def onclose(self):
         self.removeCallbacks()
