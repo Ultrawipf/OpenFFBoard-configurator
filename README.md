@@ -12,10 +12,6 @@ Be very careful when changing motor types, drivers or the power value.
 Incorrect settings may cause unintended movements or damage hardware.
 
 
-On older windows versions (older than Windows 10) CDC drivers may not load automatically.
-
-Then you need to manually install for example the STM VCP driver for the device. (We will provide an installer later)
-
 
 ![FFB Window](screenshots/FFBwheel.png?raw=true)
 
@@ -25,7 +21,15 @@ Then you need to manually install for example the STM VCP driver for the device.
 
 ![TMC Window](screenshots/TMC.png?raw=true)
 
-Dependencies:
+
+### Installation:
+On older windows versions (older than Windows 10) CDC drivers may not load automatically.
+
+Then you need to manually install for example the STM VCP driver for the device.
+
+For DFU on windows a libusb compatible driver is required. Use [Zadig](http://zadig.akeo.ie/) to install a winusb driver for the DFU device or install the STM32CubeProgrammer which uses the same driver and can flash the device as well.
+
+#### Dependencies:
 
 PyQt6
 PyQt6-Charts (For TMC graph)
