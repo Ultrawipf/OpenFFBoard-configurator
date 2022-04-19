@@ -377,7 +377,9 @@ class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         vbox = QVBoxLayout()
         self.polBox = QCheckBox("Invert")
         vbox.addWidget(self.polBox)
-        vbox.addWidget(QLabel("Requires num/8 PCF8574 w. increasing addresses.\nNot more than 4 recommended (Takes 200µs per module).\nNumber of buttons:"))
+        self.fastBox = QCheckBox("400kHz fast mode")
+        vbox.addWidget(self.fastBox)
+        vbox.addWidget(QLabel("Requires num/8 PCF8574 w. increasing addresses.\nNumber of buttons:"))
         self.numBtnBox = QSpinBox()
         self.numBtnBox.setMinimum(1)
         self.numBtnBox.setMaximum(64)
@@ -392,8 +394,10 @@ class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.sendValue("pcfbtn","btnnum",self.numBtnBox.value())
         self.sendValue("pcfbtn","invert",(1 if self.polBox.isChecked() else 0))
+        self.sendValue("pcfbtn","fastmode",(1 if self.fastBox.isChecked() else 0))
     
     def readValues(self):
         self.getValueAsync("pcfbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
         self.getValueAsync("pcfbtn","invert",self.polBox.setChecked,0,conversion=int)
+        self.getValueAsync("pcfbtn","fastmode",self.fastBox.setChecked,0,conversion=int)
  
