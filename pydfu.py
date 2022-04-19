@@ -88,7 +88,7 @@ def get_backend(): # Return a specific backend for windows
     return None # default
 
 import inspect
-if 'length' in inspect.getargspec(usb.util.get_string).args:
+if 'length' in inspect.getfullargspec(usb.util.get_string).args:
     # PyUSB 1.0.0.b1 has the length argument
     def get_string(dev, index):
         return usb.util.get_string(dev, 255, index)
@@ -174,6 +174,27 @@ def set_address(addr):
     # Check command state
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_IDLE:
         raise Exception("DFU: set address failed")
+
+
+def read_memory(addr,length):
+    """Length 2-2048"""
+
+    length = min(max(2,length),2048)
+    readbuffer = []
+
+    set_address(addr)
+    clr_status()
+
+    reply = __dev.ctrl_transfer(0xA1, __DFU_UPLOAD, 2, __DFU_INTERFACE, length, __TIMEOUT)
+    readbuffer.extend(reply)
+
+    # Execute last command
+    #if get_status() != __DFU_STATE_DFU_UPLOAD_IDLE:
+    if get_status() == __DFU_STATE_DFU_ERROR:
+        raise Exception("DFU: read memory failed")
+
+    return readbuffer
+    
 
 
 def write_memory(addr, buf, progress=None, progress_addr=0, progress_size=0):
@@ -551,6 +572,16 @@ def main():
         default=False
     )
     parser.add_argument(
+        "-r", "--read",
+        help="read memory address. requires -s",
+        default=None
+    )
+    parser.add_argument(
+        "-s", "--size",
+        help="read memory length. requires -r",
+        default=None
+    )
+    parser.add_argument(
         "-m", "--mass-erase",
         help="mass erase device",
         action="store_true",
@@ -577,6 +608,12 @@ def main():
         return
 
     init()
+
+    if args.size and args.read:
+        print("Reading from",hex(int(args.read,16)))
+        data = read_memory(int(args.read,16),int(args.size))
+        print(data)
+        return
 
     if args.mass_erase:
         print ("Mass erase...")
