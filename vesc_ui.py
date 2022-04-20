@@ -9,6 +9,7 @@ import main
 from base_ui import WidgetUI
 import math
 from base_ui import CommunicationHandler
+import portconf_ui
 
 class VescUI(WidgetUI,CommunicationHandler):
     prefix = None
@@ -24,11 +25,13 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.pushButton_refresh.clicked.connect(self.initUi)
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
+        self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",main)
+        self.pushButton_cansettings.clicked.connect(self.canOptions.exec)
 
         #self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
         self.registerCallback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
         self.registerCallback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
-        self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
+        #self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
         self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
         self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
 
@@ -82,13 +85,13 @@ class VescUI(WidgetUI,CommunicationHandler):
 
 
     def initUi(self):
-        self.sendCommands("vesc",["offbcanid", "vesccanid", "canspd", "useencoder", "offset"],self.prefix)
+        self.sendCommands("vesc",["offbcanid", "vesccanid",  "useencoder", "offset"],self.prefix)
     
     def updateOffset(self, preset):
         self.doubleSpinBox_encoderOffset.setValue(preset / 10000)
 
-    def updateCanSpd(self,preset):
-        self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
+    # def updateCanSpd(self,preset):
+    #     self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
 
     def stateCb(self,state):
         self.label_state.setText(self.vescstate(state))
@@ -130,7 +133,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
         OpenFFBoardCANId = str(self.spinBox_OFFB_can_id.value())
         VESCCANId = str(self.spinBox_VESC_can_Id.value())
-        self.sendValue("vesc","canspd",spdPreset,instance=self.prefix)
+        #self.sendValue("vesc","canspd",spdPreset,instance=self.prefix)
         self.sendValue("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
         self.sendValue("vesc","vesccanid",VESCCANId,instance=self.prefix)
         self.sendValue("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)

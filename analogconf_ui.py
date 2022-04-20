@@ -7,6 +7,7 @@ import main
 from helper import res_path,classlistToIds
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from base_ui import CommunicationHandler
+import portconf_ui
 
 class AnalogOptionsDialog(OptionsDialog):
     def __init__(self,name,id, main):
@@ -107,7 +108,10 @@ class CANAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.infoLabel = QLabel("")
         vbox.addWidget(self.infoLabel)
 
-        vbox.addWidget(QLabel("CAN Speed default 500k"))
+        self.cansettingsbutton = QPushButton("CAN settings")
+        self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",self.main)
+        self.cansettingsbutton.clicked.connect(self.canOptions.exec)
+        vbox.addWidget(self.cansettingsbutton)
         
         self.setLayout(vbox)
 

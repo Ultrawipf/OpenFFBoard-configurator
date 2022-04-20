@@ -8,6 +8,7 @@ from PyQt6.QtCore import QTimer
 import main
 from base_ui import WidgetUI
 from base_ui import CommunicationHandler
+import portconf_ui
 
 class OdriveUI(WidgetUI,CommunicationHandler):
     prefix = None
@@ -21,15 +22,16 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         CommunicationHandler.__init__(self)
         self.main = main #type: main.MainUi
         self.timer = QTimer(self)
-        
+        self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",main)
         self.pushButton_apply.clicked.connect(self.apply)
+        self.pushButton_cansettings.clicked.connect(self.canOptions.exec)
         #self.pushButton_anticogging.clicked.connect(self.antigoggingBtn) #TODO test first
         self.timer.timeout.connect(self.updateTimer)
         self.prefix = unique
         self.connected = False
 
         self.registerCallback("odrv","canid",self.spinBox_id.setValue,self.prefix,int)
-        self.registerCallback("odrv","canspd",self.updateCanSpd,self.prefix,int)
+        #self.registerCallback("odrv","canspd",self.updateCanSpd,self.prefix,int)
         self.registerCallback("odrv","connected",self.connectedCb,self.prefix,int)
         self.registerCallback("odrv","maxtorque",self.updateTorque,self.prefix,int)
         self.registerCallback("odrv","vbus",self.voltageCb,self.prefix,int)
@@ -55,8 +57,8 @@ class OdriveUI(WidgetUI,CommunicationHandler):
     def connectedCb(self,v):
         self.connected = False if v == 0 else True
 
-    def updateCanSpd(self,preset):
-        self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
+    # def updateCanSpd(self,preset):
+    #     self.comboBox_baud.setCurrentIndex(preset-3) # 3 is lowest preset!
 
     def updateTorque(self,torque):
         self.doubleSpinBox_torque.setValue(torque/100)
@@ -100,10 +102,10 @@ class OdriveUI(WidgetUI,CommunicationHandler):
 
         
     def apply(self):
-        spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
+        #spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
         canId = str(self.spinBox_id.value())
         torqueScaler = str(int(self.doubleSpinBox_torque.value() * 100))
-        self.sendValue("odrv","canspd",spdPreset,instance=self.prefix)
+        #self.sendValue("odrv","canspd",spdPreset,instance=self.prefix)
         self.sendValue("odrv","canid",canId,instance=self.prefix)
         self.sendValue("odrv","maxtorque",torqueScaler,instance=self.prefix)
 
