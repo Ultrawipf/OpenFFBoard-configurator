@@ -14,11 +14,11 @@ from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 
 # This GUIs version
-version = "1.8.1"
+version = "1.8.3"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.8.0"
+min_fw = "1.8.3"
 
 # UIs
 import system_ui
@@ -33,6 +33,7 @@ import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
+import portconf_ui
 
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None

@@ -9,7 +9,7 @@ import main
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from helper import res_path,classlistToIds
 from base_ui import CommunicationHandler
-
+import portconf_ui
 
 class ButtonOptionsDialog(OptionsDialog):
     def __init__(self,name,id, main):
@@ -326,8 +326,10 @@ class CANButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.infoLabel = QLabel("")
         vbox.addWidget(self.infoLabel)
-
-        vbox.addWidget(QLabel("CAN Speed fixed to 500k"))
+        self.cansettingsbutton = QPushButton("CAN settings")
+        self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",self.main)
+        self.cansettingsbutton.clicked.connect(self.canOptions.exec)
+        vbox.addWidget(self.cansettingsbutton)
         
         self.setLayout(vbox)
 
@@ -394,10 +396,10 @@ class PCFButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.sendValue("pcfbtn","btnnum",self.numBtnBox.value())
         self.sendValue("pcfbtn","invert",(1 if self.polBox.isChecked() else 0))
-        self.sendValue("pcfbtn","fastmode",(1 if self.fastBox.isChecked() else 0))
+        self.sendValue("i2c","speed",(1 if self.fastBox.isChecked() else 0))
     
     def readValues(self):
         self.getValueAsync("pcfbtn","btnnum",self.numBtnBox.setValue,0,conversion=int)
         self.getValueAsync("pcfbtn","invert",self.polBox.setChecked,0,conversion=int)
-        self.getValueAsync("pcfbtn","fastmode",self.fastBox.setChecked,0,conversion=int)
+        self.getValueAsync("i2c","speed",self.fastBox.setChecked,0,conversion=int)
  

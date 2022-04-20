@@ -27,7 +27,6 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="1" column="0">
-
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Axis state:</string>
@@ -38,7 +37,6 @@
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>Voltage:</string>
-
         </property>
        </widget>
       </item>
@@ -47,7 +45,6 @@
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
-
         <property name="text">
          <string>0</string>
         </property>
@@ -58,13 +55,11 @@
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
-
         <property name="text">
          <string>0</string>
         </property>
        </widget>
       </item>
-
       <item row="2" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
@@ -85,7 +80,6 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-
         </property>
        </widget>
       </item>
@@ -184,25 +178,6 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QComboBox" name="comboBox_baud">
-        <item>
-         <property name="text">
-          <string>250k</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>500k</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1000k</string>
-         </property>
-        </item>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -244,6 +219,13 @@ p, li { white-space: pre-wrap; }
         </property>
         <property name="singleStep">
          <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButton_cansettings">
+        <property name="text">
+         <string>Change CAN settings</string>
         </property>
        </widget>
       </item>
