@@ -30,6 +30,9 @@ class EncoderOptions(QGroupBox):
         elif(id == 4): # MT SPI
             self.widget = (MtEncoderConf(self,self.main))
             self.setTitle("SPI Settings")
+        elif(id == 5): # BISS-C
+            self.widget = (BissEncoderConf(self,self.main))
+            self.setTitle("BISS Settings")
         else:
             layout.addWidget(QLabel("No settings"))
 
@@ -115,3 +118,29 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
     def apply(self):
         val = self.spinBox_cs.value()
         self.sendValue("mtenc","cs",val=val)
+
+class BissEncoderConf(EncoderOption,CommunicationHandler):
+    def __init__(self,parent,main):
+        self.main = main
+        EncoderOption.__init__(self,parent)
+        CommunicationHandler.__init__(self)
+        self.initUI()
+        
+
+    def initUI(self):
+        layout = QFormLayout()
+
+        self.spinBox_cs = QSpinBox()
+        self.spinBox_cs.setRange(1,3)
+        self.spinBox_bits = QSpinBox()
+        self.spinBox_bits.setRange(1,32)
+        layout.addWidget(QLabel("SPI3 extension port"))
+        layout.addRow(QLabel("Bits"),self.spinBox_bits)
+        layout.addWidget(QLabel("Port is used exclusively!\nCS pins are not usable w. BISS"))
+        self.setLayout(layout)
+
+    def onshown(self):
+        self.getValueAsync("bissenc","bits",self.spinBox_bits.setValue,0,int)
+
+    def apply(self):
+        self.sendValue("bissenc","bits",val=self.spinBox_bits.value())
