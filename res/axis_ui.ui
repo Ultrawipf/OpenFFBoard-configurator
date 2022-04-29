@@ -301,7 +301,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;High = Effects and endstop have the same peak torque. Low = effect peak is reduced to make endstop more prominent&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Effects ratio</string>
+            <string>Effects intensity</string>
            </property>
           </widget>
          </item>
