@@ -129,7 +129,6 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
 
     def initUI(self):
         layout = QFormLayout()
-
         self.spinBox_cs = QSpinBox()
         self.spinBox_cs.setRange(1,3)
         self.spinBox_bits = QSpinBox()
