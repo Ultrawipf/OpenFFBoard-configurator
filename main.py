@@ -36,7 +36,7 @@ import odrive_ui
 import vesc_ui
 import portconf_ui
 
-darkmode=False
+darkmode = False
 
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None
@@ -113,8 +113,8 @@ class MainUi(QMainWindow,CommunicationHandler):
         dfu.deleteLater()
 
     def toggleDarkMode(self):
-        global darkmode, app
-        darkmode = not darkmode
+        global darkmode
+        darkmode = not darkmode # Toggle darkmode
         if darkmode:
             app.setStyleSheet(qdarktheme.load_stylesheet())
         else:
@@ -332,6 +332,7 @@ class AboutDialog(QDialog):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    app.setStyleSheet(qdarktheme.load_stylesheet("light")) # load light stylesheet (round)
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
