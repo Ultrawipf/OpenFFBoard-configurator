@@ -68,7 +68,7 @@
      <x>0</x>
      <y>0</y>
      <width>644</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -86,6 +86,7 @@
     <addaction name="actionDFU_Uploader"/>
     <addaction name="actionSave_chip_config"/>
     <addaction name="actionRestore_chip_config"/>
+    <addaction name="actionToggle_dark_mode"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -136,6 +137,11 @@
    </property>
    <property name="text">
     <string>Active features</string>
+   </property>
+  </action>
+  <action name="actionToggle_dark_mode">
+   <property name="text">
+    <string>toggle dark mode</string>
    </property>
   </action>
  </widget>
