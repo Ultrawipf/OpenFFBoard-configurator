@@ -12,6 +12,7 @@ from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
+import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
 
 # This GUIs version
 version = "1.8.4"
@@ -35,6 +36,8 @@ import odrive_ui
 import vesc_ui
 import portconf_ui
 
+darkmode=False
+
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None
     mainClassUi = None
@@ -55,7 +58,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
-
         self.errorsDialog = errors.ErrorsDialog(self)
         self.activeClassDialog = activelist.ActiveClassDialog(self)
         self.setup()
@@ -80,6 +82,7 @@ class MainUi(QMainWindow,CommunicationHandler):
 
         # Toolbar menu items
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
+        self.actionToggle_dark_mode.triggered.connect(self.toggleDarkMode)
 
         self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
         self.serialchooser.connected.connect(self.actionErrors.setEnabled)
@@ -108,6 +111,14 @@ class MainUi(QMainWindow,CommunicationHandler):
         msg.setLayout(l)
         msg.exec()
         dfu.deleteLater()
+
+    def toggleDarkMode(self):
+        global darkmode, app
+        darkmode = not darkmode
+        if darkmode:
+            app.setStyleSheet(qdarktheme.load_stylesheet())
+        else:
+            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
 
     def openAbout(self):
         AboutDialog(self).exec()
