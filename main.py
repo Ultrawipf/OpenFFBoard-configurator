@@ -1,4 +1,5 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
+from glob import glob
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
@@ -13,6 +14,12 @@ import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
+import darkdetect #pip install darkdetect https://github.com/albertosottile/darkdetect
+
+if darkdetect.theme().lower() == 'dark':
+    darkmode = True
+else:
+    darkmode = False
 
 # This GUIs version
 version = "1.8.4"
@@ -36,7 +43,7 @@ import odrive_ui
 import vesc_ui
 import portconf_ui
 
-darkmode = False
+
 
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None
@@ -116,7 +123,7 @@ class MainUi(QMainWindow,CommunicationHandler):
         global darkmode
         darkmode = not darkmode # Toggle darkmode
         if darkmode:
-            app.setStyleSheet(qdarktheme.load_stylesheet())
+            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
         else:
             app.setStyleSheet(qdarktheme.load_stylesheet("light"))
 
@@ -332,7 +339,10 @@ class AboutDialog(QDialog):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarktheme.load_stylesheet("light")) # load light stylesheet (round)
+    if darkmode:  # load system theme (round)
+        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+    else:
+        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
