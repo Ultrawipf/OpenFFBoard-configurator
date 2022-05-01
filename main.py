@@ -16,11 +16,6 @@ from base_ui import CommunicationHandler
 import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
 import darkdetect #pip install darkdetect https://github.com/albertosottile/darkdetect
 
-if darkdetect.theme().lower() == 'dark':
-    darkmode = True
-else:
-    darkmode = False
-
 # This GUIs version
 version = "1.8.4"
 
@@ -50,7 +45,9 @@ class MainUi(QMainWindow,CommunicationHandler):
     mainClassUi = None
     timeouting = False
     connected = False
-    
+    setDarkModeSignal = pyqtSignal()
+    setLightModeSignal = pyqtSignal()
+
     def __init__(self):
         QMainWindow.__init__(self)
         uic.loadUi(res_path('MainWindow.ui'), self)
@@ -121,11 +118,14 @@ class MainUi(QMainWindow,CommunicationHandler):
 
     def toggleDarkMode(self):
         global darkmode
-        darkmode = not darkmode # Toggle darkmode
-        if darkmode:
-            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-        else:
+        if darkmode: #current is dark, set light mode
+            darkmode = False
             app.setStyleSheet(qdarktheme.load_stylesheet("light"))
+            self.setLightModeSignal.emit()
+        else: #set dark mode
+            darkmode = True
+            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+            self.setDarkModeSignal.emit()
 
     def openAbout(self):
         AboutDialog(self).exec()
@@ -339,11 +339,15 @@ class AboutDialog(QDialog):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
-    if darkmode:  # load system theme (round)
-        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-    else:
-        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
     window = MainUi()
+    if darkdetect.theme().lower() == 'dark':
+        darkmode = True
+        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+        window.setDarkModeSignal.emit() #tells the tabs to set dark mode
+    else:
+        darkmode = False
+        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
+        window.setLightModeSignal.emit() #tells the tabs to set light mode
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp

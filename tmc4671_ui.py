@@ -9,6 +9,7 @@ from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 
 from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
 from base_ui import CommunicationHandler
+import darkdetect #pip install darkdetect https://github.com/albertosottile/darkdetect
 
 ext_notice = """External encoder forwards the encoder
 selection of the Axis (if available).
@@ -17,7 +18,7 @@ Please select the encoder there."""
 hall_notice = """Using hall sensors as the main position
 source is not recommended"""
 
-from main import darkmode
+
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
@@ -96,7 +97,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.VerticalRubberBand)
         self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
 
-        if darkmode == True:
+        self.main.setDarkModeSignal.connect(self.setChartDarkStyle)
+        self.main.setLightModeSignal.connect(self.setChartLightStyle)
+
+        if darkdetect.theme().lower() == "dark":
             self.setChartDarkStyle()
         else:
             self.setChartLightStyle()
