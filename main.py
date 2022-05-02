@@ -1,5 +1,4 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
-from glob import glob
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
