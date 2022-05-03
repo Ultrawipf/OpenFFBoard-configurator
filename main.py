@@ -1,9 +1,10 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
+from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox,QStyleFactory
 from PyQt6.QtCore import QIODevice,pyqtSignal
 from PyQt6.QtCore import QTimer,QThread
+from PyQt6.QtGui import QPalette, QColor
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
@@ -13,7 +14,8 @@ from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
-import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
+# import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
+from dark_palette import PALETTE_DARK
 
 # This GUIs version
 version = "1.8.4"
@@ -337,13 +339,10 @@ def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
-    if sys.platform == 'win32': #only on windows, macOS and linux will use system palette
-        if windowsThemeIsLight() == 0:
-            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-            app.setPalette(qdarktheme.load_palette("dark"))
-        else:
-            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
-            app.setPalette(qdarktheme.load_palette("light"))
+    if (sys.platform == 'win32') & (windowsThemeIsLight() == 0): #only on windows, for macOS and linux use system palette
+        app.setStyle("Fusion")
+        app.setPalette(PALETTE_DARK)
+
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp
