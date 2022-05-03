@@ -42,6 +42,11 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.buttonBoxLayout = QVBoxLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
 
+        self.btn_mask=0
+        self.prefix=0
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateTimer)
+
     def initUI(self):
         vbox = QVBoxLayout()
         self.polBox = QCheckBox("Invert")
@@ -52,8 +57,36 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         
         self.setLayout(vbox)
 
+    # Tab is currently shown
+    def showEvent(self,event):
+        self.timer.start(300)
+
+    # Tab is hidden
+    def hideEvent(self,event):
+        self.timer.stop()
+        
+    def updateTimer(self):
+        self.sendCommands("dpin",["values"],self.prefix)
+
     def onclose(self):
-            self.removeCallbacks()
+        self.removeCallbacks()
+
+    def onshown(self):
+        self.registerCallback("dpin","values",self.valueCb,self.prefix,int)
+
+    def valueCb(self, val):
+        j=0
+        for i in range(self.num):
+            btn = self.buttongroup.button(i)
+            if self.btn_mask & (1<<i):
+                if val & (1<<j):
+                    btn.setStyleSheet("background-color: yellow")
+                else:
+                    btn.setStyleSheet("background-color: white")
+                j=j+1
+            else:
+                btn.setStyleSheet("background-color: white")
+            
     def initButtons(self,num):
         #delete buttons
         self.num = num
@@ -74,17 +107,18 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             self.buttonBoxLayout.addWidget(cb)
 
         def localcb(mask):
+            self.btn_mask = mask
             for i in range(self.num):
                 self.buttongroup.button(i).setChecked(mask & (1 << i))
         self.getValueAsync("dpin","mask",localcb,0,conversion=int)
         
  
     def apply(self):
-        mask = 0
+        self.btn_mask = 0
         for i in range(self.num):
             if(self.buttongroup.button(i).isChecked()):
-                mask |= 1 << i
-        self.sendValue("dpin","mask",mask)
+                self.btn_mask |= 1 << i
+        self.sendValue("dpin","mask",self.btn_mask)
         self.sendValue("dpin","polarity",(1 if self.polBox.isChecked() else 0))
     
     def readValues(self):
