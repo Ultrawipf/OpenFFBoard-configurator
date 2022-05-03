@@ -8,7 +8,6 @@ from PyQt6.QtGui import QPalette, QColor
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
-from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
 import config 
 from helper import res_path
 import serial_ui
@@ -324,7 +323,7 @@ class AboutDialog(QDialog):
 
 def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is using Dark Mode
     # Registry will return 0 if Windows is in Dark Mode and 1 if Windows is in Light Mode. This dictionary converts that output into the text that the program is expecting.
-    # valueMeaning = {0: "Dark", 1: "Light"}
+    # 0 = Dark, 1 = Light
     # In HKEY_CURRENT_USER, get the Personalisation Key.
     try:
         key = getKey(hkey, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize")
@@ -339,10 +338,11 @@ def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
-    if (sys.platform == 'win32') & (windowsThemeIsLight() == 0): #only on windows, for macOS and linux use system palette
-        app.setStyle("Fusion")
-        app.setPalette(PALETTE_DARK)
-
+    if (sys.platform == 'win32'):
+        from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
+        if (windowsThemeIsLight() == 0): #only on windows, for macOS and linux use system palette
+            app.setStyle("Fusion")
+            app.setPalette(PALETTE_DARK)
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp
