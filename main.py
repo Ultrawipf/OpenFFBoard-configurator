@@ -13,7 +13,6 @@ from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
-# import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
 from dark_palette import PALETTE_DARK
 
 # This GUIs version
