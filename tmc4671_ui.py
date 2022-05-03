@@ -9,6 +9,7 @@ from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 
 from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
 from base_ui import CommunicationHandler
+import darkdetect #pip install darkdetect https://github.com/albertosottile/darkdetect
 
 ext_notice = """External encoder forwards the encoder
 selection of the Axis (if available).
@@ -16,6 +17,8 @@ Please select the encoder there."""
 
 hall_notice = """Using hall sensors as the main position
 source is not recommended"""
+
+
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
@@ -30,7 +33,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     versionWarningShow = True
     vext = 0
     vint = 0
-    
+
     def __init__(self, main=None, unique=0):
         self.axis = 0
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
@@ -83,10 +86,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.chart.addSeries(self.lines_Flux)
         self.lines_Flux.setColor(QColor("limegreen"))
-        
+
         self.lines_Flux.attachAxis(self.chartYaxis_Amps)
         self.lines_Flux.attachAxis(self.chartXaxis)
-        
         
         self.lines_Temps = QLineSeries()
         self.lines_Temps.setName("Temp °C")
@@ -491,6 +493,45 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.adc_to_amps = x
             if(x > 0):
                 self.chartYaxis_Amps.setMax(round((0x7fff*x) / 10))
+
+    def setChartDarkStyle(self):
+        print(self)
+        print("Setting dark style")
+        # set background color to gray, and chart line to white
+        self.chart.setBackgroundBrush(QColor(0x20,0x21,0x24))
+        # set legend Lable color to white #e4e7eb
+        self.chart.legend().setLabelColor(QColor(0xe4e7eb))
+        # set chart to light gray
+        self.chartXaxis.setGridLineColor(QColor(0x3f,0x40,0x42))
+        self.chartYaxis_Amps.setGridLineColor(QColor(0x3f,0x40,0x42))
+        self.chartYaxis_Temps.setGridLineColor(QColor(0x3f,0x40,0x42))
+        # set axis font to white
+        self.chartXaxis.setLabelsBrush(QColor(0xFF,0xFF,0xFF))
+        self.chartYaxis_Temps.setLabelsBrush(QColor(0xFF,0xFF,0xFF))
+        self.chartYaxis_Amps.setLabelsColor(QColor(0xFF,0xFF,0xFF))
+        # set axis line to dark gray
+        self.chartYaxis_Amps.setLinePen(QColor(0x3f,0x40,0x42))
+        self.chartYaxis_Temps.setLinePen(QColor(0x3f,0x40,0x42))
+        self.chartXaxis.setLinePen(QColor(0x3f,0x40,0x42))
+
+    def setChartLightStyle(self): # light mode
+        # set background color to #f8f9fa
+        self.chart.setBackgroundBrush(QColor(0xf8f9fa))
+        # set legend Lable color to dark #4d5157
+        self.chart.legend().setLabelColor(QColor(0x4d5157))
+        # set chart to light gray #dadce0
+        self.chartXaxis.setGridLineColor(QColor(0xdadce0))
+        self.chartYaxis_Amps.setGridLineColor(QColor(0xdadce0))
+        self.chartYaxis_Temps.setGridLineColor(QColor(0xdadce0))
+        # set axis font to #4d5157
+        self.chartXaxis.setLabelsBrush(QColor(0x4d5157))
+        self.chartYaxis_Temps.setLabelsBrush(QColor(0x4d5157))
+        self.chartYaxis_Amps.setLabelsColor(QColor(0x4d5157))
+        # set axis line to #dadce0
+        self.chartYaxis_Amps.setLinePen(QColor(0xdadce0))
+        self.chartYaxis_Temps.setLinePen(QColor(0xdadce0))
+        self.chartXaxis.setLinePen(QColor(0xdadce0))
+
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
