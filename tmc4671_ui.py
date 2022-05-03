@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel,QApplication
 from helper import res_path,classlistToIds
 from PyQt6.QtCore import QTime, QTimer
 from PyQt6.QtCore import Qt,QMargins
@@ -54,11 +54,13 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis()
+        self.chartXaxis.setGridLineColor(QApplication.instance().palette().dark().color())
         self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
 
         self.chartYaxis_Amps = QValueAxis()
         self.chartYaxis_Temps = QValueAxis()
-
+        self.chartYaxis_Amps.setGridLineColor(QApplication.instance().palette().dark().color())
+        self.chartYaxis_Temps.setGridLineColor(QApplication.instance().palette().dark().color())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         
@@ -95,6 +97,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Amps.setMax(20)
         self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.VerticalRubberBand)
         self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
+
+        # Set graph theme colors
+        self.chart.legend().setLabelBrush(QApplication.instance().palette().text())
+        for ax in self.chart.axes():
+            ax.setLabelsBrush(QApplication.instance().palette().text())
  
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
