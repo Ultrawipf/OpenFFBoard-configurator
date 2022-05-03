@@ -61,6 +61,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Temps = QValueAxis()
         self.chartYaxis_Amps.setGridLineColor(QApplication.instance().palette().dark().color())
         self.chartYaxis_Temps.setGridLineColor(QApplication.instance().palette().dark().color())
+        self.chart.setBackgroundBrush(QApplication.instance().palette().window())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         
