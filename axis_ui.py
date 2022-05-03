@@ -176,17 +176,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
         id = self.encClasses[idx][0]
         if(self.encId != id):
             self.sendValue("axis","enctype",id,instance=self.axis)
-            #self.serialWrite("enctype="+str(id)+"\n")
             self.getEncoder()
             self.main.updateTabs()
-            self.encoderIndexChanged(id)
-        
+            #self.encoderIndexChanged(id)
     
     def updateSliders(self):
         if(self.drvId == 1 or self.drvId == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
             self.horizontalSlider_power.setMaximum(28000)
-            self.getValueAsync("tmc","iScale",self.setCurrentScaler,self.drvId - 1,float)
-            #self.serialGetAsync("tmcIscale?",self.setCurrentScaler,convert=float)       
+            self.getValueAsync("tmc","iScale",self.setCurrentScaler,self.drvId - 1,float)  
         else:
             self.horizontalSlider_power.setMaximum(0x7fff)
 
@@ -221,22 +218,21 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def getEncoder(self):
        
         def f(dat):
-            for w in self.encWidgets:
-                # cleanup if present
-                CommunicationHandler.removeCallbacks(w)
-            self.comboBox_encoder.clear()
-            self.encWidgets.clear()
+            # for w in self.encWidgets:
+            #     # cleanup if present
+            #     CommunicationHandler.removeCallbacks(w)
+            # self.comboBox_encoder.clear()
+            # self.encWidgets.clear()
 
             self.encIds,self.encClasses = classlistToIds(dat)
             for c in self.encClasses:
-                self.comboBox_encoder.addItem(c[1],c[0])
                 id = c[0]
                 creatable = c[2]
-                self.comboBox_encoder.model().item(self.encIds[c[0]][0]).setEnabled(creatable)
-
                 if(id not in self.encWidgets or self.stackedWidget_encoder.indexOf(self.encWidgets[id]) == -1):
                     self.encWidgets[id] = EncoderOptions(self.main,id)
                     self.stackedWidget_encoder.addWidget(self.encWidgets[id])
+                    self.comboBox_encoder.addItem(c[1],c[0])
+                self.comboBox_encoder.model().item(self.encIds[c[0]][0]).setEnabled(creatable)
 
         self.getValueAsync("axis","enctype",f,self.axis,str,typechar='!')
         
@@ -254,5 +250,4 @@ class AxisUI(WidgetUI,CommunicationHandler):
             idx = self.encIds[self.encId][0] if self.encId in self.encIds else 0
             self.comboBox_encoder.setCurrentIndex(idx)
             self.encoderIndexChanged(idx)
-            
         self.getValueAsync("axis","enctype",encid_f,self.axis,int,typechar='?')
