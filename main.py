@@ -7,13 +7,13 @@ from PyQt6.QtCore import QTimer,QThread
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
+from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
 import config 
 from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
 import qdarktheme #pip install pyqtdarktheme https://github.com/5yutan5/PyQtDarkTheme
-import darkdetect #pip install darkdetect https://github.com/albertosottile/darkdetect
 
 # This GUIs version
 version = "1.8.4"
@@ -44,8 +44,6 @@ class MainUi(QMainWindow,CommunicationHandler):
     mainClassUi = None
     timeouting = False
     connected = False
-    setDarkModeSignal = pyqtSignal()
-    setLightModeSignal = pyqtSignal()
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -85,7 +83,6 @@ class MainUi(QMainWindow,CommunicationHandler):
 
         # Toolbar menu items
         self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
-        self.actionToggle_dark_mode.triggered.connect(self.toggleDarkMode)
 
         self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
         self.serialchooser.connected.connect(self.actionErrors.setEnabled)
@@ -114,17 +111,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         msg.setLayout(l)
         msg.exec()
         dfu.deleteLater()
-
-    def toggleDarkMode(self):
-        global darkmode
-        if darkmode: #current is dark, set light mode
-            darkmode = False
-            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
-            self.setLightModeSignal.emit()
-        else: #set dark mode
-            darkmode = True
-            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-            self.setDarkModeSignal.emit()
 
     def openAbout(self):
         AboutDialog(self).exec()
@@ -333,20 +319,31 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-        
-            
-if __name__ == '__main__':
 
+def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is using Dark Mode
+    # Registry will return 0 if Windows is in Dark Mode and 1 if Windows is in Light Mode. This dictionary converts that output into the text that the program is expecting.
+    # valueMeaning = {0: "Dark", 1: "Light"}
+    # In HKEY_CURRENT_USER, get the Personalisation Key.
+    try:
+        key = getKey(hkey, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize")
+        # In the Personalisation Key, get the AppsUseLightTheme subkey. This returns a tuple.
+        # The first item in the tuple is the result we want (0 or 1 indicating Dark Mode or Light Mode); the other value is the type of subkey e.g. DWORD, QWORD, String, etc.
+        subkey = getSubkeyValue(key, "AppsUseLightTheme")[0]
+    except FileNotFoundError:
+        # some headless Windows instances (e.g. GitHub Actions or Docker images) do not have this key
+        return None
+    return subkey
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
-    if darkdetect.theme().lower() == 'dark':
-        darkmode = True
-        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
-        window.setDarkModeSignal.emit() #tells the tabs to set dark mode
-    else:
-        darkmode = False
-        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
-        window.setLightModeSignal.emit() #tells the tabs to set light mode
+    if sys.platform == 'win32': #only on windows, macOS and linux will use system palette
+        if windowsThemeIsLight() == 0:
+            app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+            app.setPalette(qdarktheme.load_palette("dark"))
+        else:
+            app.setStyleSheet(qdarktheme.load_stylesheet("light"))
+            app.setPalette(qdarktheme.load_palette("light"))
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp

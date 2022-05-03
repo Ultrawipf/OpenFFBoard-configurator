@@ -54,13 +54,17 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis()
-        self.chartXaxis.setGridLineColor(QApplication.instance().palette().dark().color())
+        # use Application.instance().palette().dark().color() but with 50% opacity
+        self.chartXaxis.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),128))
+        
+
         self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
 
         self.chartYaxis_Amps = QValueAxis()
         self.chartYaxis_Temps = QValueAxis()
-        self.chartYaxis_Amps.setGridLineColor(QApplication.instance().palette().dark().color())
-        self.chartYaxis_Temps.setGridLineColor(QApplication.instance().palette().dark().color())
+        # use Application.instance().palette().dark().color() but with 25% opacity
+        self.chartYaxis_Amps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
+        self.chartYaxis_Temps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
         self.chart.setBackgroundBrush(QApplication.instance().palette().window())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)

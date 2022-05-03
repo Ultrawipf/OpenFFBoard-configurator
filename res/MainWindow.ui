@@ -86,7 +86,6 @@
     <addaction name="actionDFU_Uploader"/>
     <addaction name="actionSave_chip_config"/>
     <addaction name="actionRestore_chip_config"/>
-    <addaction name="actionToggle_dark_mode"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
