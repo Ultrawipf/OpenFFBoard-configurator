@@ -2,5 +2,3 @@ PyQt6>=6.2
 PyQt6-Charts
 pyusb
 intelhex
-pyqtdarktheme
-darkdetect

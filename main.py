@@ -320,7 +320,7 @@ class AboutDialog(QDialog):
 
         self.version.setText(verstr)
 
-def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is using Dark Mode
+def windowsThemeIsLight(): # detect if the user is using Dark Mode in Windows
     # Registry will return 0 if Windows is in Dark Mode and 1 if Windows is in Light Mode. This dictionary converts that output into the text that the program is expecting.
     # 0 = Dark, 1 = Light
     # In HKEY_CURRENT_USER, get the Personalisation Key.
@@ -337,9 +337,9 @@ def windowsThemeIsLight(): # Uses the Windows Registry to detect if the user is 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
-    if (sys.platform == 'win32'):
+    if (sys.platform == 'win32'):  #only on windows, for macOS and linux use system palette
         from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
-        if (windowsThemeIsLight() == 0): #only on windows, for macOS and linux use system palette
+        if (windowsThemeIsLight() == 0):
             app.setStyle("Fusion")
             app.setPalette(PALETTE_DARK)
     window.setWindowTitle("Open FFBoard Configurator")
