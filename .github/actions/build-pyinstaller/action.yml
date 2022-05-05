@@ -1,0 +1,32 @@
+name: Build Configurator
+
+inputs:
+  path: 
+    description: 'input path'
+    required: true
+outputs:
+  distpath:
+    description: 'Output path'
+    value: ${{ inputs.path }}/build/dist/
+
+runs:
+  using: "composite"
+
+  # Steps represent a sequence of tasks that will be executed as part of the job
+  steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    # Setup toolchain
+    - name: Setup environment
+      shell: bash
+      run: |
+        pip install -r requirements.txt pyinstaller
+      working-directory: ${{ inputs.path }}
+
+    - name: Build Pyinstaller
+      shell: bash
+      run: |
+        pyinstaller OpenFFBoard.spec
+      working-directory: ${{ inputs.path }}/build/
