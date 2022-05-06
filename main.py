@@ -1,4 +1,3 @@
-#from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox,QStyleFactory
@@ -337,7 +336,7 @@ def windowsThemeIsLight(): # detect if the user is using Dark Mode in Windows
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
-    if (sys.platform == 'win32'):  #only on windows, for macOS and linux use system palette
+    if (sys.platform == 'win32' or "Windows" in sys.platform):  #only on windows, for macOS and linux use system palette. windows server is not called win32
         from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
         if (windowsThemeIsLight() == 0):
             app.setStyle("Fusion")
