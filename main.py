@@ -1,9 +1,10 @@
 #from fbs_runtime.application_context.PyQt6 import ApplicationContext
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
+from PyQt6.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox,QStyleFactory
 from PyQt6.QtCore import QIODevice,pyqtSignal
 from PyQt6.QtCore import QTimer,QThread
+from PyQt6.QtGui import QPalette, QColor
 from PyQt6 import uic
 from PyQt6.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
@@ -12,6 +13,7 @@ from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
 from base_ui import CommunicationHandler
+from dark_palette import PALETTE_DARK
 
 # This GUIs version
 version = "1.8.4"
@@ -35,12 +37,14 @@ import odrive_ui
 import vesc_ui
 import portconf_ui
 
+
+
 class MainUi(QMainWindow,CommunicationHandler):
     serial = None
     mainClassUi = None
     timeouting = False
     connected = False
-    
+
     def __init__(self):
         QMainWindow.__init__(self)
         uic.loadUi(res_path('MainWindow.ui'), self)
@@ -55,7 +59,6 @@ class MainUi(QMainWindow,CommunicationHandler):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
-
         self.errorsDialog = errors.ErrorsDialog(self)
         self.activeClassDialog = activelist.ActiveClassDialog(self)
         self.setup()
@@ -316,12 +319,29 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-        
-            
-if __name__ == '__main__':
 
+def windowsThemeIsLight(): # detect if the user is using Dark Mode in Windows
+    # Registry will return 0 if Windows is in Dark Mode and 1 if Windows is in Light Mode. This dictionary converts that output into the text that the program is expecting.
+    # 0 = Dark, 1 = Light
+    # In HKEY_CURRENT_USER, get the Personalisation Key.
+    try:
+        key = getKey(hkey, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize")
+        # In the Personalisation Key, get the AppsUseLightTheme subkey. This returns a tuple.
+        # The first item in the tuple is the result we want (0 or 1 indicating Dark Mode or Light Mode); the other value is the type of subkey e.g. DWORD, QWORD, String, etc.
+        subkey = getSubkeyValue(key, "AppsUseLightTheme")[0]
+    except FileNotFoundError:
+        # some headless Windows instances (e.g. GitHub Actions or Docker images) do not have this key
+        return None
+    return subkey
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = MainUi()
+    if (sys.platform == 'win32'):  #only on windows, for macOS and linux use system palette
+        from winreg import HKEY_CURRENT_USER as hkey, QueryValueEx as getSubkeyValue, OpenKey as getKey
+        if (windowsThemeIsLight() == 0):
+            app.setStyle("Fusion")
+            app.setPalette(PALETTE_DARK)
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
     global mainapp
