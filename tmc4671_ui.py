@@ -67,7 +67,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         # use Application.instance().palette().dark().color() but with 25% opacity
         self.chartYaxis_Amps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
         self.chartYaxis_Temps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
-        self.chart.setBackgroundBrush(QApplication.instance().palette().light())
+        self.chart.setBackgroundBrush(QApplication.instance().palette().midlight())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         

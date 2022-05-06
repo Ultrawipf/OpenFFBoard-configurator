@@ -23,7 +23,7 @@ if hasattr(QPalette.ColorRole, "PlaceholderText"):
     _palette_dark.setColor(QPalette.ColorRole.PlaceholderText, QColor(180,180,180))
 
 _palette_dark.setColor(QPalette.ColorRole.Light, QColor(25, 25, 25))
-_palette_dark.setColor(QPalette.ColorRole.Midlight, QColor("#3f4042"))
+_palette_dark.setColor(QPalette.ColorRole.Midlight, QColor(30, 30, 30))
 _palette_dark.setColor(QPalette.ColorRole.Dark, QColor("#e4e7eb"))
 _palette_dark.setColor(QPalette.ColorRole.Mid, QColor("#3f4042"))
 _palette_dark.setColor(QPalette.ColorRole.Shadow, QColor("#3f4042"))
