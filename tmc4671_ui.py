@@ -431,7 +431,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def calibrated(self,v):
         v = int(v)
-        if not v:
+        if not v and self.isEnabled():
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setWindowTitle("Calibration required")
