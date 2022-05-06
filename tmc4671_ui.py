@@ -17,6 +17,8 @@ Please select the encoder there."""
 hall_notice = """Using hall sensors as the main position
 source is not recommended"""
 
+
+
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     states = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
@@ -30,7 +32,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     versionWarningShow = True
     vext = 0
     vint = 0
-    
+
     def __init__(self, main=None, unique=0):
         self.axis = 0
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
@@ -54,13 +56,17 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis()
-        self.chartXaxis.setGridLineColor(QApplication.instance().palette().dark().color())
+        # use Application.instance().palette().dark().color() but with 50% opacity
+        self.chartXaxis.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),128))
+        
+
         self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
 
         self.chartYaxis_Amps = QValueAxis()
         self.chartYaxis_Temps = QValueAxis()
-        self.chartYaxis_Amps.setGridLineColor(QApplication.instance().palette().dark().color())
-        self.chartYaxis_Temps.setGridLineColor(QApplication.instance().palette().dark().color())
+        # use Application.instance().palette().dark().color() but with 25% opacity
+        self.chartYaxis_Amps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
+        self.chartYaxis_Temps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
         self.chart.setBackgroundBrush(QApplication.instance().palette().window())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
@@ -79,10 +85,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.chart.addSeries(self.lines_Flux)
         self.lines_Flux.setColor(QColor("limegreen"))
-        
+
         self.lines_Flux.attachAxis(self.chartYaxis_Amps)
         self.lines_Flux.attachAxis(self.chartXaxis)
-        
         
         self.lines_Temps = QLineSeries()
         self.lines_Temps.setName("Temp °C")
@@ -487,6 +492,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.adc_to_amps = x
             if(x > 0):
                 self.chartYaxis_Amps.setMax(round((0x7fff*x) / 10))
+
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 

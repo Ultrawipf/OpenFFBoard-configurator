@@ -120,8 +120,11 @@
         <property name="title">
          <string>Info</string>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item alignment="Qt::AlignLeft">
+         <item>
           <widget class="QLabel" name="label_4">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Displays the rate at which hid reports are sent TO the device (How fast the game updates effects)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -129,9 +132,12 @@
            <property name="text">
             <string>HID effect rate:</string>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
           </widget>
          </item>
-         <item alignment="Qt::AlignLeft">
+         <item>
           <widget class="QLabel" name="label_HIDrate">
            <property name="text">
             <string>0</string>
