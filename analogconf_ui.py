@@ -69,7 +69,8 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(self.buttonBoxLayout.count()):
             b = self.buttonBoxLayout.takeAt(0)
             self.buttonBoxLayout.removeItem(b)
-            b.widget().deleteLater()
+            b.widget().setParent(None)
+            #b.widget().deleteLater()
         for b in self.analogbtns.buttons():
             self.analogbtns.removeButton(b)
 
@@ -78,6 +79,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(axes):
             btn=QCheckBox(str(i+1),self)
             pgb = QProgressBar(self)
+            pgb.setFixedHeight(10)
             pgb.setRange(-32768, 32767)
             self.analogbtns.addButton(btn,i)
             self.buttonBoxLayout.addWidget(btn)
@@ -91,8 +93,8 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.getValueAsync("apin","mask",f,0,conversion=int)
 
     def valueCb(self, str):
-        val_list = str.split(",")
-        print(val_list)
+        val_list = str.split("\n")
+        #print(val_list)
         j=0
         for i in range(self.axes):
             pgb = self.pgb_list[i]
@@ -113,10 +115,12 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def onshown(self):
         # pass
+        print("Open")
         self.registerCallback("apin","values",self.valueCb,self.prefix,str)
 
     def onclose(self):
         # pass
+        print("Close")
         self.removeCallbacks()
 
 

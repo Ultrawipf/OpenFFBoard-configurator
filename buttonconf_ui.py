@@ -82,10 +82,10 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
                 if val & (1<<j):
                     btn.setStyleSheet("background-color: yellow")
                 else:
-                    btn.setStyleSheet("background-color: white")
+                    btn.setStyleSheet("background-color: none")
                 j=j+1
             else:
-                btn.setStyleSheet("background-color: white")
+                btn.setStyleSheet("background-color: none")
             
     def initButtons(self,num):
         #delete buttons
@@ -95,7 +95,8 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(self.buttonBoxLayout.count()):
             b = self.buttonBoxLayout.takeAt(0)
             self.buttonBoxLayout.removeItem(b)
-            b.widget().deleteLater()
+            b.widget().setParent(None)
+            #b.widget().deleteLater()
         for b in self.buttongroup.buttons():
             self.buttongroup.removeButton(b)
 
