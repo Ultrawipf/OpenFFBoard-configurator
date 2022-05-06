@@ -6,3 +6,4 @@
 - BISS-C encoder support
 - TMC graph follows system style
 - Windows darkmode support
+- Digital and analog readout
