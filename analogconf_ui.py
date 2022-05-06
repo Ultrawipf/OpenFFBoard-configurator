@@ -81,6 +81,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
             pgb = QProgressBar(self)
             pgb.setFixedHeight(10)
             pgb.setRange(-32768, 32767)
+            pgb.setValue(-32768)
             self.analogbtns.addButton(btn,i)
             self.buttonBoxLayout.addWidget(btn)
             self.buttonBoxLayout.addWidget(pgb)
