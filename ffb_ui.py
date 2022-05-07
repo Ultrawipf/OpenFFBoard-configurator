@@ -211,7 +211,9 @@ class FfbUI(WidgetUI,CommunicationHandler):
         #clear
         for b in self.buttonconfbuttons:
             SerialComms.removeCallbacks(b[1])
+            b[0].setParent(None)
             del b
+        self.buttonconfbuttons.clear() # Clear buttons
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
             del b
@@ -256,7 +258,9 @@ class FfbUI(WidgetUI,CommunicationHandler):
         #clear
         for b in self.axisconfbuttons:
             SerialComms.removeCallbacks(b[1])
+            b[0].setParent(None)
             del b
+        self.axisconfbuttons.clear()
         for b in self.axisbtns.buttons():
             self.axisbtns.removeButton(b)
             del b
