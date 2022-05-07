@@ -244,7 +244,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
  
         if not self.axisClasses:
             self.sendCommand("main","lsain",0,'?')
-            print("Analog missing")
+            #print("Analog missing")
             return
         
         if(types == None):

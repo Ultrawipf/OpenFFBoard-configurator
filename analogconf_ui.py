@@ -95,7 +95,6 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def valueCb(self, str):
         val_list = str.split("\n")
-        #print(val_list)
         j=0
         for i in range(self.axes):
             pgb = self.pgb_list[i]
@@ -115,13 +114,9 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.sendValue("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
 
     def onshown(self):
-        # pass
-        print("Open")
         self.registerCallback("apin","values",self.valueCb,self.prefix,str)
 
     def onclose(self):
-        # pass
-        print("Close")
         self.removeCallbacks()
 
 
