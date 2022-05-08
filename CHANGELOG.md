@@ -7,4 +7,3 @@
 - TMC graph follows system style
 - Windows darkmode support
 - Digital and analog readout
-- Temporarily changed requirements to use Qt6.2.2 to fix text issues in dark mode
