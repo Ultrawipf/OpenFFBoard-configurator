@@ -345,7 +345,7 @@ if __name__ == '__main__':
             app.setStyle("Fusion")
             app.setPalette(PALETTE_DARK)
     window.setWindowTitle("Open FFBoard Configurator")
-    window.setWindowIcon(QIcon('128.png'))
+    window.setWindowIcon(QIcon('res/app.ico'))
     window.show()
     global mainapp
     mainapp = window
