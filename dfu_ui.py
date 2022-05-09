@@ -45,7 +45,12 @@ class DFUModeUI(WidgetUI):
 
         else:
             self.timer.stop()
-            pydfu.init()
+            try:
+                pydfu.init()
+            except ValueError as e:
+                self.log("Found DFU device but could not connect: " + str(e.args[1]))
+                self.timer.start()
+                return
             self.log("Found DFU device. Please select an option")
             self.dfuDevice = dfu_devices[0]
             self.groupbox_controls.setEnabled(True)
