@@ -108,11 +108,14 @@ def init():
         raise ValueError("Multiple DFU devices found")
     __dev = devices[0]
 
-    # Claim DFU interface
-    usb.util.claim_interface(__dev, __DFU_INTERFACE)
+    try:
+        # Claim DFU interface
+        usb.util.claim_interface(__dev, __DFU_INTERFACE)
 
-    # Clear status
-    clr_status()
+        # Clear status
+        clr_status()
+    except usb.core.USBError as usbError:
+        raise ValueError("DFU: init failed", usbError.strerror)
 
 def clr_status():
     """Clears any error status (perhaps left over from a previous session)."""
