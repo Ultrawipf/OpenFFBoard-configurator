@@ -116,7 +116,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def compute_speed(self):
         """Compute all the factor from the hardware init."""
         enc_resolution = self.spinBox_encRes.value()
-        #wheel_range = self.spinBox_whRange.value()     Not used the init
         ffb_rate = self.spinBox_ffbRate.value()
         max_speed = self.spinBox_maxSpeed.value()
         min_speed_degree = self.spinBox_minDeg.value()

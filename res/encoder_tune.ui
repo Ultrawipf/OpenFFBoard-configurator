@@ -31,7 +31,7 @@
   <property name="windowTitle">
    <string>DFU Mode</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0">
+  <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0">
    <item row="0" column="0">
     <widget class="QGroupBox" name="groupbox_controls">
      <property name="title">
@@ -59,30 +59,13 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Wheel Range</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="spinBox_whRange">
-        <property name="maximum">
-         <number>1080</number>
-        </property>
-        <property name="value">
-         <number>900</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>FFB Rate</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="1" column="1">
        <widget class="QSpinBox" name="spinBox_ffbRate">
         <property name="maximum">
          <number>1000</number>
@@ -141,7 +124,7 @@
          <number>300</number>
         </property>
         <property name="value">
-         <number>25</number>
+         <number>135</number>
         </property>
        </widget>
       </item>
@@ -483,11 +466,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-style:italic;&quot;&gt;Graph speed sensor tweak : encoder output&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#00ffff;&quot;&gt;cyan&lt;/span&gt;&lt;span style=&quot; font-size:10pt; color:#0000ff;&quot;&gt; &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: raw value&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#ff40ff;&quot;&gt;magenta&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; : filtered value&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#00f900;&quot;&gt;green&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; : scaled raw value&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-style:italic;&quot;&gt;Graph effect's tweak: filter answer&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#ff3b30;&quot;&gt;red&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; : damper&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#ffff00;&quot;&gt;yellow&lt;/span&gt;&lt;span style=&quot; font-size:10pt; color:#800000;&quot;&gt; &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: friction&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#00f900;&quot;&gt;green&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; : scaled raw value&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -673,7 +652,6 @@ p, li { white-space: pre-wrap; }
  </customwidgets>
  <tabstops>
   <tabstop>spinBox_encRes</tabstop>
-  <tabstop>spinBox_whRange</tabstop>
   <tabstop>spinBox_ffbRate</tabstop>
   <tabstop>spinBox_maxSpeed</tabstop>
   <tabstop>spinBox_minDeg</tabstop>

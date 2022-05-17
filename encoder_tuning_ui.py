@@ -144,7 +144,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def compute_speed(self):
         """Compute all the factor from the hardware init."""
         enc_resolution = self.spinBox_encRes.value()
-        # wheel_range = self.spinBox_whRange.value()     Not used the init
         ffb_rate = self.spinBox_ffbRate.value()
         max_speed = self.spinBox_maxSpeed.value()
         min_speed_degree = self.spinBox_minDeg.value()
@@ -185,7 +184,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.nb_pulse_at_max_speed = (enc_resolution * max_speed) / (60.0 * ffb_rate)
         self.label_maxPulse.setText(f"{self.nb_pulse_at_max_speed:.4f}")
 
-        self.speed_scaler = (32767 / self.nb_pulse_at_max_speed) * 0.99
+        self.speed_scaler = 32767 / (max_speed * (360 / 60))
         self.doubleSpinBox_speedScaler.setValue(self.speed_scaler)
 
         # compute the acceleration factor
@@ -197,9 +196,10 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # init the randomize structure for graph display
         self.min_randomize_value.clear()
         i = 1
+        max_speed_deg_sec = round(max_speed * 360 / 60)
         while i <= 200:
             self.min_randomize_value.append(
-                random.randint(0, round(self.nb_pulse_at_max_speed))
+                random.randint(0, max_speed_deg_sec)
             )
             i += 1
         self.simulate_min_speed()
