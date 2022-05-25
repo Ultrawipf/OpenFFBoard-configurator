@@ -29,7 +29,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.active = 0
         self.rate = 0
         self.springgain = 4
-        self.dampergain = 2
+        self.dampergain = 8 # 2 before VMA tuning
         self.inertiagain = 2
         self.frictiongain = 2
 
