@@ -29,10 +29,10 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.pushButton_cansettings.clicked.connect(self.canOptions.exec)
 
         #self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
-        self.registerCallback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
-        self.registerCallback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
-        self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
-        self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
+        self.register_callback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
+        self.register_callback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
+        self.register_callback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
+        self.register_callback("vesc","offset",self.updateOffset,self.prefix,int)
 
         self.register_callback("vesc","errorflags",self.errorCb,self.prefix,int)
         self.register_callback("vesc","encrate",self.label_encoder_rate.setText,self.prefix,str)
