@@ -47,12 +47,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(val * 256/self.dampergain))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_damper,self.dampergain/256,"damper"))
+        self.horizontalSlider_damper.valueChanged.connect(self.display_speed_cutoff_damper)
 
         self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 256/self.frictiongain))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,self.frictiongain/256,"friction"))
 
         self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 256/self.inertiagain))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,self.inertiagain/256,"inertia"))
+        self.horizontalSlider_inertia.valueChanged.connect(self.display_accel_cutoff_inertia)
         
         self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.send_value("main","hidsendspd",str(val)))
 
@@ -152,6 +154,20 @@ class FfbUI(WidgetUI,CommunicationHandler):
             spinbox.blockSignals(False)
         if(command):
             self.send_value("fx",command,val)
+
+    def display_speed_cutoff_damper(self, gain):
+        """Update the max rpm speed cutoff"""
+        damper_fw_internal_scaler = 40
+        damper_speed = self.dampergain * damper_fw_internal_scaler * ((gain + 1) / 256)
+        max_speed = (32767 * 60 / 360) / damper_speed
+        self.label_rpm.setText(f"{max_speed:.1f}")
+        
+    def display_accel_cutoff_inertia(self, gain):
+        """Update the max accel cutoff for inertia"""
+        inertia_fw_internal_scaler = 10
+        inertia_accel = self.inertiagain * inertia_fw_internal_scaler * ((gain + 1) / 256)
+        max_accel = 32767 / inertia_accel
+        self.label_accel.setText(f"{max_accel:.0f}")
 
     def updateSpinboxAndSlider(self,val,spinbox : QSlider,slider,factor):
         slider.setValue(val)
