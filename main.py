@@ -15,7 +15,7 @@ from base_ui import CommunicationHandler
 from dark_palette import PALETTE_DARK
 
 # This GUIs version
-version = "1.8.6"
+version = "1.8.7"
 
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal

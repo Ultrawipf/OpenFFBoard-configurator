@@ -7,3 +7,6 @@
 - TMC graph follows system style
 - Windows darkmode support
 - Digital and analog readout
+
+v1.8.7:
+- Fixed crash when applying vesc settings
