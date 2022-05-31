@@ -202,14 +202,25 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         dump = config.loadDump()
         if not dump:
             return
-        for sector in dump["flash"]:
-            self.comms.sendValue(self, "sys", "flashraw", sector["val"], sector["addr"], 0)
-        # Message
-        msg = PyQt6.QtWidgets.QMessageBox(
-            PyQt6.QtWidgets.QMessageBox.Icon.Information,
-            "Restore flash dump",
-            "Uploaded flash dump.\nPlease reboot.",
-        )
+
+        if self.connected:
+            for sector in dump["flash"]:
+                self.comms.sendValue(self, "sys", "flashraw", sector["val"], sector["addr"], 0)
+            # Message
+            msg = PyQt6.QtWidgets.QMessageBox(
+                PyQt6.QtWidgets.QMessageBox.Icon.Information,
+                "Restore flash dump",
+                "Uploaded flash dump.\nPlease reboot.",
+            )
+        else:
+            # Message
+            msg = PyQt6.QtWidgets.QMessageBox(
+                PyQt6.QtWidgets.QMessageBox.Icon.Warning,
+                "Can't restaure flash dump",
+                "Please connect board firt.",
+            )
+
+
         msg.exec()
 
     def timeout_check_cb(self, port_checked):
