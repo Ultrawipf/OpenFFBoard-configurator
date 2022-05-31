@@ -31,7 +31,6 @@ class VescUI(WidgetUI,CommunicationHandler):
         #self.checkBox_useEncoder.stateChanged.connect(lambda val : self.sendValue("vesc","useencoder",(0 if val == 0 else 1),instance=self.prefix))
         self.registerCallback("vesc","offbcanid",self.spinBox_OFFB_can_id.setValue,self.prefix,int)
         self.registerCallback("vesc","vesccanid",self.spinBox_VESC_can_Id.setValue,self.prefix,int)
-        #self.registerCallback("vesc","canspd",self.updateCanSpd,self.prefix,int)
         self.registerCallback("vesc","useencoder",self.updateEncoderUI,self.prefix,int)
         self.registerCallback("vesc","offset",self.updateOffset,self.prefix,int)
 
@@ -130,10 +129,8 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.sendCommands("vesc",["vescstate","errorflags","voltage","pos","encrate","torque"],self.prefix)
  
     def apply(self):
-        spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
         OpenFFBoardCANId = str(self.spinBox_OFFB_can_id.value())
         VESCCANId = str(self.spinBox_VESC_can_Id.value())
-        #self.sendValue("vesc","canspd",spdPreset,instance=self.prefix)
         self.sendValue("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
         self.sendValue("vesc","vesccanid",VESCCANId,instance=self.prefix)
         self.sendValue("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)
