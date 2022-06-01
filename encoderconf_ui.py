@@ -18,7 +18,7 @@ class EncoderOptions(QGroupBox):
 
     def setType(self,id):
         layout = QVBoxLayout()
- 
+
         found = True
         self.setTitle("Encoder settings")
         if(id == 2): # local encoder
@@ -37,12 +37,13 @@ class EncoderOptions(QGroupBox):
             layout.addWidget(QLabel("No settings"))
 
         
-        #layout.setContentsMargins(0,0,0,0)
+        layout.setContentsMargins(0,0,0,0)
         if self.widget:
             layout.addWidget(self.widget)
             self.applyBtn = QPushButton("Apply")
             self.applyBtn.clicked.connect(self.widget.apply)
             footer = QHBoxLayout()
+            footer.setContentsMargins(0,0,0,0)
             footer.addStretch(5)
             footer.addWidget(self.applyBtn)
             footer.addStretch(5)
@@ -53,6 +54,7 @@ class EncoderOptions(QGroupBox):
 class EncoderOption(QWidget):
     def __init__(self,parent):
         super().__init__(parent)
+
     def apply(self):
         pass
 
@@ -80,6 +82,7 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
 
     def initUI(self):
         layout = QFormLayout()
+        layout.setContentsMargins(0,0,0,0)
 
         self.spinBox_cpr = QSpinBox()
         self.spinBox_cpr.setRange(0,0xffff)
@@ -105,6 +108,7 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
 
     def initUI(self):
         layout = QFormLayout()
+        layout.setContentsMargins(0,0,0,0)
 
         self.spinBox_cs = QSpinBox()
         self.spinBox_cs.setRange(1,3)
@@ -129,13 +133,15 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
 
     def initUI(self):
         layout = QFormLayout()
+        layout.setContentsMargins(0,0,0,0)
+
         self.spinBox_cs = QSpinBox()
-        self.spinBox_cs.setRange(1,3)
+        self.spinBox_cs.setRange(1,3)   
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
         layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("Bits"),self.spinBox_bits)
-        layout.addWidget(QLabel("Port is used exclusively!\nCS pins are not usable w. BISS"))
+        layout.addWidget(QLabel("Port is used exclusively! CS pins are not usable !"))
         self.setLayout(layout)
 
     def onshown(self):
