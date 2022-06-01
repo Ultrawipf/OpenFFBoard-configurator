@@ -5,17 +5,22 @@ Regroup all required classes to manage the encoder tuning for the FFB Engine.
 Module : encoder_tuning_ui
 Authors : vincent
 """
+from cmath import pi
 import random
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
+from numpy import sin
 import biquad
 import base_ui
 
 
 class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the UI to tune the encoder."""
+
+    NB_SAMPLE_NORMAL_GRAPH = 3000
+    NB_SAMPLE_DISPLAY_KEEP = 10
 
     def __init__(self, parent: "AdvancedTuningDialog" = None, axis_instance: int = 0):
         """Initialize the init with the dialog parent and the axisUI linked on the encoder."""
@@ -30,11 +35,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         self.spinBox_speedFreq.valueChanged.connect(self.simulate_min_speed)
         self.doubleSpinBox_speedQ.valueChanged.connect(self.simulate_min_speed)
-        self.doubleSpinBox_speedScaler.valueChanged.connect(self.simulate_min_speed)
 
         self.spinBox_accelFreq.valueChanged.connect(self.draw_accel_factor)
         self.doubleSpinBox_accelQ.valueChanged.connect(self.draw_accel_factor)
-        self.spinBox_accelScaler.valueChanged.connect(self.draw_accel_factor)
 
         self.register_callback(
             "axis",
@@ -52,13 +55,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         )
         self.register_callback(
             "axis",
-            "scaleSpeed",
-            self.doubleSpinBox_speedScaler.setValue,
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
             "filterAccel_freq",
             self.spinBox_accelFreq.setValue,
             self.axis_instance,
@@ -71,21 +67,13 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.axis_instance,
             int,
         )
-        self.register_callback(
-            "axis",
-            "scaleAccel",
-            self.spinBox_accelScaler.setValue,
-            self.axis_instance,
-            int,
-        )
 
         self.min_randomize_value = []
         self.min_speed_detectable = 0
         self.min_speed_wanted = 0
         self.average_sample_toread_min = 0
         self.nb_pulse_at_max_speed = 0
-        self.speed_scaler = 0
-        self.min_speed_rescale = 0
+        self.max_speed_deg_sec = 0
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -117,26 +105,18 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # speed save
         freq = self.spinBox_speedFreq.value()
         q_factor = self.doubleSpinBox_speedQ.value()
-        speedscaler = self.doubleSpinBox_speedScaler.value()
 
         self.send_value("axis", "filterSpeed_freq", freq, instance=self.axis_instance)
         self.send_value(
             "axis", "filterSpeed_q", round(q_factor * 100), instance=self.axis_instance
         )
-        self.send_value(
-            "axis", "scaleSpeed", round(speedscaler), instance=self.axis_instance
-        )
 
         # accel save
         freq = self.spinBox_accelFreq.value()
         q_factor = self.doubleSpinBox_accelQ.value()
-        speedscaler = self.spinBox_accelScaler.value()
         self.send_value("axis", "filterAccel_freq", freq, instance=self.axis_instance)
         self.send_value(
             "axis", "filterAccel_q", round(q_factor * 100), instance=self.axis_instance
-        )
-        self.send_value(
-            "axis", "scaleAccel", speedscaler, instance=self.axis_instance
         )
         self.log("Axis: tuning sent to board, click on save flash")
         self.parent_dlg.close()
@@ -180,27 +160,27 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             # if freq = 100, smoothing is on 9 samples , max value is 0,243
             # TODO: brainstorm on how have to be the filtering
 
-        # compute the scaler for max speed
+        # compute the range for max speed
         self.nb_pulse_at_max_speed = (enc_resolution * max_speed) / (60.0 * ffb_rate)
         self.label_maxPulse.setText(f"{self.nb_pulse_at_max_speed:.4f}")
-
-        self.speed_scaler = 32767 / (max_speed * (360 / 60))
-        self.doubleSpinBox_speedScaler.setValue(self.speed_scaler)
 
         # compute the acceleration factor
         #VMA check if keep the autotunning
         #self.spinBox_accelFreq.setValue(self.spinBox_speedFreq.value() * 10)
         #self.doubleSpinBox_accelQ.setValue(self.doubleSpinBox_speedQ.value())
-        self.spinBox_accelScaler.setValue(self.doubleSpinBox_speedScaler.value())
 
         # init the randomize structure for graph display
         self.min_randomize_value.clear()
         i = 1
-        max_speed_deg_sec = round(max_speed * 360 / 60)
-        while i <= 200:
-            self.min_randomize_value.append(
-                random.randint(0, max_speed_deg_sec)
-            )
+        self.max_speed_deg_sec = round(max_speed * 360 / 60)
+        nb_pulse_max = round(self.nb_pulse_at_max_speed)
+        scale = self.max_speed_deg_sec / nb_pulse_max
+        while i <= AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH:
+            #rand = random.randint(0, nb_pulse_max)
+            #rand = round(random.expovariate(6) * nb_pulse_max)
+            #rand = round(nb_pulse_max * abs(random.vonmisesvariate(0, 8) / (2 * pi)))
+            rand = round(sin(i/200) * random.triangular(-nb_pulse_max, nb_pulse_max, 0))
+            self.min_randomize_value.append(rand * scale)
             i += 1
         self.simulate_min_speed()
 
@@ -208,12 +188,10 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Restore the default min speed."""
         self.spinBox_speedFreq.setValue(25.0)
         self.doubleSpinBox_speedQ.setValue(0.6)
-        self.doubleSpinBox_speedScaler.setValue(40)
         self.spinBox_accelFreq.setValue(120)
         self.doubleSpinBox_accelQ.setValue(0.3)
-        self.spinBox_accelScaler.setValue(40)
         self.draw_simulation_min()
-        self.draw_min_random()
+        self.draw_speed_random()
         self.draw_accel_factor()
 
     def simulate_min_speed(self):
@@ -221,7 +199,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # if self.label_sampleAvg.text() == '0':
         #    self.computeSpeed()
         self.draw_simulation_min()
-        self.draw_min_random()
+        self.draw_speed_random()
         self.draw_accel_factor()
 
     def draw_simulation_min(self):
@@ -268,7 +246,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         chart_y_axis_forces = PyQt6.QtCharts.QValueAxis()
         chart_y_axis_forces.setMin(0)
         chart_y_axis_forces.setLabelsFont(font)
-        chart_y_axis_forces.setTitleText("Min Speed")
+        chart_y_axis_forces.setTitleText("Min Speed (rpm)")
         chart_y_axis_forces.setGridLineColor(
             PyQt6.QtGui.QColor(
                 PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
@@ -351,9 +329,8 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             q_line.append(i, value)
         chart_y_axis_forces.setMax(maxy * 1.01)
 
-    def draw_min_random(self):
+    def draw_speed_random(self):
         """Draw the simulation on a random stream and apply filter."""
-        scaler = round(self.doubleSpinBox_speedScaler.value())
         freq = self.spinBox_speedFreq.value()
         q_factor = self.doubleSpinBox_speedQ.value()
 
@@ -373,7 +350,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         font.setPixelSize(7)
 
         chart_x_axis = PyQt6.QtCharts.QValueAxis()
-        chart_x_axis.setMax(200)
+        chart_x_axis.setMax(AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH)
         chart_x_axis.setLabelsFont(font)
         chart_x_axis.setTitleText("Time")
         chart_x_axis.setGridLineColor(
@@ -392,9 +369,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         chart_y_axis_forces = PyQt6.QtCharts.QValueAxis()
         chart_y_axis_forces.setMin(0)
-        chart_y_axis_forces.setMax(32767)
+        chart_y_axis_forces.setMax(self.max_speed_deg_sec + 10)
         chart_y_axis_forces.setLabelsFont(font)
-        chart_y_axis_forces.setTitleText("Max Speed")
+        chart_y_axis_forces.setTitleText("Speed (°/s)")
         chart_y_axis_forces.setGridLineColor(
             PyQt6.QtGui.QColor(
                 PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
@@ -447,33 +424,20 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         local_filter = biquad.Biquad(0, freq / 1000.0, q_factor, 0)
         local_filter.calcBiquad()
 
-        q_line3 = PyQt6.QtCharts.QLineSeries()
-        q_line3.setColor(
-            PyQt6.QtGui.QColor(  # cyan
-                0,
-                PyQt6.QtWidgets.QApplication.instance()
-                .palette()
-                .dark()
-                .color()
-                .green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
-        )
-        chart.addSeries(q_line3)
-        q_line3.attachAxis(chart_y_axis_forces)
-        q_line3.attachAxis(chart_x_axis)
-
-        for i in range(200):
-            q_line.append(i, self.min_randomize_value[i] * scaler)
-            q_line2.append(
-                i, local_filter.compute(self.min_randomize_value[i] * scaler)
-            )
-            q_line3.append(i, self.min_randomize_value[i])
+        max_filter = 0
+        max_value = 0
+        for i in range(AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH):
+            filter_result = local_filter.compute(self.min_randomize_value[i])
+            max_filter = max(max_filter, filter_result)
+            max_value = max(max_value, self.min_randomize_value[i])
+            if i % AdvancedTweakUI.NB_SAMPLE_DISPLAY_KEEP == 0:
+                q_line.append(i, max_value)
+                q_line2.append(i, max_filter)
+                max_value = 0
+                max_filter = 0
 
     def draw_accel_factor(self):
         """Draw the simulation for the accel on the speed random stream and apply filter."""
-        scaler = self.spinBox_accelScaler.value()
         freq = self.spinBox_accelFreq.value()
         q_factor = self.doubleSpinBox_accelQ.value()
 
@@ -493,7 +457,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         font.setPixelSize(7)
 
         chart_x_axis = PyQt6.QtCharts.QValueAxis()
-        chart_x_axis.setMax(200)
+        chart_x_axis.setMax(AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH)
         chart_x_axis.setLabelsFont(font)
         chart_x_axis.setTitleText("Time")
         chart_x_axis.setGridLineColor(
@@ -511,10 +475,11 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         chart.addAxis(chart_x_axis, PyQt6.QtCore.Qt.AlignmentFlag.AlignBottom)
 
         chart_y_axis_forces = PyQt6.QtCharts.QValueAxis()
-        chart_y_axis_forces.setMin(-32767)
-        chart_y_axis_forces.setMax(32767)
+        max_range = (self.max_speed_deg_sec + 1) * 1000
+        chart_y_axis_forces.setMin(-max_range)
+        chart_y_axis_forces.setMax(max_range)
         chart_y_axis_forces.setLabelsFont(font)
-        chart_y_axis_forces.setTitleText("Max Speed")
+        chart_y_axis_forces.setTitleText("Accel (°/s2)")
         chart_y_axis_forces.setGridLineColor(
             PyQt6.QtGui.QColor(
                 PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
@@ -567,32 +532,16 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         local_filter = biquad.Biquad(0, freq / 1000.0, q_factor, 0)
         local_filter.calcBiquad()
 
-        q_line3 = PyQt6.QtCharts.QLineSeries()
-        q_line3.setColor(
-            PyQt6.QtGui.QColor(  # cyan
-                0,
-                PyQt6.QtWidgets.QApplication.instance()
-                .palette()
-                .dark()
-                .color()
-                .green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
-        )
-        chart.addSeries(q_line3)
-        q_line3.attachAxis(chart_y_axis_forces)
-        q_line3.attachAxis(chart_x_axis)
-
-        for i in range(200):
+        for i in range(AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH):
             if i > 1:
-                data = self.min_randomize_value[i] - self.min_randomize_value[i - 1]
+                data = self.min_randomize_value[i] - self.min_randomize_value[i - 1] 
             else:
                 data = 0
-            q_line.append(i, data * scaler)
-            q_line2.append(i, local_filter.compute(data) * scaler)
-            q_line3.append(i, data)
-
+            data = data * 1000
+            filter_response = local_filter.compute(data)
+            if i % AdvancedTweakUI.NB_SAMPLE_DISPLAY_KEEP == 0:
+                q_line.append(i, data)
+                q_line2.append(i, filter_response)
 
 class AdvancedTuningDialog(PyQt6.QtWidgets.QDialog):
     """Manage the dialog box for the encoder UI.

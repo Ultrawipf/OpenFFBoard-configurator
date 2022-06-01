@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>885</width>
-    <height>688</height>
+    <height>707</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -91,13 +91,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Max speed</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
        <widget class="QSpinBox" name="spinBox_minSec">
         <property name="maximum">
@@ -118,13 +111,20 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Max speed</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QSpinBox" name="spinBox_maxSpeed">
         <property name="maximum">
          <number>300</number>
         </property>
         <property name="value">
-         <number>135</number>
+         <number>60</number>
         </property>
        </widget>
       </item>
@@ -149,7 +149,7 @@
      <property name="title">
       <string>Speed sensor tuning</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0" columnstretch="0,0">
+     <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,1" columnstretch="0,0">
       <property name="leftMargin">
        <number>5</number>
       </property>
@@ -330,10 +330,22 @@
       </item>
       <item row="1" column="0">
        <widget class="QGroupBox" name="groupBox_5">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>165</height>
+         </size>
+        </property>
         <property name="title">
          <string>Maximum speed settings</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_5" columnminimumwidth="140,60,60">
+        <layout class="QGridLayout" name="gridLayout_5">
          <property name="sizeConstraint">
           <enum>QLayout::SetDefaultConstraint</enum>
          </property>
@@ -346,27 +358,10 @@
          <property name="bottomMargin">
           <number>12</number>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>Encoder's pulse read</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_11">
            <property name="text">
             <string>Enc pulse</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Speed scaler required&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -386,29 +381,13 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_speedScaler">
-           <property name="decimals">
-            <number>0</number>
-           </property>
-           <property name="minimum">
-            <double>1.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>10000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>40.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
+         <item row="1" column="0">
           <spacer name="verticalSpacer">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
+            <enum>QSizePolicy::MinimumExpanding</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -417,6 +396,13 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Encoder's pulse read</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -556,42 +542,13 @@ p, li { white-space: pre-wrap; }
          <property name="bottomMargin">
           <number>5</number>
          </property>
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Freq.&lt;br/&gt;&lt;/span&gt;(from speed factor)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QSpinBox" name="spinBox_accelScaler">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimum">
-            <number>1</number>
-           </property>
+         <item row="0" column="2">
+          <widget class="QSpinBox" name="spinBox_accelFreq">
            <property name="maximum">
-            <number>10000</number>
+            <number>500</number>
            </property>
            <property name="value">
-            <number>40</number>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Acceleration scaler&lt;/span&gt;&lt;br/&gt;(based on speed scaler factor)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <number>120</number>
            </property>
           </widget>
          </item>
@@ -611,13 +568,13 @@ p, li { white-space: pre-wrap; }
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QSpinBox" name="spinBox_accelFreq">
-           <property name="maximum">
-            <number>500</number>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Freq.&lt;br/&gt;&lt;/span&gt;(from speed factor)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
-           <property name="value">
-            <number>120</number>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -630,6 +587,19 @@ p, li { white-space: pre-wrap; }
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
+         </item>
+         <item row="2" column="0" colspan="3">
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -661,7 +631,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>pushButton_restoreDefault</tabstop>
   <tabstop>spinBox_speedFreq</tabstop>
   <tabstop>doubleSpinBox_speedQ</tabstop>
-  <tabstop>doubleSpinBox_speedScaler</tabstop>
   <tabstop>textBrowser</tabstop>
  </tabstops>
  <resources/>
