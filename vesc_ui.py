@@ -131,9 +131,9 @@ class VescUI(WidgetUI,CommunicationHandler):
     def apply(self):
         OpenFFBoardCANId = str(self.spinBox_OFFB_can_id.value())
         VESCCANId = str(self.spinBox_VESC_can_Id.value())
-        self.sendValue("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
-        self.sendValue("vesc","vesccanid",VESCCANId,instance=self.prefix)
-        self.sendValue("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)
+        self.send_value("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
+        self.send_value("vesc","vesccanid",VESCCANId,instance=self.prefix)
+        self.send_value("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)
         self.initUi() # Update UI
     
     def manualEncPosRead(self):
