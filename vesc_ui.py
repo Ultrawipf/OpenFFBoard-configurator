@@ -134,7 +134,7 @@ class VescUI(WidgetUI,CommunicationHandler):
         self.send_value("vesc","offbcanid",OpenFFBoardCANId,instance=self.prefix)
         self.send_value("vesc","vesccanid",VESCCANId,instance=self.prefix)
         self.send_value("vesc","useencoder",(1 if self.checkBox_useEncoder.isChecked() else 0),instance=self.prefix)
-        self.initUi() # Update UI
+        self.init_ui() # Update UI
     
     def manualEncPosRead(self):
         self.send_command("vesc","forceposread",instance=self.prefix)
