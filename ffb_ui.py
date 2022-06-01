@@ -218,6 +218,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
             return
         types = int(types)
         layout = QGridLayout()
+        layout.setVerticalSpacing(0)
+        layout.setContentsMargins(12,5,12,5)
         #clear
         for b in self.buttonconfbuttons:
             SerialComms.removeCallbacks(b[1])
