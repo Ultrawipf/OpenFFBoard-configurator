@@ -315,6 +315,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
+                    self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate)
+                    self.wrapper_status_bar.update_ffb_block_display(True)
                 elif classe_active["id"] == 0xA01:
                     classe = axis_ui.AxisUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
@@ -568,6 +570,10 @@ class WrapperStatusBar(base_ui.WidgetUI):
         self.icon_ko = icon_ko.pixmap(18, 18)
         self.label_cnx.setPixmap(self.icon_ko)
 
+        self.label_ffbcnx.setPixmap(self.icon_ko)
+        self.label_ffbfreq.setText("")
+        self.update_ffb_block_display(False)
+
         self.serial_connected(False)
 
         self.logger.register_to_logger(self.append_log)
@@ -587,6 +593,27 @@ class WrapperStatusBar(base_ui.WidgetUI):
             else:
                 self.label_memfree.setText(F"{use}k")
 
+    def update_ffb_block_display(self, visibility:bool):
+        """Show the ffb block in the status block."""
+        if visibility:
+            self.line_ffb.show()
+            self.label_ffbcnx.show()
+            self.label_ffb.show()
+            self.label_ffbfreq.show()
+        else:
+            self.line_ffb.hide()
+            self.label_ffbcnx.hide()
+            self.label_ffb.hide()
+            self.label_ffbfreq.hide()
+
+    def update_ffb_rate(self, event):
+        status, rate = event
+        if status == 1:
+            self.label_ffbcnx.setPixmap(self.icon_ok)
+        else :
+            self.label_ffbcnx.setPixmap(self.icon_ko)
+        self.label_ffbfreq.setText(F"{rate} hz")
+
     def update_status(self, msg):
         """Change the status message in the bottom right."""
         self.label_status.setText(msg)
@@ -597,6 +624,7 @@ class WrapperStatusBar(base_ui.WidgetUI):
             self.label_cnx.setPixmap(self.icon_ok)
         else:
             self.label_cnx.setPixmap(self.icon_ko)
+            self.update_ffb_block_display(False)
 
     def append_log(self, message):
         """Display the last log message in the status bar."""
