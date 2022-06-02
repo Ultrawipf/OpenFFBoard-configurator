@@ -35,13 +35,6 @@
    <property name="horizontalSpacing">
     <number>3</number>
    </property>
-   <item row="0" column="1">
-    <widget class="QLabel" name="label_memfree">
-     <property name="text">
-      <string>-</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="3">
     <widget class="QLabel" name="label_log">
      <property name="text">
@@ -55,24 +48,17 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
+   <item row="0" column="9">
+    <widget class="QLabel" name="label_ffbcnx">
      <property name="text">
-      <string>Free rtos RAM :</string>
+      <string>ffbcnx</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <widget class="Line" name="line_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="6">
-    <widget class="QLabel" name="label_cnx">
+   <item row="0" column="10">
+    <widget class="QLabel" name="label_ffb">
      <property name="text">
-      <string>cnx</string>
+      <string>FFB</string>
      </property>
     </widget>
    </item>
@@ -85,6 +71,20 @@
    </item>
    <item row="0" column="5">
     <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="label_memfree">
+     <property name="text">
+      <string>-</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="Line" name="line_3">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
@@ -105,6 +105,34 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="0" column="11">
+    <widget class="QLabel" name="label_ffbfreq">
+     <property name="text">
+      <string>ffbfreq</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="6">
+    <widget class="QLabel" name="label_cnx">
+     <property name="text">
+      <string>cnx</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Free rtos RAM :</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="8">
+    <widget class="Line" name="line_ffb">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

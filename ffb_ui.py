@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget,QToolButton
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
 from helper import res_path,classlistToIds,splitListReply,throttle
-from PyQt6.QtCore import QTimer,QEvent
+from PyQt6.QtCore import QTimer,QEvent, pyqtSignal
 import main
 import buttonconf_ui
 import analogconf_ui
@@ -12,6 +12,8 @@ from base_ui import WidgetUI,CommunicationHandler
 from serial_comms import SerialComms
 
 class FfbUI(WidgetUI,CommunicationHandler):
+
+    ffb_rate_event = pyqtSignal(list)
 
     def __init__(self, main : 'main.MainUi'=None,  title = "FFB main"):
         WidgetUI.__init__(self, main,'ffbclass.ui')
@@ -121,22 +123,12 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def hideEvent(self,event):
         self.timer.stop()
 
-    def updateFfbRateLabel(self):
-        if self.active == 1:
-            act = "FFB ON"
-        elif self.active == -1:
-            act = "EMERGENCY STOP"
-        else:
-            act = "FFB OFF"
-        self.label_HIDrate.setText(str(self.rate)+"Hz" + " (" + act + ")")
-
     def ffbActiveCB(self,active):
         self.active = active
-        self.updateFfbRateLabel()
+        self.ffb_rate_event.emit((self.active,self.rate))
         
     def ffbRateCB(self,rate):
         self.rate = rate
-        #self.updateFfbRateLabel()
  
     def updateTimer(self):
         try:
