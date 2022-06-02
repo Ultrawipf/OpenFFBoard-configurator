@@ -6,11 +6,11 @@ Module : encoder_tuning_ui
 Authors : vincent
 """
 import random
+import math
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
-import math
 import biquad
 import base_ui
 
