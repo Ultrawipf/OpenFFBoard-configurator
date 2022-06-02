@@ -43,10 +43,10 @@
       <item row="2" column="1">
        <widget class="QLabel" name="label_state">
         <property name="styleSheet">
-         <string notr="true">QLabel {
-	background : #FFFFFF;
-	border: 1px solid #DDDDDD;
-}</string>
+         <string notr="true"/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Panel</enum>
         </property>
         <property name="text">
          <string>0</string>
@@ -56,10 +56,10 @@
       <item row="8" column="1">
        <widget class="QLabel" name="label_encoder_rate">
         <property name="styleSheet">
-         <string notr="true">QLabel {
-	background : #FFFFFF;
-	border: 1px solid #DDDDDD;
-}</string>
+         <string notr="true"/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Panel</enum>
         </property>
         <property name="text">
          <string>0</string>
@@ -69,10 +69,10 @@
       <item row="3" column="1">
        <widget class="QLabel" name="label_errors">
         <property name="styleSheet">
-         <string notr="true">QLabel {
-	background : #FFFFFF;
-	border: 1px solid #DDDDDD;
-}</string>
+         <string notr="true"/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Panel</enum>
         </property>
         <property name="text">
          <string>0</string>
@@ -99,10 +99,10 @@
       <item row="4" column="1">
        <widget class="QLabel" name="label_voltage">
         <property name="styleSheet">
-         <string notr="true">QLabel {
-	background : #FFFFFF;
-	border: 1px solid #DDDDDD;
-}</string>
+         <string notr="true"/>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Panel</enum>
         </property>
         <property name="text">
          <string>0</string>
@@ -278,7 +278,6 @@
          <string notr="true">QSlider::groove:horizontal {
     border: 1px solid #DDDDDD;
     height: 16px;
-    background-color: #EEEEEE;
 }
 
 QSlider::handle:horizontal {
@@ -322,7 +321,6 @@ QSlider::handle:horizontal {
        <widget class="QProgressBar" name="progressBar_torquepos">
         <property name="styleSheet">
          <string notr="true">QProgressBar{
-	background-color: #EEEEEE;
    	border-top: 1px solid #DDDDDD;
 	border-bottom: 1px solid #DDDDDD;
 	border-right: 1px solid #DDDDDD;
@@ -358,7 +356,6 @@ QProgressBar::chunk {
        <widget class="QProgressBar" name="progressBar_torqueneg">
         <property name="styleSheet">
          <string notr="true">QProgressBar{
-	background-color: #EEEEEE;
    	border-top: 1px solid #DDDDDD;
 	border-bottom: 1px solid #DDDDDD;
 	border-left: 1px solid #DDDDDD;
