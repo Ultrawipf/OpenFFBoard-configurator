@@ -5,13 +5,12 @@ Regroup all required classes to manage the encoder tuning for the FFB Engine.
 Module : encoder_tuning_ui
 Authors : vincent
 """
-from cmath import pi
 import random
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
-from numpy import sin
+import math
 import biquad
 import base_ui
 
@@ -176,10 +175,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         nb_pulse_max = round(self.nb_pulse_at_max_speed)
         scale = self.max_speed_deg_sec / nb_pulse_max
         while i <= AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH:
-            #rand = random.randint(0, nb_pulse_max)
-            #rand = round(random.expovariate(6) * nb_pulse_max)
-            #rand = round(nb_pulse_max * abs(random.vonmisesvariate(0, 8) / (2 * pi)))
-            rand = round(sin(i/200) * random.triangular(-nb_pulse_max, nb_pulse_max, 0))
+            rand = round(math.sin(i/200) * random.triangular(-nb_pulse_max, nb_pulse_max, 0))
             self.min_randomize_value.append(rand * scale)
             i += 1
         self.simulate_min_speed()
