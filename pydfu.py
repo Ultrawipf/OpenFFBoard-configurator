@@ -116,6 +116,8 @@ def init():
         clr_status()
     except usb.core.USBError as usbError:
         raise ValueError("DFU: init failed", usbError.strerror)
+    except NotImplementedError:
+        raise ValueError("DFU: init failed", "WinUSB driver may not be installed")
 
 def clr_status():
     """Clears any error status (perhaps left over from a previous session)."""
