@@ -1,1 +1,1 @@
-- Added dfu updater winusb error handling
+- Added analog filter option

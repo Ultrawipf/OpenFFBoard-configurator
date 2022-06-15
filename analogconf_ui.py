@@ -45,6 +45,8 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         layout = QVBoxLayout()
         self.autorangeBox = QCheckBox("Autorange")
         layout.addWidget(self.autorangeBox)
+        self.filterBox = QCheckBox("Lowpass filters")
+        layout.addWidget(self.filterBox)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -62,6 +64,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
     def readValues(self):
         self.getValueAsync("apin","pins",self.createAinButtons,0,conversion=int)
         self.getValueAsync("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
+        self.getValueAsync("apin","filter",self.filterBox.setChecked,0,conversion=int)
 
     def createAinButtons(self,axes):
         self.axes = axes
@@ -112,6 +115,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.axismask = mask
         self.sendValue("apin","mask",mask)
         self.sendValue("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
+        self.sendValue("apin","filter",1 if self.filterBox.isChecked() else 0)
 
     def onshown(self):
         self.registerCallback("apin","values",self.valueCb,self.prefix,str)
