@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QGroupBox,QProgressBar
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
 from PyQt6 import uic
 from PyQt6.QtCore import QTimer
 import main
@@ -19,6 +19,8 @@ class AnalogOptionsDialog(OptionsDialog):
             self.dialog = (AnalogInputConf(name,self.main))
         if(id == 1): # can analog
             self.dialog = (CANAnalogConf(name,self.main))
+        if(id == 2): # ADS111X
+            self.dialog = (ADS111XAnalogConf(name,self.main))
 
         OptionsDialog.__init__(self, self.dialog,main)
 
@@ -191,3 +193,61 @@ class CANAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
 
         
  
+class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
+
+    def __init__(self,name,main):
+        self.main = main
+        OptionsDialogGroupBox.__init__(self,name,main)
+        CommunicationHandler.__init__(self)
+
+
+    def initUI(self):
+        #vbox = QVBoxLayout()
+        layout = QFormLayout()
+
+        self.numAinBox = QSpinBox()
+        self.numAinBox.setMinimum(1)
+        self.numAinBox.setMaximum(4)
+        
+        layout.addRow("Number of inputs",self.numAinBox)
+        #self.numAinBox.valueChanged.connect(self.amountChanged)
+
+        self.diffCb = QCheckBox("Differential mode")
+        #layout.addRow(self.diffCb)
+        self.diffCb.stateChanged.connect(lambda c : self.numAinBox.setMaximum(2 if c else 4))
+
+        self.gainCombobox = QComboBox()
+        #vbox.addWidget(QLabel("Gain"))
+        self.gainCombobox.addItems(["2/3x (+/- 6.144V)","1x (+/- 4.096V)","2x (+/- 2.048V)","4x (+/- 1.024V)","8x (+/- 0.512V)","16x (+/- 0.256V)"])
+        layout.addRow("Gain:",self.gainCombobox)
+
+        self.samplerateCombobox = QComboBox()
+        self.samplerateCombobox.addItems(["8 SPS","16 SPS","32 SPS","128 SPS","250 SPS","475 SPS","860 SPS"])
+        layout.addRow("Samplerate:",self.samplerateCombobox)
+
+        self.portsettingsbutton = QPushButton("I2C settings")
+        self.i2cOptions = portconf_ui.I2COptionsDialog(0,"I2C",self.main)
+        self.portsettingsbutton.clicked.connect(self.i2cOptions.exec)
+        layout.addRow(self.diffCb,self.portsettingsbutton)
+
+        layout.addRow(QLabel("Mapping in differential mode:\nChannel 1: IN0 = p IN1 = n\nChannel 2: IN2 = p IN3 = n"))
+        layout.addRow(QLabel("I²C address is fixed to primary address\n(ADDR pin to GND)"))
+        
+        self.setLayout(layout)
+
+    def onclose(self):
+        self.removeCallbacks()
+
+
+    def apply(self):
+        self.sendValue("adsAnalog","diff",1 if self.diffCb.isChecked() else 0)
+        self.sendValue("adsAnalog","inputs",self.numAinBox.value())
+        self.sendValue("adsAnalog","gain",self.gainCombobox.currentIndex())
+        self.sendValue("adsAnalog","rate",self.samplerateCombobox.currentIndex())
+        
+    
+    def readValues(self):
+        self.getValueAsync("adsAnalog","gain",self.gainCombobox.setCurrentIndex,0,conversion=int)
+        self.getValueAsync("adsAnalog","rate",self.samplerateCombobox.setCurrentIndex,0,conversion=int)
+        self.getValueAsync("adsAnalog","diff",self.diffCb.setChecked,0,conversion=int)
+        self.getValueAsync("adsAnalog","inputs",self.numAinBox.setValue,0,conversion=int)
