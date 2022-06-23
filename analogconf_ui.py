@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPush
 from PyQt6 import uic
 from PyQt6.QtCore import QTimer
 import main
-from helper import res_path,classlistToIds
+from helper import res_path,classlistToIds,updateListComboBox
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from base_ui import CommunicationHandler
 import portconf_ui
@@ -202,7 +202,6 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
 
 
     def initUI(self):
-        #vbox = QVBoxLayout()
         layout = QFormLayout()
 
         self.numAinBox = QSpinBox()
@@ -210,19 +209,16 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.numAinBox.setMaximum(4)
         
         layout.addRow("Number of inputs",self.numAinBox)
-        #self.numAinBox.valueChanged.connect(self.amountChanged)
-
+ 
         self.diffCb = QCheckBox("Differential mode")
-        #layout.addRow(self.diffCb)
         self.diffCb.stateChanged.connect(lambda c : self.numAinBox.setMaximum(2 if c else 4))
 
         self.gainCombobox = QComboBox()
-        #vbox.addWidget(QLabel("Gain"))
-        self.gainCombobox.addItems(["2/3x (+/- 6.144V)","1x (+/- 4.096V)","2x (+/- 2.048V)","4x (+/- 1.024V)","8x (+/- 0.512V)","16x (+/- 0.256V)"])
-        layout.addRow("Gain:",self.gainCombobox)
+        #self.gainCombobox.addItems(["2/3x (+/- 6.144V)","1x (+/- 4.096V)","2x (+/- 2.048V)","4x (+/- 1.024V)","8x (+/- 0.512V)","16x (+/- 0.256V)"])
+        layout.addRow("Scale:",self.gainCombobox)
 
         self.samplerateCombobox = QComboBox()
-        self.samplerateCombobox.addItems(["8 SPS","16 SPS","32 SPS","128 SPS","250 SPS","475 SPS","860 SPS"])
+        #self.samplerateCombobox.addItems(["8 SPS","16 SPS","32 SPS","64 SPS","128 SPS","250 SPS","475 SPS","860 SPS"])
         layout.addRow("Samplerate:",self.samplerateCombobox)
 
         self.portsettingsbutton = QPushButton("I2C settings")
@@ -242,11 +238,14 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
     def apply(self):
         self.sendValue("adsAnalog","diff",1 if self.diffCb.isChecked() else 0)
         self.sendValue("adsAnalog","inputs",self.numAinBox.value())
-        self.sendValue("adsAnalog","gain",self.gainCombobox.currentIndex())
-        self.sendValue("adsAnalog","rate",self.samplerateCombobox.currentIndex())
+        self.sendValue("adsAnalog","gain",int(self.gainCombobox.currentData()))
+        self.sendValue("adsAnalog","rate",int(self.samplerateCombobox.currentData()))
         
     
     def readValues(self):
+        self.getValueAsync("adsAnalog","gain",lambda d : updateListComboBox(self.gainCombobox,d),0,typechar='!')
+        self.getValueAsync("adsAnalog","rate",lambda d : updateListComboBox(self.samplerateCombobox,d),0,typechar='!')
+
         self.getValueAsync("adsAnalog","gain",self.gainCombobox.setCurrentIndex,0,conversion=int)
         self.getValueAsync("adsAnalog","rate",self.samplerateCombobox.setCurrentIndex,0,conversion=int)
         self.getValueAsync("adsAnalog","diff",self.diffCb.setChecked,0,conversion=int)
