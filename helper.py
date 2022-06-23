@@ -37,6 +37,19 @@ def updateClassComboBox(combobox,ids,classes,selected = None):
     if(selected in ids and combobox.currentIndex() != ids[selected][0]):
         combobox.setCurrentIndex(ids[selected][0])
 
+# Populates a combobox with entries formatted as "Entrylabel<datasep>data<entrysep>..."
+def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None):
+    combobox.clear()
+    if lookup:
+        lookup.clear()
+    i = 0
+    for s in reply.split(entrySep):
+        e = s.split(dataSep)
+        combobox.addItem(e[0],e[1])
+        if lookup:
+            lookup[e[1]] = i
+        i += 1
+
 def splitListReply(reply,itemdelim = ':', entrydelim = '\n'):
     #for line in reply.split(entrydelim):
     return [ line.split(itemdelim) for line in reply.split(entrydelim) ]
