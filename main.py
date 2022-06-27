@@ -49,7 +49,7 @@ VERSION = "1.8.6"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.8.5"
+MIN_FW = "1.9.1"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""

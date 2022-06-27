@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>885</width>
-    <height>707</height>
+    <width>871</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,122 +32,10 @@
    <string>DFU Mode</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0">
-   <item row="0" column="0">
-    <widget class="QGroupBox" name="groupbox_controls">
-     <property name="title">
-      <string>Encoder</string>
-     </property>
-     <layout class="QFormLayout" name="formLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>Encoder resolution</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="spinBox_encRes">
-        <property name="maximum">
-         <number>999999999</number>
-        </property>
-        <property name="value">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>FFB Rate</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="spinBox_ffbRate">
-        <property name="maximum">
-         <number>1000</number>
-        </property>
-        <property name="value">
-         <number>1000</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>My mouvement (hand)</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="0" colspan="2">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>Min speed    °  /   s</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSpinBox" name="spinBox_minSec">
-        <property name="maximum">
-         <number>60</number>
-        </property>
-        <property name="value">
-         <number>5</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QSpinBox" name="spinBox_minDeg">
-        <property name="maximum">
-         <number>360</number>
-        </property>
-        <property name="value">
-         <number>20</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Max speed</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="spinBox_maxSpeed">
-        <property name="maximum">
-         <number>300</number>
-        </property>
-        <property name="value">
-         <number>60</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="4">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="0" colspan="6">
+   <item row="2" column="0" colspan="5">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>Speed sensor tuning</string>
+      <string>Speed sensor simulator</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,1" columnstretch="0,0">
       <property name="leftMargin">
@@ -175,7 +63,7 @@
       <item row="0" column="0">
        <widget class="QGroupBox" name="groupBox_4">
         <property name="title">
-         <string>Minimum speed settings</string>
+         <string>Minimum speed simulation</string>
         </property>
         <layout class="QGridLayout" name="gridLayout">
          <property name="sizeConstraint">
@@ -192,8 +80,11 @@
          </property>
          <item row="3" column="0" colspan="2">
           <widget class="QLabel" name="label_20">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Speed Low Filter Freq&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Speed Filter Freq&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -257,6 +148,9 @@
          </item>
          <item row="4" column="2">
           <widget class="QDoubleSpinBox" name="doubleSpinBox_speedQ">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
            <property name="minimum">
             <double>0.100000000000000</double>
            </property>
@@ -301,7 +195,7 @@
          <item row="4" column="0" colspan="2">
           <widget class="QLabel" name="label_21">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Speed Low Filter Q&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Speed Filter Q&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -310,6 +204,12 @@
          </item>
          <item row="3" column="2">
           <widget class="QSpinBox" name="spinBox_speedFreq">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
            <property name="maximum">
             <number>500</number>
            </property>
@@ -343,7 +243,7 @@
          </size>
         </property>
         <property name="title">
-         <string>Maximum speed settings</string>
+         <string>Maximum speed simulation</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_5">
          <property name="sizeConstraint">
@@ -420,7 +320,290 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="5">
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupbox_controls">
+     <property name="title">
+      <string>Encoder / mouvement for graph sim.</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_8">
+      <item row="2" column="1" colspan="2">
+       <widget class="QSpinBox" name="spinBox_maxSpeed">
+        <property name="maximum">
+         <number>300</number>
+        </property>
+        <property name="value">
+         <number>60</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Max hand speed (rpm)</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QSpinBox" name="spinBox_ffbRate">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="spinBox_minDeg">
+        <property name="maximum">
+         <number>360</number>
+        </property>
+        <property name="value">
+         <number>20</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Min hand speed (°/s)</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>FFB Rate</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Encoder resolution</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QSpinBox" name="spinBox_minSec">
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>5</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QSpinBox" name="spinBox_encRes">
+        <property name="maximum">
+         <number>999999999</number>
+        </property>
+        <property name="value">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Encoder profile</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="3" column="0">
+       <widget class="QPushButton" name="pushButton_restoreDefault">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <italic>true</italic>
+         </font>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>Restore Default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QComboBox" name="comboBox_profileSelected">
+        <item>
+         <property name="text">
+          <string>Low resolution</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Medium resolution</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>High resolution</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="pushButton_compute">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>Suggest profile</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="5">
+    <widget class="QGroupBox" name="groupBox_6">
+     <property name="title">
+      <string>Acceleration sensor simulator</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6" rowstretch="0">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Maximum acceleration simulation</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_7">
+         <property name="leftMargin">
+          <number>5</number>
+         </property>
+         <property name="topMargin">
+          <number>5</number>
+         </property>
+         <property name="rightMargin">
+          <number>5</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item row="0" column="2">
+          <widget class="QSpinBox" name="spinBox_accelFreq">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="maximum">
+            <number>500</number>
+           </property>
+           <property name="value">
+            <number>120</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_accelQ">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>1.200000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.300000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Freq.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Q&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="3">
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QChartView" name="graph_accel" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>100</height>
+         </size>
+        </property>
+        <property name="baseSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="4">
     <widget class="QTextBrowser" name="textBrowser">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -456,160 +639,6 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QPushButton" name="pushButton_compute">
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>1. Tune Auto</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_save">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>2. Apply settings</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_loadSettings">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <italic>true</italic>
-        </font>
-       </property>
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>Reload settings</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_restoreDefault">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <italic>true</italic>
-        </font>
-       </property>
-       <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
-       </property>
-       <property name="text">
-        <string>Restore Default</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="3" column="0" colspan="6">
-    <widget class="QGroupBox" name="groupBox_6">
-     <property name="title">
-      <string>Acceleration sensor tuning</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_6" rowstretch="0">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetDefaultConstraint</enum>
-      </property>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Normalization and Filter</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_7">
-         <property name="leftMargin">
-          <number>5</number>
-         </property>
-         <property name="topMargin">
-          <number>5</number>
-         </property>
-         <property name="rightMargin">
-          <number>5</number>
-         </property>
-         <property name="bottomMargin">
-          <number>5</number>
-         </property>
-         <item row="0" column="2">
-          <widget class="QSpinBox" name="spinBox_accelFreq">
-           <property name="maximum">
-            <number>500</number>
-           </property>
-           <property name="value">
-            <number>120</number>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_accelQ">
-           <property name="minimum">
-            <double>0.100000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>1.200000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>0.010000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.300000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="2">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Freq.&lt;br/&gt;&lt;/span&gt;(from speed factor)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Suggested &lt;span style=&quot; font-weight:700;&quot;&gt;Accel. Filter Q&lt;br/&gt;&lt;/span&gt;(from speed factor)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="3">
-          <spacer name="verticalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QChartView" name="graph_accel" native="true"/>
-      </item>
-     </layout>
-    </widget>
-   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -623,12 +652,6 @@ p, li { white-space: pre-wrap; }
  <tabstops>
   <tabstop>spinBox_encRes</tabstop>
   <tabstop>spinBox_ffbRate</tabstop>
-  <tabstop>spinBox_maxSpeed</tabstop>
-  <tabstop>spinBox_minDeg</tabstop>
-  <tabstop>spinBox_minSec</tabstop>
-  <tabstop>pushButton_compute</tabstop>
-  <tabstop>pushButton_save</tabstop>
-  <tabstop>pushButton_restoreDefault</tabstop>
   <tabstop>spinBox_speedFreq</tabstop>
   <tabstop>doubleSpinBox_speedQ</tabstop>
   <tabstop>textBrowser</tabstop>

@@ -11,6 +11,7 @@ import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
+from matplotlib import scale
 import biquad
 import base_ui
 
@@ -27,16 +28,22 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         base_ui.CommunicationHandler.__init__(self)
         self.parent_dlg = parent
         self.axis_instance = axis_instance
-        self.pushButton_loadSettings.clicked.connect(self.load_settings)
-        self.pushButton_compute.clicked.connect(self.compute_speed)
+        self.pushButton_compute.clicked.connect(self.suggest_settings)
         self.pushButton_restoreDefault.clicked.connect(self.restore_default_min_speed)
-        self.pushButton_save.clicked.connect(self.save_settings)
 
+        self.comboBox_profileSelected.currentIndexChanged.connect(self.change_profile)
+
+        # When spinbox are setted, redraw the graph
         self.spinBox_speedFreq.valueChanged.connect(self.simulate_min_speed)
         self.doubleSpinBox_speedQ.valueChanged.connect(self.simulate_min_speed)
-
         self.spinBox_accelFreq.valueChanged.connect(self.draw_accel_factor)
         self.doubleSpinBox_accelQ.valueChanged.connect(self.draw_accel_factor)
+
+        # Refresh UI on settings update
+        self.spinBox_encRes.valueChanged.connect(self.compute_speed)
+        self.spinBox_maxSpeed.valueChanged.connect(self.compute_speed)
+        self.spinBox_minDeg.valueChanged.connect(self.compute_speed)
+        self.spinBox_minSec.valueChanged.connect(self.compute_speed)
 
         self.register_callback(
             "axis",
@@ -66,6 +73,13 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.axis_instance,
             int,
         )
+        self.register_callback(
+            "axis",
+            "filterProfile_id",
+            self.received_profile,
+            self.axis_instance,
+            int,
+        )
 
         self.min_randomize_value = []
         self.min_speed_detectable = 0
@@ -73,6 +87,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.average_sample_toread_min = 0
         self.nb_pulse_at_max_speed = 0
         self.max_speed_deg_sec = 0
+        self.first_profile_id = -1
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -80,45 +95,47 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def showEvent(self, a0: PyQt6.QtGui.QShowEvent) -> None:  # pylint: disable=unused-argument, invalid-name
         """Show event, reload the settings and show the settings."""
-        self.load_settings()
+        self.load_profile()
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None:  # pylint: disable=unused-argument, invalid-name
         """Hide event, hide the dialog."""
+        self.log("Axis: closed tuning windows, click on save flash")
+        if self.first_profile_id != self.comboBox_profileSelected.currentIndex() :
+            msg = PyQt6.QtWidgets.QMessageBox(self)
+            msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Information)
+            msg.setText("Profile changed !\nDon't forget to save in flash.")
+            msg.exec()
         return super().hideEvent(a0)
 
-    def load_settings(self):
-        """Load the settings : compute the speed to init the UI and load data from board."""
+    def load_profile(self):
+        """Load the profile : compute the speed to init the UI and load data from board."""
         self.compute_speed()
+        self.send_command("axis", "filterProfile_id", self.axis_instance)
+
+    def received_profile(self, profile_idx):
+        """Change the combobox value when we received the profile value and load filter settings."""
+        self.comboBox_profileSelected.setCurrentIndex(profile_idx)
+        self.first_profile_id = profile_idx
+
+    def change_profile(self, idx):
+        """Called only when the profile change"""
+        self.send_value("axis","filterProfile_id", idx, instance = self.axis_instance)
+        
         self.send_commands(
             "axis",
-            ["filterSpeed_freq", "filterSpeed_q", "scaleSpeed",
-            "filterAccel_freq", "filterAccel_q", "scaleAccel"],
-            self.axis_instance,
-        )
-        self.send_command("fx", "frictionPctSpeedToRampup", self.axis_instance)
-
-    def save_settings(self):
-        """Save the data in the board."""
-
-        # speed save
-        freq = self.spinBox_speedFreq.value()
-        q_factor = self.doubleSpinBox_speedQ.value()
-
-        self.send_value("axis", "filterSpeed_freq", freq, instance=self.axis_instance)
-        self.send_value(
-            "axis", "filterSpeed_q", round(q_factor * 100), instance=self.axis_instance
+            ["filterSpeed_freq", "filterSpeed_q", "filterAccel_freq", "filterAccel_q"],
+            self.axis_instance
         )
 
-        # accel save
-        freq = self.spinBox_accelFreq.value()
-        q_factor = self.doubleSpinBox_accelQ.value()
-        self.send_value("axis", "filterAccel_freq", freq, instance=self.axis_instance)
-        self.send_value(
-            "axis", "filterAccel_q", round(q_factor * 100), instance=self.axis_instance
-        )
-        self.log("Axis: tuning sent to board, click on save flash")
-        self.parent_dlg.close()
+    def suggest_settings(self):
+        enc_resolution = self.spinBox_encRes.value()
+        if enc_resolution <= 20000:
+            self.comboBox_profileSelected.setCurrentIndex(0)
+        elif enc_resolution <= 262144:
+            self.comboBox_profileSelected.setCurrentIndex(1)
+        else :
+            self.comboBox_profileSelected.setCurrentIndex(2)
 
     def compute_speed(self):
         """Compute all the factor from the hardware init."""
@@ -147,33 +164,18 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.average_sample_toread_min = max(1, round(self.average_sample_toread_min))
         self.label_sampleAvg.setText(str(self.average_sample_toread_min))
 
-        # if the number of sample is 1, speed don't need to be smooth reduce smoothing (250)
-        if self.average_sample_toread_min == 1:
-            self.spinBox_speedFreq.setValue(250)
-            self.doubleSpinBox_speedQ.setValue(0.55)
-        else:
-            self.spinBox_speedFreq.setValue(25)
-            self.doubleSpinBox_speedQ.setValue(0.6)
-            # if freq = 25, smoothing is on 35 samples, max value is 0,063
-            # if freq = 50, smoothing is on 18 samples , max value is 0,121
-            # if freq = 100, smoothing is on 9 samples , max value is 0,243
-            # TODO: brainstorm on how have to be the filtering
-
         # compute the range for max speed
         self.nb_pulse_at_max_speed = (enc_resolution * max_speed) / (60.0 * ffb_rate)
         self.label_maxPulse.setText(f"{self.nb_pulse_at_max_speed:.4f}")
-
-        # compute the acceleration factor
-        #VMA check if keep the autotunning
-        #self.spinBox_accelFreq.setValue(self.spinBox_speedFreq.value() * 10)
-        #self.doubleSpinBox_accelQ.setValue(self.doubleSpinBox_speedQ.value())
 
         # init the randomize structure for graph display
         self.min_randomize_value.clear()
         i = 1
         self.max_speed_deg_sec = round(max_speed * 360 / 60)
         nb_pulse_max = round(self.nb_pulse_at_max_speed)
-        scale = self.max_speed_deg_sec / nb_pulse_max
+        scale = 1
+        if nb_pulse_max != 0 :
+            scale = self.max_speed_deg_sec / nb_pulse_max
         while i <= AdvancedTweakUI.NB_SAMPLE_NORMAL_GRAPH:
             rand = round(math.sin(i/200) * random.triangular(-nb_pulse_max, nb_pulse_max, 0))
             self.min_randomize_value.append(rand * scale)
@@ -182,13 +184,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def restore_default_min_speed(self):
         """Restore the default min speed."""
-        self.spinBox_speedFreq.setValue(25.0)
-        self.doubleSpinBox_speedQ.setValue(0.6)
-        self.spinBox_accelFreq.setValue(120)
-        self.doubleSpinBox_accelQ.setValue(0.3)
-        self.draw_simulation_min()
-        self.draw_speed_random()
-        self.draw_accel_factor()
+        self.comboBox_profileSelected.setCurrentItem(0)
 
     def simulate_min_speed(self):
         """Compute and draw graph when the button."""
@@ -545,9 +541,10 @@ class AdvancedTuningDialog(PyQt6.QtWidgets.QDialog):
     The dialogbox is open in non modal item.
     """
 
-    def __init__(self, parent_ui: base_ui.WidgetUI = None, axis_instance: int = 0):
+    def __init__(self, parent_ui: "axis_ui.AxisUI" = None, axis_instance: int = 0):
         """Construct the with an axis, the tuning is by axis."""
         PyQt6.QtWidgets.QDialog.__init__(self, parent_ui)
+        self.axis_ui = parent_ui
         self.advanced_tweak_ui = AdvancedTweakUI(self, axis_instance)
         self.layout = PyQt6.QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
