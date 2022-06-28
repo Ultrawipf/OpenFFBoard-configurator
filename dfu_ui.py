@@ -93,7 +93,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Send the dfu command to the board, log message, and close serial."""
         self.send_command("sys", "dfu")
         self.log("\nEntering DFU...\n")
-        self.main.resetPort()
+        self.main.reset_port()
 
     def file_clicked(self):
         """Open the dialog box to select the file to Upload."""
