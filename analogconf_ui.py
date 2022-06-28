@@ -66,9 +66,9 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.send_commands("apin",["values"],self.prefix)
 
     def readValues(self):
-        self.getValueAsync("apin","pins",self.createAinButtons,0,conversion=int)
-        self.getValueAsync("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
-        self.getValueAsync("apin","filter",self.filterBox.setChecked,0,conversion=int)
+        self.get_value_async("apin","pins",self.createAinButtons,0,conversion=int)
+        self.get_value_async("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
+        self.get_value_async("apin","filter",self.filterBox.setChecked,0,conversion=int)
 
     def createAinButtons(self,axes):
         self.axes = axes
@@ -117,9 +117,9 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
             if (self.analogbtns.button(i).isChecked()):
                 mask |= 1 << i
         self.axismask = mask
-        self.sendValue("apin","mask",mask)
-        self.sendValue("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
-        self.sendValue("apin","filter",1 if self.filterBox.isChecked() else 0)
+        self.send_value("apin","mask",mask)
+        self.send_value("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
+        self.send_value("apin","filter",1 if self.filterBox.isChecked() else 0)
 
     def onshown(self):
         self.register_callback("apin","values",self.valueCb,self.prefix,str)
@@ -234,21 +234,21 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.setLayout(layout)
 
     def onclose(self):
-        self.removeCallbacks()
+        self.remove_callbacks()
 
 
     def apply(self):
-        self.sendValue("adsAnalog","diff",1 if self.diffCb.isChecked() else 0)
-        self.sendValue("adsAnalog","inputs",self.numAinBox.value())
-        self.sendValue("adsAnalog","gain",int(self.gainCombobox.currentData()))
-        self.sendValue("adsAnalog","rate",int(self.samplerateCombobox.currentData()))
+        self.send_value("adsAnalog","diff",1 if self.diffCb.isChecked() else 0)
+        self.send_value("adsAnalog","inputs",self.numAinBox.value())
+        self.send_value("adsAnalog","gain",int(self.gainCombobox.currentData()))
+        self.send_value("adsAnalog","rate",int(self.samplerateCombobox.currentData()))
         
     
     def readValues(self):
-        self.getValueAsync("adsAnalog","gain",lambda d : updateListComboBox(self.gainCombobox,d),0,typechar='!')
-        self.getValueAsync("adsAnalog","rate",lambda d : updateListComboBox(self.samplerateCombobox,d),0,typechar='!')
+        self.get_value_async("adsAnalog","gain",lambda d : updateListComboBox(self.gainCombobox,d),0,typechar='!')
+        self.get_value_async("adsAnalog","rate",lambda d : updateListComboBox(self.samplerateCombobox,d),0,typechar='!')
 
-        self.getValueAsync("adsAnalog","gain",self.gainCombobox.setCurrentIndex,0,conversion=int)
-        self.getValueAsync("adsAnalog","rate",self.samplerateCombobox.setCurrentIndex,0,conversion=int)
-        self.getValueAsync("adsAnalog","diff",self.diffCb.setChecked,0,conversion=int)
-        self.getValueAsync("adsAnalog","inputs",self.numAinBox.setValue,0,conversion=int)
+        self.get_value_async("adsAnalog","gain",self.gainCombobox.setCurrentIndex,0,conversion=int)
+        self.get_value_async("adsAnalog","rate",self.samplerateCombobox.setCurrentIndex,0,conversion=int)
+        self.get_value_async("adsAnalog","diff",self.diffCb.setChecked,0,conversion=int)
+        self.get_value_async("adsAnalog","inputs",self.numAinBox.setValue,0,conversion=int)
