@@ -34,6 +34,12 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.dampergain = 2
         self.inertiagain = 2
         self.frictiongain = 2
+        self.damper_internal_scale = 1
+        self.inertia_internal_scale = 1
+        self.friction_internal_scale = 1
+        self.damper_internal_factor = 1
+        self.inertia_internal_factor = 1
+        self.friction_internal_factor = 1
 
         self.timer = QTimer(self)
         self.buttonbtns.setExclusive(False)
@@ -87,6 +93,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.register_callback("fx","friction",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_friction,self.horizontalSlider_friction,self.frictiongain/256),0,int)
         self.register_callback("fx","inertia",lambda val : self.updateSpinboxAndSlider(val,self.doubleSpinBox_inertia,self.horizontalSlider_inertia,self.inertiagain/256),0,int)
         
+        self.register_callback("fx","scaler_friction",self.set_friction_internal_scale,0,str,typechar="!")
+        self.register_callback("fx","scaler_damper",self.set_damper_internal_scale,0,str,typechar="!")
+        self.register_callback("fx","scaler_inertia",self.set_inertia_internal_scale,0,str,typechar="!")
+
+        self.register_callback("fx","scaler_friction",self.set_friction_internal_factor,0,str)
+        self.register_callback("fx","scaler_damper",self.set_damper_internal_factor,0,str)
+        self.register_callback("fx","scaler_inertia",self.set_inertia_internal_factor,0,str)
 
         if(self.init_ui()):
             tabId = self.main.add_tab(self,title)
@@ -106,6 +119,9 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
             self.send_command("main","lsain",0,'?') # get analog types
             self.send_command("main","aintypes",0,'?') # get active analog
+
+            self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia"],0,typechar="!")
+            self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia"],0)
 
             self.updateSliders()
             self.send_command("main","hidsendspd",0,'!') # get speed
@@ -149,14 +165,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
     def display_speed_cutoff_damper(self, gain):
         """Update the max rpm speed cutoff"""
-        damper_fw_internal_scaler = 40
+        damper_fw_internal_scaler = self.damper_internal_factor * self.damper_internal_scale
         damper_speed = self.dampergain * damper_fw_internal_scaler * ((gain + 1) / 256)
         max_speed = (32767 * 60 / 360) / damper_speed
         self.label_rpm.setText(f"{max_speed:.1f}")
         
     def display_accel_cutoff_inertia(self, gain):
         """Update the max accel cutoff for inertia"""
-        inertia_fw_internal_scaler = 10
+        inertia_fw_internal_scaler = self.inertia_internal_factor * self.inertia_internal_factor
         inertia_accel = self.inertiagain * inertia_fw_internal_scaler * ((gain + 1) / 256)
         max_accel = 32767 / inertia_accel
         self.label_accel.setText(f"{max_accel:.0f}")
@@ -310,10 +326,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.doubleSpinBox_CFq.setEnabled(qOn)
         self.label_cffilter.setText(lbl)
 
-    def setGainScaler(self,slider : QSlider,spinbox : QSpinBox, gain, repl):
+    def extract_scaler(self, gain_default, repl) :
         infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
         if "scale" in infos:
-            gain = float(infos["scale"]) if float(infos["scale"]) > 0 else gain
+            gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
+        return gain_default
+
+    def setGainScaler(self,slider : QSlider,spinbox : QSpinBox, gain, repl):
+        gain = self.extract_scaler(gain, repl)
         spinbox.setMaximum(gain)
         self.sliderChangedUpdateSpinbox(slider.value(),spinbox,gain)
         return gain
@@ -327,6 +347,23 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def setInertiaScalerCb(self,repl):
         self.inertiagain = self.setGainScaler(self.horizontalSlider_inertia,self.doubleSpinBox_inertia,self.inertiagain,repl)
 
+    def set_friction_internal_scale(self,repl):
+        self.friction_internal_scale = self.extract_scaler(1, repl)
+
+    def set_damper_internal_scale(self,repl):
+        self.damper_internal_scale = self.extract_scaler(1, repl)
+    
+    def set_inertia_internal_scale(self,repl):
+        self.inertia_internal_scale = self.extract_scaler(1, repl)
+
+    def set_friction_internal_factor(self,value):
+        self.friction_internal_factor = float(value)
+
+    def set_damper_internal_factor(self,value):
+        self.damper_internal_factor = float(value)
+    
+    def set_inertia_internal_factor(self,value):
+        self.inertia_internal_factor = float(value)
     
     def updateSliders(self):
         self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
