@@ -11,7 +11,6 @@ import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
-from matplotlib import scale
 import biquad
 import base_ui
 
