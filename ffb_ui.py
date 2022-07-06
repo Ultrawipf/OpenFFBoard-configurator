@@ -172,7 +172,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         
     def display_accel_cutoff_inertia(self, gain):
         """Update the max accel cutoff for inertia"""
-        inertia_fw_internal_scaler = self.inertia_internal_factor * self.inertia_internal_factor
+        inertia_fw_internal_scaler = self.inertia_internal_factor * self.inertia_internal_scale
         inertia_accel = self.inertiagain * inertia_fw_internal_scaler * ((gain + 1) / 256)
         max_accel = 32767 / inertia_accel
         self.label_accel.setText(f"{max_accel:.0f}")
