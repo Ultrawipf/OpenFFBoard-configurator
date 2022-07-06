@@ -163,7 +163,7 @@
       <item row="2" column="5">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>RPM</string>
+         <string>rpm</string>
         </property>
        </widget>
       </item>
@@ -242,7 +242,7 @@
        </widget>
       </item>
       <item row="2" column="4">
-       <widget class="QLabel" name="label_rpm">
+       <widget class="QLabel" name="label_damper_rpm">
         <property name="text">
          <string>0</string>
         </property>
@@ -376,6 +376,20 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLabel" name="label_friction_rpm">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="5">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>rpm</string>
         </property>
        </widget>
       </item>
