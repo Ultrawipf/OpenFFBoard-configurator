@@ -40,6 +40,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.damper_internal_factor = 1
         self.inertia_internal_factor = 1
         self.friction_internal_factor = 1
+        self.friction_pct_speed_rampup = 25
 
         self.timer = QTimer(self)
         self.buttonbtns.setExclusive(False)
@@ -59,6 +60,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
         self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 256/self.frictiongain))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,self.frictiongain/256,"friction"))
+        self.horizontalSlider_friction.valueChanged.connect(self.display_speed_cutoff_friction)
 
         self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 256/self.inertiagain))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,self.inertiagain/256,"inertia"))
@@ -100,6 +102,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.register_callback("fx","scaler_friction",self.set_friction_internal_factor,0,str)
         self.register_callback("fx","scaler_damper",self.set_damper_internal_factor,0,str)
         self.register_callback("fx","scaler_inertia",self.set_inertia_internal_factor,0,str)
+
+        self.register_callback("fx", "frictionPctSpeedToRampup", self.set_friction_pct_speed_rampup,0,int)
 
         if(self.init_ui()):
             tabId = self.main.add_tab(self,title)
@@ -168,7 +172,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         damper_fw_internal_scaler = self.damper_internal_factor * self.damper_internal_scale
         damper_speed = self.dampergain * damper_fw_internal_scaler * ((gain + 1) / 256)
         max_speed = (32767 * 60 / 360) / damper_speed
-        self.label_rpm.setText(f"{max_speed:.1f}")
+        self.label_damper_rpm.setText(f"{max_speed:.1f}")
+
+    def display_speed_cutoff_friction(self, gain):
+        """Update the max rpm speed cutoff"""
+        friction_fw_internal_scaler = self.friction_internal_factor * self.friction_internal_scale
+        max_speed = (32767 * self.friction_pct_speed_rampup / 100.0) * (60 / 360) / friction_fw_internal_scaler
+        self.label_friction_rpm.setText(f"{max_speed:.1f}")
         
     def display_accel_cutoff_inertia(self, gain):
         """Update the max accel cutoff for inertia"""
@@ -364,6 +374,9 @@ class FfbUI(WidgetUI,CommunicationHandler):
     
     def set_inertia_internal_factor(self,value):
         self.inertia_internal_factor = float(value)
+
+    def set_friction_pct_speed_rampup(self,value):
+        self.friction_pct_speed_rampup = value
     
     def updateSliders(self):
         self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
