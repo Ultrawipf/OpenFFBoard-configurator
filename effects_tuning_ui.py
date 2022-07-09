@@ -74,11 +74,10 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def load_settings(self):
         """Load the settings."""
-        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia"],0,typechar="!")
-        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup"],0)
-
-        self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
-        self.send_commands("fx",["spring","damper","friction","inertia"],0)
+        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia",
+                                "spring","damper","friction","inertia"],0,typechar="!")
+        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup",
+                                "spring","damper","friction","inertia"],0)
 
     def extract_scaler(self, gain_default, repl) :
         infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
@@ -154,9 +153,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             255,
         )
         self.draw_effect_conditional(
-            -450,
-            450,
-            "wheel angle (deg)",
+            -100,
+            100,
+            "wheel range (%)",
             -32767,
             32767,
             "torque",
