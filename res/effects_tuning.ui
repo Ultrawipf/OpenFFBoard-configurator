@@ -72,10 +72,10 @@
        <widget class="QChartView" name="graph_damper" native="true"/>
       </item>
       <item row="2" column="1">
-       <widget class="QSpinBox" name="spinBox"/>
+       <widget class="QSpinBox" name="spinBox_damper_freq"/>
       </item>
       <item row="2" column="3">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_damper_q"/>
       </item>
       <item row="1" column="1" colspan="3">
        <widget class="QSlider" name="horizontalSlider_damper_gain">
