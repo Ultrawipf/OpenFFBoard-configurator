@@ -24,28 +24,25 @@
        <number>0</number>
       </property>
       <property name="horizontalSpacing">
-       <number>5</number>
+       <number>15</number>
       </property>
       <property name="verticalSpacing">
        <number>0</number>
       </property>
-      <item row="3" column="1" colspan="2">
-       <widget class="QSlider" name="horizontalSlider_damper_q">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_5">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+        <property name="text">
+         <string>Freq</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="3">
-       <widget class="QChartView" name="graph_damper" native="true"/>
-      </item>
-      <item row="3" column="0">
+      <item row="2" column="2">
        <widget class="QLabel" name="label_7">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -71,42 +68,31 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="2">
+      <item row="0" column="0" colspan="4">
+       <widget class="QChartView" name="graph_damper" native="true"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="spinBox"/>
+      </item>
+      <item row="2" column="3">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+      </item>
+      <item row="1" column="1" colspan="3">
        <widget class="QSlider" name="horizontalSlider_damper_gain">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1" colspan="2">
-       <widget class="QSlider" name="horizontalSlider_damper_freq">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+        <property name="maximum">
+         <number>255</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Freq</string>
         </property>
        </widget>
       </item>
@@ -123,7 +109,7 @@
        <number>0</number>
       </property>
       <property name="horizontalSpacing">
-       <number>5</number>
+       <number>15</number>
       </property>
       <property name="verticalSpacing">
        <number>0</number>
@@ -141,18 +127,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSlider" name="horizontalSlider_inertia_gain">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="spinBox_inertia_freq"/>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_3">
@@ -167,20 +143,7 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="horizontalSlider_inertia_freq">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
+      <item row="2" column="2">
        <widget class="QLabel" name="label_4">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -193,20 +156,36 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QSlider" name="horizontalSlider_inertia_q">
+      <item row="2" column="3">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia_q">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="3">
+       <widget class="QSlider" name="horizontalSlider_inertia_gain">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximum">
+         <number>255</number>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
+      <item row="0" column="0" colspan="4">
        <widget class="QChartView" name="graph_inertia" native="true"/>
       </item>
      </layout>
@@ -222,13 +201,29 @@
        <number>0</number>
       </property>
       <property name="horizontalSpacing">
-       <number>5</number>
+       <number>15</number>
       </property>
       <property name="verticalSpacing">
        <number>0</number>
       </property>
-      <item row="0" column="0" colspan="2">
-       <widget class="QChartView" name="graph_friction" native="true"/>
+      <item row="1" column="1" colspan="3">
+       <widget class="QSlider" name="horizontalSlider_friction_gain">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximum">
+         <number>255</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_8">
@@ -243,46 +238,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSlider" name="horizontalSlider_friction_gain">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="spinBox_friction_freq"/>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Freq</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="horizontalSlider_friction_freq">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
+      <item row="3" column="2">
        <widget class="QLabel" name="label_9">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -295,18 +254,41 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QSlider" name="horizontalSlider_friction_q">
+      <item row="3" column="3">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_friction_q"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_10">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Freq</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Smooth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="QSlider" name="horizontalSlider_friction_smooth">
+        <property name="maximum">
+         <number>100</number>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
        </widget>
+      </item>
+      <item row="0" column="0" colspan="4">
+       <widget class="QChartView" name="graph_friction" native="true"/>
       </item>
      </layout>
     </widget>
@@ -341,14 +323,23 @@
       </item>
       <item row="1" column="1">
        <widget class="QSlider" name="horizontalSlider_spring_gain">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximum">
+         <number>255</number>
+        </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::NoTicks</enum>
         </property>
        </widget>
       </item>
@@ -360,6 +351,9 @@
    </item>
    <item row="2" column="0" colspan="2">
     <widget class="QFrame" name="frame">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -383,7 +377,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>Run effect</string>
+         <string>simulate effect</string>
         </property>
        </widget>
       </item>

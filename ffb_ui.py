@@ -10,6 +10,7 @@ import buttonconf_ui
 import analogconf_ui
 from base_ui import WidgetUI,CommunicationHandler
 from serial_comms import SerialComms
+import effects_tuning_ui
 
 class FfbUI(WidgetUI,CommunicationHandler):
 
@@ -46,6 +47,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
 
+        self.effect_tuning_dlg = effects_tuning_ui.AdvancedFFBTuneDialog(self)
+
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 
         self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"filterCfQ"))
@@ -67,6 +70,8 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_inertia.valueChanged.connect(self.display_accel_cutoff_inertia)
         
         self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.send_value("main","hidsendspd",str(val)))
+
+        self.pushButton_advanced_tuning.clicked.connect(self.effect_tuning_dlg.display)
 
         self.timer.timeout.connect(self.updateTimer)
 

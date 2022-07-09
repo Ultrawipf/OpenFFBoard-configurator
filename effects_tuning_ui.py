@@ -6,74 +6,58 @@ Module : encoder_tuning_ui
 Authors : vincent
 """
 import math
-import random
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
-import biquad
 import base_ui
+from helper import throttle
 
-class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
+class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the UI to tune the encoder."""
 
-    def __init__(
-        self, parent: 'AdvancedTuningDialog' = None, axis_instance: int = 0
-    ):
+    def __init__(self, parent: 'AdvancedFFBTuneDialog' = None):
         """Initialize the init with the dialog parent and the axisUI linked on the encoder."""
-        base_ui.WidgetUI.__init__(self, parent, "encoder_tune.ui")
+        base_ui.WidgetUI.__init__(self, parent, "effects_tuning.ui")
         base_ui.CommunicationHandler.__init__(self)
         self.parent_dlg = parent
-        self.axis_instance = axis_instance
-        self.pushButton_loadSettings.clicked.connect(self.load_settings)
-        self.pushButton_compute.clicked.connect(self.compute_speed)
-        self.pushButton_restoreDefault.clicked.connect(self.restore_default_min_speed)
-        self.pushButton_restoreDefaultEffect.clicked.connect(self.simulate_effect)
-        self.pushButton_save.clicked.connect(self.save_settings)
+        self.springgain = 1
+        self.dampergain = 1
+        self.frictiongain = 1
+        self.inertiagain = 1
+        self.damper_internal_scale = 1
+        self.inertia_internal_scale = 1
+        self.friction_internal_scale = 1
+        self.damper_internal_factor = 1
+        self.inertia_internal_factor = 1
+        self.friction_internal_factor = 1
 
-        self.spinBox_speedFreq.valueChanged.connect(self.simulate_min_speed)
-        self.doubleSpinBox_speedQ.valueChanged.connect(self.simulate_min_speed)
-        self.doubleSpinBox_speedScaler.valueChanged.connect(self.simulate_min_speed)
+        self.horizontalSlider_friction_smooth.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_friction_smooth,"frictionPctSpeedToRampup"))
+        self.horizontalSlider_spring_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_spring_gain,"spring"))
+        self.horizontalSlider_damper_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_damper_gain,"damper"))
+        self.horizontalSlider_friction_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_friction_gain,"friction"))
+        self.horizontalSlider_inertia_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_inertia_gain,"inertia"))
 
-        self.spinBox_pctFrictionRampUp.valueChanged.connect(self.draw_all_effects)
+        self.register_callback("fx", "frictionPctSpeedToRampup",lambda val : self.update_slider(val,self.horizontalSlider_friction_smooth),0,int)
 
-        self.register_callback(
-            "axis",
-            "filterSpeed_freq",
-            self.spinBox_speedFreq.setValue,
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
-            "filterSpeed_q",
-            lambda q: self.doubleSpinBox_speedQ.setValue(q / 100.0),
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
-            "scaleSpeed",
-            self.doubleSpinBox_speedScaler.setValue,
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "fx",
-            "frictionPctSpeedToRampup",
-            self.spinBox_pctFrictionRampUp.setValue,
-            0,
-            int,
-        )
+        self.register_callback("fx","spring",self.set_spring_scaler_cb,0,str,typechar="!")
+        self.register_callback("fx","damper",self.set_damper_scaler_cb,0,str,typechar="!")
+        self.register_callback("fx","inertia",self.set_inertia_scaler_cb,0,str,typechar="!")
+        self.register_callback("fx","friction",self.set_friction_scaler_cb,0,str,typechar="!")
 
-        self.min_randomize_value = []
-        self.min_speed_detectable = 0
-        self.min_speed_wanted = 0
-        self.average_sample_toread_min = 0
-        self.nb_pulse_at_max_speed = 0
-        self.speed_scaler = 0
-        self.min_speed_rescale = 0
+        self.register_callback("fx","spring",lambda val : self.update_slider(val,self.horizontalSlider_spring_gain),0,int)
+        self.register_callback("fx","damper",lambda val : self.update_slider(val,self.horizontalSlider_damper_gain),0,int)
+        self.register_callback("fx","friction",lambda val : self.update_slider(val,self.horizontalSlider_friction_gain),0,int)
+        self.register_callback("fx","inertia",lambda val : self.update_slider(val,self.horizontalSlider_inertia_gain),0,int)
 
+        self.register_callback("fx","scaler_friction",self.set_internal_friction_scale,0,str,typechar="!")
+        self.register_callback("fx","scaler_damper",self.set_internal_damper_scale,0,str,typechar="!")
+        self.register_callback("fx","scaler_inertia",self.set_internal_inertia_scale,0,str,typechar="!")
+
+        self.register_callback("fx","scaler_friction",self.set_internal_friction_factor,0,str)
+        self.register_callback("fx","scaler_damper",self.set_internal_damper_factor,0,str)
+        self.register_callback("fx","scaler_inertia",self.set_internal_inertia_factor,0,str)
+        
     def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
         return super().setEnabled(a0)
@@ -85,395 +69,174 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def hideEvent(self, a0) -> None: # pylint: disable=unused-argument, invalid-name
         """Hide event, hide the dialog."""
+        self.send_commands("fx",["spring","damper","friction","inertia","frictionPctSpeedToRampup"],0)
         return super().hideEvent(a0)
 
     def load_settings(self):
-        """Load the settings : compute the speed to init the UI and load data from board."""
-        self.compute_speed()
-        self.send_commands(
-            "axis",
-            ["filterSpeed_freq", "filterSpeed_q", "scaleSpeed"],
-            self.axis_instance,
-        )
-        self.send_command("fx", "frictionPctSpeedToRampup", self.axis_instance)
+        """Load the settings."""
+        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia"],0,typechar="!")
+        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup"],0)
 
-    def save_settings(self):
-        """Save the data in the board."""
-        freq = self.spinBox_speedFreq.value()
-        q_factor = self.doubleSpinBox_speedQ.value()
-        speedscaler = self.doubleSpinBox_speedScaler.value()
-        pctfric = self.spinBox_pctFrictionRampUp.value()
-        self.send_value("axis", "filterSpeed_freq", freq, instance=self.axis_instance)
-        self.send_value(
-            "axis", "filterSpeed_q", round(q_factor * 100), instance=self.axis_instance
-        )
-        self.send_value(
-            "axis", "scaleSpeed", round(speedscaler), instance=self.axis_instance
-        )
-        self.send_value("fx", "frictionPctSpeedToRampup", pctfric)
-        self.parent_dlg.close()
+        self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
+        self.send_commands("fx",["spring","damper","friction","inertia"],0)
 
-    def compute_speed(self):
-        """Compute all the factor from the hardware init."""
-        enc_resolution = self.spinBox_encRes.value()
-        ffb_rate = self.spinBox_ffbRate.value()
-        max_speed = self.spinBox_maxSpeed.value()
-        min_speed_degree = self.spinBox_minDeg.value()
-        min_speed_duration = self.spinBox_minSec.value()
+    def extract_scaler(self, gain_default, repl) :
+        infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
+        if "scale" in infos:
+            gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
+        return gain_default
 
-        # compute the min speed detectable by the encoder in rpm : 1 position at the ffb rate
-        self.min_speed_detectable = (
-            360.0 / enc_resolution
-        ) * ffb_rate  # °/s detectable by encoder
-        self.min_speed_detectable *= 60.0 / 360
-        self.label_minDetectable.setText(f"{self.min_speed_detectable:.4f}")
+    def set_spring_scaler_cb(self,repl):
+        self.springgain = self.extract_scaler(self.springgain, repl)
 
-        # compute the min speed wanted by the user in rpm
-        self.min_speed_wanted = (min_speed_degree / 360.0) / (min_speed_duration / 60.0)
-        self.label_minWanted.setText(f"{self.min_speed_wanted:.4f}")
+    def set_damper_scaler_cb(self,repl):
+        self.dampergain = self.extract_scaler(self.dampergain, repl)
 
-        # compute how many sample we need to average to be able to
-        # read the minimum speed : smoothing effect on speed
-        self.average_sample_toread_min = (
-            self.min_speed_detectable / self.min_speed_wanted
-        )
-        self.average_sample_toread_min = max(1, round(self.average_sample_toread_min))
-        self.label_sampleAvg.setText(str(self.average_sample_toread_min))
+    def set_friction_scaler_cb(self,repl):
+        self.frictiongain = self.extract_scaler(self.frictiongain, repl)
 
-        # if the number of sample is 1, speed don't need to be smooth reduce smoothing (250)
-        if self.average_sample_toread_min == 1:
-            self.spinBox_speedFreq.setValue(250)
-            self.doubleSpinBox_speedQ.setValue(0.55)
-        else:
-            self.spinBox_speedFreq.setValue(25)
-            self.doubleSpinBox_speedQ.setValue(0.6)
-            # if freq = 25, smoothing is on 35 samples, max value is 0,063
-            # if freq = 50, smoothing is on 18 samples , max value is 0,121
-            # if freq = 100, smoothing is on 9 samples , max value is 0,243
-            # TODO: brainstorm on how have to be the filtering
+    def set_inertia_scaler_cb(self,repl):
+        self.inertiagain = self.extract_scaler(self.inertiagain, repl)
 
-        # compute the scaler for max speed
-        self.nb_pulse_at_max_speed = (enc_resolution * max_speed) / (60.0 * ffb_rate)
-        self.label_maxPulse.setText(f"{self.nb_pulse_at_max_speed:.4f}")
+    def set_internal_friction_scale(self, repl):
+        self.friction_internal_scale = self.extract_scaler(1, repl)
 
-        self.speed_scaler = (32767 / self.nb_pulse_at_max_speed) * 0.99
-        self.doubleSpinBox_speedScaler.setValue(self.speed_scaler)
+    def set_internal_damper_scale(self, repl):
+        self.damper_internal_scale = self.extract_scaler(1, repl)
 
-        # init the randomize structure for graph display
-        self.min_randomize_value.clear()
-        i = 1
-        while i <= 200:
-            self.min_randomize_value.append(
-                random.randint(0, round(self.nb_pulse_at_max_speed))
-            )
-            i += 1
-        self.simulate_min_speed()
+    def set_internal_inertia_scale(self, repl):
+        self.inertia_internal_scale = self.extract_scaler(1, repl)
 
-    def compute_speed_effect(self):
-        """Compute the speed law pass filter."""
-        rps = float(self.label_minDetectable.text())
+    def set_internal_friction_factor(self, value):
+        self.friction_internal_factor = float(value)
 
-        # compute the rampup for friction at low speed to smooth torque and remove oscillation
-        if (
-            self.doubleSpinBox_speedQ.value() == 0
-            or self.average_sample_toread_min == 0
-        ):
-            return
+    def set_internal_damper_factor(self, value):
+        self.damper_internal_factor = float(value)
 
-        # simulate a low signal and get the max value of the filter's output
-        local_filter = biquad.Biquad(
-            0,
-            self.spinBox_speedFreq.value() / 1000.0,
-            self.doubleSpinBox_speedQ.value(),
-            0,
-        )
-        local_filter.calcBiquad()
-        minsample = 0
-        for i in range(50):
-            if ((i + 10) % self.average_sample_toread_min) == 0 and i < 80:
-                value = rps
-            else:
-                value = 0
-            filtered_value = local_filter.compute(value)
-            minsample = max(minsample, filtered_value)
-        self.min_speed_rescale = minsample * self.doubleSpinBox_speedScaler.value()
-        self.label_minSpeedRescale.setText(f"{self.min_speed_rescale:.4f}")
+    def set_internal_inertia_factor(self, value):
+        self.inertia_internal_factor = float(value)
 
-        # comute the min
-        signal_to_not_oscillate = 0.01 / 30
-        phase_rad = math.asin((signal_to_not_oscillate * 2) - 1)
-        pct_friction = round(
-            self.min_speed_rescale * (100 / 32767) * (1 / (0.5 + phase_rad / math.pi))
-        )
-        pct_friction = max(pct_friction, 3)
-        self.spinBox_pctFrictionRampUp.setValue(pct_friction)
+    def set_friction_pct_speed_rampup(self,value):
+        self.friction_pct_speed_rampup = value
 
-    def restore_default_min_speed(self):
-        """Restore the default min speed."""
-        self.spinBox_speedFreq.setValue(25.0)
-        self.doubleSpinBox_speedQ.setValue(0.6)
-        self.doubleSpinBox_speedScaler.setValue(40)
-        self.draw_simulation_min()
-        self.draw_simulation_random()
-        self.simulate_effect()
-        self.spinBox_pctFrictionRampUp.setValue(5)
-        self.draw_all_effects()
+    def update_slider(self,val,slider : PyQt6.QtWidgets.QSlider):
+        #skip the slider update if value is the same
+        if (slider.value() == val) : return
+        
+        #update the slider value and the graph
+        slider.setValue(val)
+        self.slider_changed(val, slider)
+    
+    def slider_changed(self,val,slider : PyQt6.QtWidgets.QSlider, command = None):
 
-    def simulate_min_speed(self):
-        """Compute and draw graph when the button."""
-        # if self.label_sampleAvg.text() == '0':
-        #    self.computeSpeed()
-        self.draw_simulation_min()
-        self.draw_simulation_random()
-        self.simulate_effect()
+        #send value to the board
+        if command :
+            self.send_value("fx", command, val)
 
-    def simulate_effect(self):
-        """Compute and draw the effect : inertia and damper."""
-        # compute the speedEffect when a simulation is done because filter change
-        self.compute_speed_effect()
-        self.draw_all_effects()
+        #update graph if the slider is used by a graph
+        if slider == self.horizontalSlider_spring_gain :
+            self.draw_graph_spring()
+        if slider == self.horizontalSlider_inertia_gain :
+            self.draw_graph_inertia()
+        if slider == self.horizontalSlider_damper_gain :
+            self.draw_graph_damper()
+        if slider == self.horizontalSlider_friction_gain or \
+            slider == self.horizontalSlider_friction_smooth :
+            self.draw_graph_friction()
 
-    def draw_all_effects(self):
+    def draw_graph_spring(self):
         """Draw the effects graph response."""
-        scaler = round(self.doubleSpinBox_speedScaler.value())
-        max_encoder_range = round(self.nb_pulse_at_max_speed * scaler)
-        max_encoder_range = min(max_encoder_range, 32767)
-        self.draw_effect(
+        scaler = self.springgain * (1+self.horizontalSlider_spring_gain.value()) / 256.0
+        color = PyQt6.QtGui.QColor(
+            0,
+            0,
+            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
+            255,
+        )
+        self.draw_effect_conditional(
+            -450,
+            450,
+            "wheel angle (deg)",
             -32767,
             32767,
-            -max_encoder_range,
-            max_encoder_range,
+            "torque",
             300,
-            self.graph_effects,
-        )
-        max_encoder_range = min(max_encoder_range, 1000)
-        self.draw_effect(
-            -1000,
-            1000,
-            -max_encoder_range,
-            max_encoder_range,
-            100,
-            self.graph_effectsZoom,
+            self.graph_spring,
+            color,
+            scaler,
+            1
         )
 
-    def draw_simulation_min(self):
-        """Draw the min curve."""
-        avg_samples = int(self.label_sampleAvg.text())
-        freq = self.spinBox_speedFreq.value()
-        q_factor = self.doubleSpinBox_speedQ.value()
-        min_rps = float(self.label_minWanted.text())
-        rps = float(self.label_minDetectable.text())
-
-        if q_factor == 0.0 or avg_samples == 0:
-            return
-
-        # Chart setup
-        chart = PyQt6.QtCharts.QChart()
-        chart.setBackgroundRoundness(5)
-        chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
-        chart.legend().hide()
-        chart.setBackgroundBrush(PyQt6.QtWidgets.QApplication.instance().palette().window())
-
-        font = PyQt6.QtGui.QFont()
-        font.setPixelSize(7)
-
-        chart_x_axis = PyQt6.QtCharts.QValueAxis()
-        chart_x_axis.setMax(100)
-        chart_x_axis.setLabelsFont(font)
-        chart_x_axis.setTitleText("Time (ms)")
-        chart_x_axis.setGridLineColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                128,
-            )
+    def draw_graph_inertia(self):
+        """Draw the effects graph response."""
+        scaler = self.inertia_internal_factor * self.inertia_internal_scale * self.inertiagain * (1+self.horizontalSlider_inertia_gain.value()) / 256.0
+        color = PyQt6.QtGui.QColor(
+            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
+            0,
+            0,
+            255,
         )
-        chart.addAxis(chart_x_axis, PyQt6.QtCore.Qt.AlignmentFlag.AlignBottom)
-
-        chart_y_axis_forces = PyQt6.QtCharts.QValueAxis()
-        chart_y_axis_forces.setMin(0)
-        chart_y_axis_forces.setLabelsFont(font)
-        chart_y_axis_forces.setTitleText("Min Speed")
-        chart_y_axis_forces.setGridLineColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                64,
-            )
+        self.draw_effect_conditional(
+            -30000,
+            30000,
+            "acceleration (deg/s2)",
+            -32767,
+            32767,
+            "torque",
+            300,
+            self.graph_inertia,
+            color,
+            scaler,
+            1
         )
-        chart.addAxis(chart_y_axis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-
-        for axe in chart.axes():
-            axe.setTitleBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-            axe.setLabelsBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-
-        self.graph_min.setChart(chart)
-
-        q_line3 = PyQt6.QtCharts.QLineSeries()
-        q_line3.setColor(
-            PyQt6.QtGui.QColor( #White
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
+    
+    def draw_graph_damper(self):
+        """Draw the effects graph response."""
+        scaler = self.damper_internal_factor * self.damper_internal_scale * self.dampergain * (1+self.horizontalSlider_damper_gain.value()) / 256.0
+        color = PyQt6.QtGui.QColor(
+            0,
+            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
+            0,
+            255,
         )
-        chart.addSeries(q_line3)
-        q_line3.attachAxis(chart_y_axis_forces)
-        q_line3.attachAxis(chart_x_axis)
-
-        q_line2 = PyQt6.QtCharts.QLineSeries()
-        q_line2.setColor(
-            PyQt6.QtGui.QColor( #magenta
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                0,
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
+        self.draw_effect_conditional(
+            -300,
+            300,
+            "speed (rpm)",
+            -300 * 360 / 60.0,
+            300 * 360 / 60.0,
+            "torque",
+            300,
+            self.graph_damper,
+            color,
+            scaler,
+            1
         )
-        chart.addSeries(q_line2)
-        q_line2.attachAxis(chart_y_axis_forces)
-        q_line2.attachAxis(chart_x_axis)
-        local_filter = biquad.Biquad(0, freq / 1000.0, q_factor, 0)
-        local_filter.calcBiquad()
 
-        q_line = PyQt6.QtCharts.QLineSeries()
-        q_line.setColor(
-            PyQt6.QtGui.QColor( #cyan
-                0,
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
+    def draw_graph_friction(self):
+        """Draw the effects graph response."""
+        scaler = self.friction_internal_factor * self.friction_internal_scale
+        color = PyQt6.QtGui.QColor(
+            0,
+            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
+            0,
+            255,
         )
-        chart.addSeries(q_line)
-        q_line.attachAxis(chart_y_axis_forces)
-        q_line.attachAxis(chart_x_axis)
-
-        maxy = 0
-        for i in range(100):
-            if ((i + 10) % avg_samples) == 0 and i < 80:
-                value = rps
-            else:
-                value = 0
-            filtered_value = local_filter.compute(value)
-            maxy = max(maxy, value, min_rps)
-            q_line3.append(i, min_rps)
-            q_line2.append(i, filtered_value)
-            q_line.append(i, value)
-        chart_y_axis_forces.setMax(maxy * 1.01)
-
-    def draw_simulation_random(self):
-        """Draw the simulation on a random stream and apply filter."""
-        scaler = round(self.doubleSpinBox_speedScaler.value())
-        freq = self.spinBox_speedFreq.value()
-        q_factor = self.doubleSpinBox_speedQ.value()
-
-        if len(self.min_randomize_value) < 200 or q_factor == 0.0:
-            return
-
-        # Chart setup
-        chart = PyQt6.QtCharts.QChart()
-        chart.setBackgroundRoundness(5)
-        chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
-        chart.legend().hide()
-        chart.setBackgroundBrush(PyQt6.QtWidgets.QApplication.instance().palette().window())
-
-        font = PyQt6.QtGui.QFont()
-        font.setPixelSize(7)
-
-        chart_x_axis = PyQt6.QtCharts.QValueAxis()
-        chart_x_axis.setMax(200)
-        chart_x_axis.setLabelsFont(font)
-        chart_x_axis.setTitleText("Time")
-        chart_x_axis.setGridLineColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                128,
-            )
+        self.draw_effect_conditional(
+            -130,
+            130,
+            "speed (rpm)",
+            -120 * 360 / 60.0,
+            120 * 360 / 60.0,
+            "torque",
+            300,
+            self.graph_friction,
+            color,
+            scaler,
+            0
         )
-        chart.addAxis(chart_x_axis, PyQt6.QtCore.Qt.AlignmentFlag.AlignBottom)
 
-        chart_y_axis_forces = PyQt6.QtCharts.QValueAxis()
-        chart_y_axis_forces.setMin(0)
-        chart_y_axis_forces.setMax(32767)
-        chart_y_axis_forces.setLabelsFont(font)
-        chart_y_axis_forces.setTitleText("Max Speed")
-        chart_y_axis_forces.setGridLineColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                64,
-            )
-        )
-        chart.addAxis(chart_y_axis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-
-        for axe in chart.axes():
-            axe.setTitleBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-            axe.setLabelsBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-
-        self.graph_random.setChart(chart)
-
-        q_line = PyQt6.QtCharts.QLineSeries()
-        q_line.setColor(
-            PyQt6.QtGui.QColor( #cyan
-                0,
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                0,
-                255,
-            )
-        )
-        chart.addSeries(q_line)
-        q_line.attachAxis(chart_y_axis_forces)
-        q_line.attachAxis(chart_x_axis)
-
-        q_line2 = PyQt6.QtCharts.QLineSeries()
-        q_line2.setColor(
-            PyQt6.QtGui.QColor( #magenta
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                0,
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
-        )
-        chart.addSeries(q_line2)
-        q_line2.attachAxis(chart_y_axis_forces)
-        q_line2.attachAxis(chart_x_axis)
-        local_filter = biquad.Biquad(0, freq / 1000.0, q_factor, 0)
-        local_filter.calcBiquad()
-
-        q_line3 = PyQt6.QtCharts.QLineSeries()
-        q_line3.setColor(
-            PyQt6.QtGui.QColor( #cyan
-                0,
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-                255,
-            )
-        )
-        chart.addSeries(q_line3)
-        q_line3.attachAxis(chart_y_axis_forces)
-        q_line3.attachAxis(chart_x_axis)
-
-        for i in range(200):
-            q_line.append(i, self.min_randomize_value[i] * scaler)
-            q_line2.append(i, local_filter.compute(self.min_randomize_value[i]) * scaler)
-            q_line3.append(i, self.min_randomize_value[i])
-
-    def draw_effect(self, min_range, max_range, start_data, end_data, nb_point_plot, qwidget):
+    def draw_effect_conditional(self, x_min, x_max, x_label, start_data, end_data, y_label, nb_point_plot, qwidget, color, effect_gain, cond_frict):
         """Draw a generic effect in a qwidget : the effect response on the metrics range."""
         # Chart setup full range
         chart = PyQt6.QtCharts.QChart()
@@ -486,10 +249,10 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         font.setPixelSize(7)
 
         chart_x_axis = PyQt6.QtCharts.QValueAxis()
-        chart_x_axis.setMin(min_range)
-        chart_x_axis.setMax(max_range)
+        chart_x_axis.setMin(x_min)
+        chart_x_axis.setMax(x_max)
         chart_x_axis.setLabelsFont(font)
-        chart_x_axis.setTitleText("Normalized Speed")
+        chart_x_axis.setTitleText(x_label)
         chart_x_axis.setGridLineColor(
             PyQt6.QtGui.QColor(
                 PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
@@ -504,7 +267,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         chart_y_axis_forces.setLabelsFont(font)
         chart_y_axis_forces.setMin(-32770)
         chart_y_axis_forces.setMax(32770)
-        chart_y_axis_forces.setTitleText("Normalized Torque")
+        chart_y_axis_forces.setTitleText(y_label)
         chart_y_axis_forces.setGridLineColor(
             PyQt6.QtGui.QColor(
                 PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
@@ -526,42 +289,22 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         qwidget.setChart(chart)
 
         q_line = PyQt6.QtCharts.QLineSeries()
-        q_line.setColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                0,
-                0,
-                255,
-            )
-        )
+        q_line.setColor(color)
+
         chart.addSeries(q_line)
         q_line.attachAxis(chart_y_axis_forces)
         q_line.attachAxis(chart_x_axis)
 
-        q_line2 = PyQt6.QtCharts.QLineSeries()
-        q_line2.setColor(
-            PyQt6.QtGui.QColor(
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-                PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-                0,
-                255,
-            )
-        )
-        chart.addSeries(q_line2)
-        q_line2.attachAxis(chart_y_axis_forces)
-        q_line2.attachAxis(chart_x_axis)
-
-        interval = (end_data - start_data) / nb_point_plot
+        interval_effect = (end_data - start_data) / nb_point_plot
+        interval_pos = (x_max - x_min) / nb_point_plot
         for i in range(0, nb_point_plot):
-            axis_pos = round(start_data + (i * interval))
-            if abs(axis_pos) > self.min_speed_rescale:
-                damper = self.calc_condition_effect_force(axis_pos, 1)
-                friction = self.friction_effect_force(axis_pos, 1)
-                q_line.append(axis_pos, damper)
-                q_line2.append(axis_pos, friction)
+            axis_pos = x_min + (i * interval_pos)
+            axis_affect = start_data + (i * interval_effect)
+            if (cond_frict) :
+                effect_value = self.calc_condition_effect_force(axis_affect, effect_gain)
             else:
-                q_line.append(axis_pos, 0)
-                q_line2.append(axis_pos, 0)
+                effect_value = self.calc_friction_effect_force(axis_affect, effect_gain)
+            q_line.append(axis_pos, effect_value)
 
     def calc_condition_effect_force(self, metric, scale):
         """Compute the force for a metric value and a scale."""
@@ -597,7 +340,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # effect friction to simulate
 
-    def friction_effect_force(self, metric, scale):
+    def calc_friction_effect_force(self, metric, scale):
         """Compute the friction effect for a metric."""
         offset = 0
         dead_band = 0
@@ -607,8 +350,8 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         speed = metric * scale
 
-        pct_friction = self.spinBox_pctFrictionRampUp.value()
-        speed_rampup_pct = round((pct_friction / 100) * 32767)  # sinusoidal to 30
+        pct_friction = self.horizontalSlider_friction_smooth.value()
+        speed_rampup_pct = round((pct_friction / 100.0) * 32767)  # sinusoidal to 30
 
         # Effect is only active outside deadband + offset
         if abs(speed - offset) > dead_band:
@@ -636,25 +379,26 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             sign = 1 if speed >= 0 else -1
             coeff = negative_coefficient if speed < 0 else positive_coefficient
             force = coeff * rampup_factor * sign
+            force = force *  self.frictiongain * (1+self.horizontalSlider_friction_gain.value()) / 256.0
 
         return force
 
 
-class AdvancedTuningDialog(PyQt6.QtWidgets.QDialog):
+class AdvancedFFBTuneDialog(PyQt6.QtWidgets.QDialog):
     """Manage the dialog box for the encoder UI.
 
     The dialogbox is open in non modal item.
     """
 
-    def __init__(self, parent_ui: base_ui.WidgetUI = None, axis_instance:int = 0):
+    def __init__(self, parent_ui: base_ui.WidgetUI = None):
         """Construct the with an axis, the tuning is by axis."""
         PyQt6.QtWidgets.QDialog.__init__(self, parent_ui)
-        self.advanced_tweak_ui = AdvancedTweakUI(self, axis_instance)
+        self.advanced_tweak_ui = AdvancedFFBTuneUI(self)
         self.layout = PyQt6.QtWidgets.QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(self.advanced_tweak_ui)
         self.setLayout(self.layout)
-        self.setWindowTitle("Advanced encoder tuning")
+        self.setWindowTitle("Advanced ffb tuning")
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable all the widget in the tuned UI."""
