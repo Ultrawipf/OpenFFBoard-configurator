@@ -32,14 +32,25 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.inertia_internal_factor = 1
         self.friction_internal_factor = 1
 
+        # on slider change
         self.horizontalSlider_friction_smooth.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_friction_smooth,"frictionPctSpeedToRampup"))
         self.horizontalSlider_spring_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_spring_gain,"spring"))
         self.horizontalSlider_damper_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_damper_gain,"damper"))
         self.horizontalSlider_friction_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_friction_gain,"friction"))
         self.horizontalSlider_inertia_gain.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_inertia_gain,"inertia"))
 
+        # on filter change
+        self.spinBox_damper_freq.valueChanged.connect(lambda val : self.filter_changed(val,"damper_f",1))
+        self.doubleSpinBox_damper_q.valueChanged.connect(lambda val : self.filter_changed(val,"damper_q",100))
+        self.spinBox_friction_freq.valueChanged.connect(lambda val : self.filter_changed(val,"friction_f",1))
+        self.doubleSpinBox_friction_q.valueChanged.connect(lambda val : self.filter_changed(val,"friction_q",100))
+        self.spinBox_inertia_freq.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_f",1))
+        self.doubleSpinBox_inertia_q.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_q",100))
+
+        # register effect command
         self.register_callback("fx", "frictionPctSpeedToRampup",lambda val : self.update_slider(val,self.horizontalSlider_friction_smooth),0,int)
 
+        # register gain factor and scale
         self.register_callback("fx","spring",self.set_spring_scaler_cb,0,str,typechar="!")
         self.register_callback("fx","damper",self.set_damper_scaler_cb,0,str,typechar="!")
         self.register_callback("fx","inertia",self.set_inertia_scaler_cb,0,str,typechar="!")
@@ -50,6 +61,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("fx","friction",lambda val : self.update_slider(val,self.horizontalSlider_friction_gain),0,int)
         self.register_callback("fx","inertia",lambda val : self.update_slider(val,self.horizontalSlider_inertia_gain),0,int)
 
+        # register internal factor for scaler and factor
         self.register_callback("fx","scaler_friction",self.set_internal_friction_scale,0,str,typechar="!")
         self.register_callback("fx","scaler_damper",self.set_internal_damper_scale,0,str,typechar="!")
         self.register_callback("fx","scaler_inertia",self.set_internal_inertia_scale,0,str,typechar="!")
@@ -57,6 +69,14 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("fx","scaler_friction",self.set_internal_friction_factor,0,str)
         self.register_callback("fx","scaler_damper",self.set_internal_damper_factor,0,str)
         self.register_callback("fx","scaler_inertia",self.set_internal_inertia_factor,0,str)
+
+        # register biquad factor
+        self.register_callback("fx","damper_f",self.spinBox_damper_freq.setValue,0,int)
+        self.register_callback("fx","damper_q",lambda val : self.doubleSpinBox_damper_q.setValue((float)(val) / 100.0),0,str)
+        self.register_callback("fx","friction_f",self.spinBox_friction_freq.setValue,0,int)
+        self.register_callback("fx","friction_q",lambda val : self.doubleSpinBox_friction_q.setValue((float)(val) / 100.0),0,str)
+        self.register_callback("fx","inertia_f",self.spinBox_inertia_freq.setValue,0,int)
+        self.register_callback("fx","inertia_q",lambda val : self.doubleSpinBox_inertia_q.setValue((float)(val) / 100.0),0,str)
         
     def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -77,7 +97,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia",
                                 "spring","damper","friction","inertia"],0,typechar="!")
         self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup",
-                                "spring","damper","friction","inertia"],0)
+                                "spring","damper","friction","inertia",
+                                "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
 
     def extract_scaler(self, gain_default, repl) :
         infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
@@ -142,6 +163,10 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if slider == self.horizontalSlider_friction_gain or \
             slider == self.horizontalSlider_friction_smooth :
             self.draw_graph_friction()
+
+    def filter_changed(self, val, filter, scale = 1):
+        if val != 0 :
+            self.send_value("fx", filter, val * scale)
 
     def draw_graph_spring(self):
         """Draw the effects graph response."""
