@@ -127,88 +127,10 @@
       <property name="verticalSpacing">
        <number>5</number>
       </property>
-      <item row="4" column="4">
-       <widget class="QLabel" name="label_accel">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <property name="text">
-         <string>Inertia Gain</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="5">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>°/s2</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="5">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>rpm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="horizontalSlider_damper">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="maximum">
-         <number>255</number>
-        </property>
-        <property name="pageStep">
-         <number>4</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="sliderPosition">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_spring">
-        <property name="decimals">
-         <number>2</number>
-        </property>
-        <property name="maximum">
-         <double>4.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia">
-        <property name="maximum">
-         <double>2.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
         </property>
        </widget>
       </item>
@@ -234,17 +156,29 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3" rowspan="5">
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <property name="text">
+         <string>Friction Gain</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QLabel" name="label_damper_rpm">
+      <item row="4" column="5">
+       <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>0</string>
+         <string>°/s2</string>
         </property>
        </widget>
       </item>
@@ -283,16 +217,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_damper">
-        <property name="maximum">
-         <double>2.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QSlider" name="horizontalSlider_spring">
         <property name="toolTip">
@@ -315,6 +239,13 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="3" rowspan="5">
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_9">
         <property name="toolTip">
@@ -334,6 +265,13 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="4">
+       <widget class="QLabel" name="label_friction_rpm">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="4" colspan="2">
        <widget class="QLabel" name="label_8">
         <property name="text">
@@ -341,22 +279,33 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_12">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Constant force effect filter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia">
+        <property name="maximum">
+         <double>2.000000000000000</double>
         </property>
-        <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
         </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_spring">
+        <property name="decimals">
+         <number>2</number>
         </property>
+        <property name="maximum">
+         <double>4.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QLabel" name="label_accel">
         <property name="text">
-         <string>Friction Gain</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <string>0</string>
         </property>
        </widget>
       </item>
@@ -379,10 +328,44 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="4">
-       <widget class="QLabel" name="label_friction_rpm">
+      <item row="2" column="1">
+       <widget class="QSlider" name="horizontalSlider_damper">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="maximum">
+         <number>255</number>
+        </property>
+        <property name="pageStep">
+         <number>4</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="sliderPosition">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of friction effects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
         <property name="text">
-         <string>0</string>
+         <string>Inertia Gain</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -390,6 +373,30 @@
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>rpm</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QLabel" name="label_damper_rpm">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_damper">
+        <property name="maximum">
+         <double>2.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" colspan="4">
+       <widget class="QPushButton" name="pushButton_advanced_tuning">
+        <property name="text">
+         <string>Advanced Tuning</string>
         </property>
        </widget>
       </item>
