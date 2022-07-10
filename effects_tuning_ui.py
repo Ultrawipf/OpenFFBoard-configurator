@@ -11,7 +11,31 @@ import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
 import base_ui
-from helper import throttle
+
+class Crosshairs():
+    
+    def __init__(self, chart: PyQt6.QtCharts.QChart, scene: PyQt6.QtWidgets.QGraphicsScene,
+        color: PyQt6.QtGui.QColor):
+        self.m_xline = PyQt6.QtWidgets.QGraphicsLineItem()
+        self.m_chart = chart
+
+        self.m_xline.setPen(color)
+        self.m_xline.setZValue(11)
+
+        # add lines and text to scene
+        scene.addItem(self.m_xline)
+    
+    def update_position(self, metrics):
+        point = PyQt6.QtCore.QPointF(metrics, 0)
+        position = self.m_chart.mapToPosition(point, self.m_chart.series()[0])
+
+        x_line = PyQt6.QtCore.QLineF(position.x(), self.m_chart.plotArea().top(),position.x(), self.m_chart.plotArea().bottom())
+        self.m_xline.setLine(x_line)
+
+        if not(self.m_chart.plotArea().contains(position)):
+            self.m_xline.hide()
+        else:
+            self.m_xline.show()
 
 class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the UI to tune the encoder."""
@@ -31,6 +55,12 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.damper_internal_factor = 1
         self.inertia_internal_factor = 1
         self.friction_internal_factor = 1
+        self.friction_pct_speed_rampup = 1
+        self.timer = PyQt6.QtCore.QTimer(self)
+        self.cross_hairs_spring : Crosshairs = None
+        self.cross_hairs_inertia : Crosshairs = None
+        self.cross_hairs_damper : Crosshairs = None
+        self.cross_hairs_friction : Crosshairs = None
 
         # on slider change
         self.horizontalSlider_friction_smooth.valueChanged.connect(lambda val : self.slider_changed(val,self.horizontalSlider_friction_smooth,"frictionPctSpeedToRampup"))
@@ -46,6 +76,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.doubleSpinBox_friction_q.valueChanged.connect(lambda val : self.filter_changed(val,"friction_q",100))
         self.spinBox_inertia_freq.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_f",1))
         self.doubleSpinBox_inertia_q.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_q",100))
+
+        # add timer handler
+        self.timer.timeout.connect(self.updateTimer)
 
         # register effect command
         self.register_callback("fx", "frictionPctSpeedToRampup",lambda val : self.update_slider(val,self.horizontalSlider_friction_smooth),0,int)
@@ -77,6 +110,12 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("fx","friction_q",lambda val : self.doubleSpinBox_friction_q.setValue((float)(val) / 100.0),0,str)
         self.register_callback("fx","inertia_f",self.spinBox_inertia_freq.setValue,0,int)
         self.register_callback("fx","inertia_q",lambda val : self.doubleSpinBox_inertia_q.setValue((float)(val) / 100.0),0,str)
+
+        # register pos, accel, speed
+        self.register_callback("axis","curpos",self.get_pos_metrics,0,int)
+        self.register_callback("axis","curspd",self.get_speed_metrics,0,int)
+        self.register_callback("axis","curaccel",self.get_accel_metrics,0,int)
+
         
     def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -85,10 +124,12 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def showEvent(self, a0: PyQt6.QtGui.QShowEvent) -> None: # pylint: disable=unused-argument, invalid-name
         """Show event, reload the settings and show the settings."""
         self.load_settings()
+        self.timer.start(100)
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None: # pylint: disable=unused-argument, invalid-name
         """Hide event, hide the dialog."""
+        self.timer.stop()
         self.send_commands("fx",["spring","damper","friction","inertia","frictionPctSpeedToRampup"],0)
         return super().hideEvent(a0)
 
@@ -99,6 +140,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup",
                                 "spring","damper","friction","inertia",
                                 "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
+  
+    def updateTimer(self):
+        self.send_commands("axis",["curpos","curspd","curaccel"],0)
 
     def extract_scaler(self, gain_default, repl) :
         infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
@@ -168,6 +212,18 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if val != 0 :
             self.send_value("fx", filter, val * scale)
 
+    def get_pos_metrics(self, value):
+        value = 100 * value / 32767
+        self.cross_hairs_spring.update_position(value)
+    
+    def get_speed_metrics(self, value):
+        value = 60 * value / 360.0 
+        self.cross_hairs_damper.update_position(value)
+        self.cross_hairs_friction.update_position(value)
+
+    def get_accel_metrics(self, value):
+        self.cross_hairs_inertia.update_position(value)
+
     def draw_graph_spring(self):
         """Draw the effects graph response."""
         scaler = self.springgain * (1+self.horizontalSlider_spring_gain.value()) / 256.0
@@ -177,7 +233,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
             255,
         )
-        self.draw_effect_conditional(
+        chart = self.draw_effect_conditional(
             -100,
             100,
             "wheel range (%)",
@@ -190,6 +246,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             scaler,
             1
         )
+        color.setAlpha(128)
+        self.cross_hairs_spring = Crosshairs(chart, self.graph_spring.scene(), color)
 
     def draw_graph_inertia(self):
         """Draw the effects graph response."""
@@ -200,7 +258,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             0,
             255,
         )
-        self.draw_effect_conditional(
+        chart = self.draw_effect_conditional(
             -30000,
             30000,
             "acceleration (deg/s2)",
@@ -213,6 +271,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             scaler,
             1
         )
+        color.setAlpha(128)
+        self.cross_hairs_inertia = Crosshairs(chart, self.graph_inertia.scene(),color)
     
     def draw_graph_damper(self):
         """Draw the effects graph response."""
@@ -223,7 +283,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             0,
             255,
         )
-        self.draw_effect_conditional(
+        chart = self.draw_effect_conditional(
             -300,
             300,
             "speed (rpm)",
@@ -236,6 +296,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             scaler,
             1
         )
+        color.setAlpha(128)
+        self.cross_hairs_damper = Crosshairs(chart, self.graph_damper.scene(),color)
 
     def draw_graph_friction(self):
         """Draw the effects graph response."""
@@ -246,7 +308,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             0,
             255,
         )
-        self.draw_effect_conditional(
+        chart = self.draw_effect_conditional(
             -130,
             130,
             "speed (rpm)",
@@ -259,6 +321,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             scaler,
             0
         )
+        color.setAlpha(128)
+        self.cross_hairs_friction = Crosshairs(chart, self.graph_friction.scene(),color)
 
     def draw_effect_conditional(self, x_min, x_max, x_label, start_data, end_data, y_label, nb_point_plot, qwidget, color, effect_gain, cond_frict):
         """Draw a generic effect in a qwidget : the effect response on the metrics range."""
@@ -329,6 +393,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             else:
                 effect_value = self.calc_friction_effect_force(axis_affect, effect_gain)
             q_line.append(axis_pos, effect_value)
+
+        return chart
 
     def calc_condition_effect_force(self, metric, scale):
         """Compute the force for a metric value and a scale."""
