@@ -68,7 +68,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","axisdamper",lambda val : self.updateDamper(val),self.axis,int)
 
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
-        #TODO ? self.serialchooser.connected.connect(self.effectsTweaks.setEnabled)
     
     def updateEsgain(self,val):
         qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
