@@ -77,6 +77,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.spinBox_inertia_freq.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_f",1))
         self.doubleSpinBox_inertia_q.valueChanged.connect(lambda val : self.filter_changed(val,"inertia_q",100))
 
+        # on button
+        self.pushButton_restore.clicked.connect(self.restore_default)
+
         # add timer handler
         self.timer.timeout.connect(self.updateTimer)
 
@@ -130,7 +133,14 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def hideEvent(self, a0) -> None: # pylint: disable=unused-argument, invalid-name
         """Hide event, hide the dialog."""
         self.timer.stop()
+        self.remove_callbacks()
         self.send_commands("fx",["spring","damper","friction","inertia","frictionPctSpeedToRampup"],0)
+        self.log("FFB: closed tuning windows, click on save flash")
+        
+        msg = PyQt6.QtWidgets.QMessageBox(self)
+        msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Information)
+        msg.setText("Don't forget to save in flash.")
+        msg.exec()
         return super().hideEvent(a0)
 
     def load_settings(self):
@@ -141,8 +151,23 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                                 "spring","damper","friction","inertia",
                                 "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
   
+    def restore_default(self):
+        self.horizontalSlider_spring_gain.setValue(64)
+        self.horizontalSlider_inertia_gain.setValue(127)
+        self.horizontalSlider_damper_gain.setValue(64)
+        self.horizontalSlider_friction_gain.setValue(254)
+
+        self.horizontalSlider_friction_smooth.setValue(25)
+
+        self.spinBox_inertia_freq.setValue(15)
+        self.doubleSpinBox_inertia_q.setValue(0.20)
+        self.spinBox_damper_freq.setValue(30)
+        self.doubleSpinBox_damper_q.setValue(0.40)
+        self.spinBox_friction_freq.setValue(50)
+        self.doubleSpinBox_friction_q.setValue(0.20)
+
     def updateTimer(self):
-        self.send_commands("axis",["curpos","curspd","curaccel"],0)
+        self.send_commands("axis",["curpos","curspd","curaccel"],self.spinBox_axis.value())
 
     def extract_scaler(self, gain_default, repl) :
         infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}

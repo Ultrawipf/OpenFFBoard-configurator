@@ -352,7 +352,7 @@
    <item row="2" column="0" colspan="2">
     <widget class="QFrame" name="frame">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -367,55 +367,46 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="0" column="3">
-       <widget class="QRadioButton" name="radioButton_4">
-        <property name="text">
-         <string>Damper</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>simulate effect</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QRadioButton" name="radioButton_3">
-        <property name="text">
-         <string>Inertia</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="radioButton_2">
-        <property name="text">
-         <string>None</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="5">
-       <widget class="QRadioButton" name="radioButton">
-        <property name="text">
-         <string>Friction</string>
+       <widget class="QSpinBox" name="spinBox_axis">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="radioButton_5">
-        <property name="text">
-         <string>Spring</string>
+        <property name="maximum">
+         <number>1</number>
         </property>
        </widget>
       </item>
       <item row="0" column="6">
-       <widget class="QSlider" name="horizontalSlider">
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="7">
+       <widget class="QPushButton" name="pushButton_restore">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>Restore Default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Axis</string>
         </property>
        </widget>
       </item>
@@ -432,6 +423,21 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>horizontalSlider_spring_gain</tabstop>
+  <tabstop>horizontalSlider_inertia_gain</tabstop>
+  <tabstop>spinBox_inertia_freq</tabstop>
+  <tabstop>doubleSpinBox_inertia_q</tabstop>
+  <tabstop>horizontalSlider_damper_gain</tabstop>
+  <tabstop>spinBox_damper_freq</tabstop>
+  <tabstop>doubleSpinBox_damper_q</tabstop>
+  <tabstop>horizontalSlider_friction_gain</tabstop>
+  <tabstop>horizontalSlider_friction_smooth</tabstop>
+  <tabstop>spinBox_friction_freq</tabstop>
+  <tabstop>doubleSpinBox_friction_q</tabstop>
+  <tabstop>spinBox_axis</tabstop>
+  <tabstop>pushButton_restore</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
