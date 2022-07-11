@@ -514,6 +514,7 @@ class AdvancedFFBTuneDialog(PyQt6.QtWidgets.QDialog):
         self.layout.addWidget(self.advanced_tweak_ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Advanced ffb tuning")
+        self.setModal(True)
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable all the widget in the tuned UI."""
