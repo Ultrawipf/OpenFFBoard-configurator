@@ -406,7 +406,7 @@
       <item row="0" column="4">
        <widget class="QLabel" name="label_11">
         <property name="text">
-         <string>Axis</string>
+         <string>Read metrics on axis</string>
         </property>
        </widget>
       </item>

@@ -127,7 +127,6 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def showEvent(self, a0: PyQt6.QtGui.QShowEvent) -> None: # pylint: disable=unused-argument, invalid-name
         """Show event, reload the settings and show the settings."""
         self.load_settings()
-        self.timer.start(100)
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None: # pylint: disable=unused-argument, invalid-name
@@ -150,6 +149,16 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup",
                                 "spring","damper","friction","inertia",
                                 "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
+
+        self.get_value_async("main","id",self.get_main_id,0,int)
+    
+    def get_main_id(self, id):
+        """Setup axis number from main class and start polling metrics on the axis."""
+        if id == 1:
+            self.spinBox_axis.setMaximum(0)
+        elif id == 2:
+            self.spinBox_axis.setMaximum(1)
+        self.timer.start(100)
   
     def restore_default(self):
         self.horizontalSlider_spring_gain.setValue(64)
