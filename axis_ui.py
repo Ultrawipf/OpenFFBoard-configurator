@@ -40,7 +40,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
 
         self.spinBox_range.editingFinished.connect(lambda : self.horizontalSlider_degrees.setValue(self.spinBox_range.value())) # don't update while typing
-        self.horizontalSlider_degrees.valueChanged.connect(lambda val : self.send_value("axis","degrees",(val),instance=self.axis))
+        self.horizontalSlider_degrees.valueChanged.connect(self.degSiderMoved)
 
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.send_value("axis","esgain",(val),instance=self.axis))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
@@ -56,7 +56,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         tabId = self.main.add_tab(self,"FFB Axis")
         # Callbacks must prevent sending a value change command
         self.register_callback("axis","power",self.updatePowerSlider,self.axis,int)
-        self.register_callback("axis","degrees",self.rangeChanged,self.axis,int)
+        self.register_callback("axis","degrees",lambda val : self.updateRange(val),self.axis,int)
 
         self.register_callback("axis","invert",lambda val : qtBlockAndCall(self.checkBox_invert,self.checkBox_invert.setChecked,val),self.axis,int)
         
@@ -76,9 +76,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def updateIdlespring(self,val):
         qtBlockAndCall(self.spinBox_idlespring,self.spinBox_idlespring.setValue,val)
         qtBlockAndCall(self.horizontalSlider_idle,self.horizontalSlider_idle.setValue,val)
+
     def updateDamper(self,val):
         qtBlockAndCall(self.spinBox_damper,self.spinBox_damper.setValue,val)
         qtBlockAndCall(self.horizontalSlider_damper,self.horizontalSlider_damper.setValue,val)
+
+    def updateRange(self,val):
+        qtBlockAndCall(self.spinBox_range,self.spinBox_range.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
 
     def init_ui(self):
         try:
@@ -101,10 +106,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def hideEvent(self,event):
         self.encoder_tuning_dlg.close()
         self.timer.stop()
-
-    def rangeChanged(self,val):
-        qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
-        qtBlockAndCall(self.spinBox_range,self.spinBox_range.setValue,val)
     
     def setCurrentScaler(self,x):
         if(x):
@@ -118,7 +119,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
         self.label_power.setText(text)
-
 
     # Effect/Endstop ratio scaler
     def fxratio_changed(self,val):
@@ -138,7 +138,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         qtBlockAndCall(self.horizontalSlider_power,self.horizontalSlider_power.setValue,val)
         self.updatePowerLabel(val)
 
-    
     def powerSiderMoved(self,val):
         self.powerSiderMovedUpdate(val)
         self.updatePowerLabel(val)
@@ -147,10 +146,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
     @throttle(50)
     def powerSiderMovedUpdate(self,val):
         self.send_value("axis","power",val,instance=self.axis)
-
-    @throttle(50)  
-    def updateDegSlider(self,val):
-        qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
 
     @throttle(50)
     def degSiderMoved(self,val):
@@ -162,7 +157,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def submitHw(self):
         self.driverChanged(self.comboBox_driver.currentIndex())
 
-
     def driverChanged(self,idx):
         if idx == -1:
             return
@@ -173,7 +167,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getEncoder()
             self.main.update_tabs()
             
-   
     def encoderChanged(self,idx):
         if idx == -1:
             return
