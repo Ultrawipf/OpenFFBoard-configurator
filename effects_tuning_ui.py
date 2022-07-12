@@ -82,7 +82,18 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # add timer handler
         self.timer.timeout.connect(self.updateTimer)
+        
+    def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
+        """Enable the item."""
+        return super().setEnabled(a0)
 
+    def showEvent(self, a0: PyQt6.QtGui.QShowEvent) -> None: # pylint: disable=unused-argument, invalid-name
+        """Show event, reload the settings and show the settings."""
+        self.add_callbacks()
+        self.load_settings()
+        return super().showEvent(a0)
+    
+    def add_callbacks(self):
         # register effect command
         self.register_callback("fx", "frictionPctSpeedToRampup",lambda val : self.update_slider(val,self.horizontalSlider_friction_smooth),0,int)
 
@@ -118,16 +129,6 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("axis","curpos",self.get_pos_metrics,0,int)
         self.register_callback("axis","curspd",self.get_speed_metrics,0,int)
         self.register_callback("axis","curaccel",self.get_accel_metrics,0,int)
-
-        
-    def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
-        """Enable the item."""
-        return super().setEnabled(a0)
-
-    def showEvent(self, a0: PyQt6.QtGui.QShowEvent) -> None: # pylint: disable=unused-argument, invalid-name
-        """Show event, reload the settings and show the settings."""
-        self.load_settings()
-        return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None: # pylint: disable=unused-argument, invalid-name
         """Hide event, hide the dialog."""
@@ -368,7 +369,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         chart.setBackgroundBrush(PyQt6.QtWidgets.QApplication.instance().palette().window())
 
         font = PyQt6.QtGui.QFont()
-        font.setPixelSize(7)
+        font.setPixelSize(10)
 
         chart_x_axis = PyQt6.QtCharts.QValueAxis()
         chart_x_axis.setMin(x_min)
