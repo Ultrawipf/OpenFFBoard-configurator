@@ -262,12 +262,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def draw_graph_spring(self):
         """Draw the effects graph response."""
         scaler = self.springgain * (1+self.horizontalSlider_spring_gain.value()) / 256.0
-        color = PyQt6.QtGui.QColor(
-            0,
-            0,
-            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().blue(),
-            255,
-        )
+        color = PyQt6.QtGui.QColor("darkcyan")
         chart = self.draw_effect_conditional(
             -100,
             100,
@@ -287,12 +282,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def draw_graph_inertia(self):
         """Draw the effects graph response."""
         scaler = self.inertia_internal_factor * self.inertia_internal_scale * self.inertiagain * (1+self.horizontalSlider_inertia_gain.value()) / 256.0
-        color = PyQt6.QtGui.QColor(
-            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().red(),
-            0,
-            0,
-            255,
-        )
+        color = PyQt6.QtGui.QColor("darkmagenta")
         chart = self.draw_effect_conditional(
             -30000,
             30000,
@@ -312,12 +302,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def draw_graph_damper(self):
         """Draw the effects graph response."""
         scaler = self.damper_internal_factor * self.damper_internal_scale * self.dampergain * (1+self.horizontalSlider_damper_gain.value()) / 256.0
-        color = PyQt6.QtGui.QColor(
-            0,
-            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-            0,
-            255,
-        )
+        color = PyQt6.QtGui.QColor("limegreen")
         chart = self.draw_effect_conditional(
             -300,
             300,
@@ -337,12 +322,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def draw_graph_friction(self):
         """Draw the effects graph response."""
         scaler = self.friction_internal_factor * self.friction_internal_scale
-        color = PyQt6.QtGui.QColor(
-            0,
-            PyQt6.QtWidgets.QApplication.instance().palette().dark().color().green(),
-            0,
-            255,
-        )
+        color = PyQt6.QtGui.QColor("limegreen")
         chart = self.draw_effect_conditional(
             -130,
             130,
