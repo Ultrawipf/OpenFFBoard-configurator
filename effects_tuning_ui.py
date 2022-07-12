@@ -282,7 +282,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def draw_graph_inertia(self):
         """Draw the effects graph response."""
         scaler = self.inertia_internal_factor * self.inertia_internal_scale * self.inertiagain * (1+self.horizontalSlider_inertia_gain.value()) / 256.0
-        color = PyQt6.QtGui.QColor("darkmagenta")
+        color = PyQt6.QtGui.QColor("magenta")
         chart = self.draw_effect_conditional(
             -30000,
             30000,
