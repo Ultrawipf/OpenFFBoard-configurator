@@ -39,8 +39,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
 
-        self.spinBox_range.editingFinished.connect(lambda : self.horizontalSlider_degrees.setValue(self.spinBox_range.value())) # don't update while typing
-        self.horizontalSlider_degrees.valueChanged.connect(self.degSiderMoved)
+        self.spinBox_range.valueChanged.connect(self.update_pos_slider_from_spinbox) # don't update while typing
+        #elf.horizontalSlider_degrees.valueChanged.connect(self.send_slider_value)
 
         self.horizontalSlider_esgain.valueChanged.connect(lambda val : self.send_value("axis","esgain",(val),instance=self.axis))
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
@@ -148,8 +148,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.send_value("axis","power",val,instance=self.axis)
 
     @throttle(50)
-    def degSiderMoved(self,val):
+    def send_slider_value(self,val):
         self.send_value("axis","degrees",(val),instance=self.axis)
+
+    def update_pos_slider_from_spinbox(self,val):
+        if val :
+            rounded_val = round(val, -1) #round to the nearest 10 step
+            self.horizontalSlider_degrees.setValue(rounded_val)
+            self.send_slider_value(val)
 
     def submitEnc(self):
         self.encoderChanged(self.comboBox_encoder.currentIndex())
@@ -191,7 +197,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     def drvtypecb(self,i):
         self.driver_id = int(i)
-        if(i == None):
+        if i is None :
             self.main.log("Error getting driver")
             return
         updateClassComboBox(self.comboBox_driver,self.driver_ids,self.driver_classes,self.driver_id)
