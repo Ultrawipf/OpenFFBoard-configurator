@@ -129,7 +129,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def display_data(self, data):
         """Decode the json data received."""
-        json_data = json.loads("[" + data + "]")
+        json_data = json.loads("[" + data.replace('\n',',') + "]")
         if len(json_data) == 12:
             self.update_current(json_data)
 

@@ -120,10 +120,12 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if not self._serial.isOpen() and self._port is not None:
             self.main.log("Connecting...")
             self._serial.setPort(self._port)
-            self._serial.setBaudRate(500000)
+            self._serial.setBaudRate(115200)
             self._serial.open(PyQt6.QtCore.QIODevice.OpenModeFlag.ReadWrite)
             if not self._serial.isOpen():
                 self.main.log("Can not open port")
+            else:
+                self._serial.setDataTerminalReady(True)
 
         self.update()
 

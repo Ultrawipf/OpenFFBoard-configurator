@@ -25,7 +25,6 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None:
-        print("close")
         self.timer.stop()
         return super().hideEvent(a0)
     
