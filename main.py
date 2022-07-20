@@ -45,7 +45,7 @@ import effects_monitor
 import effects_graph_ui
 
 # This GUIs version
-VERSION = "1.8.6"
+VERSION = "1.9.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
