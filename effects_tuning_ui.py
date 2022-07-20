@@ -11,6 +11,7 @@ import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtCharts
 import base_ui
+from helper import map_infostring
 
 class Crosshairs():
     
@@ -109,13 +110,13 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("fx","inertia",lambda val : self.update_slider(val,self.horizontalSlider_inertia_gain),0,int)
 
         # register internal factor for scaler and factor
-        self.register_callback("fx","scaler_friction",self.set_internal_friction_scale,0,str,typechar="!")
-        self.register_callback("fx","scaler_damper",self.set_internal_damper_scale,0,str,typechar="!")
-        self.register_callback("fx","scaler_inertia",self.set_internal_inertia_scale,0,str,typechar="!")
+        # self.register_callback("fx","scaler_friction",self.set_internal_friction_scale,0,str,typechar="!")
+        # self.register_callback("fx","scaler_damper",self.set_internal_damper_scale,0,str,typechar="!")
+        # self.register_callback("fx","scaler_inertia",self.set_internal_inertia_scale,0,str,typechar="!")
 
-        self.register_callback("fx","scaler_friction",self.set_internal_friction_factor,0,str)
-        self.register_callback("fx","scaler_damper",self.set_internal_damper_factor,0,str)
-        self.register_callback("fx","scaler_inertia",self.set_internal_inertia_factor,0,str)
+        # self.register_callback("fx","scaler_friction",self.set_internal_friction_factor,0,str)
+        # self.register_callback("fx","scaler_damper",self.set_internal_damper_factor,0,str)
+        # self.register_callback("fx","scaler_inertia",self.set_internal_inertia_factor,0,str)
 
         # register biquad factor
         self.register_callback("fx","damper_f",self.spinBox_damper_freq.setValue,0,int)
@@ -145,9 +146,8 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def load_settings(self):
         """Load the settings."""
-        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia",
-                                "spring","damper","friction","inertia"],0,typechar="!")
-        self.send_commands("fx",["scaler_friction","scaler_damper","scaler_inertia","frictionPctSpeedToRampup",
+        self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
+        self.send_commands("fx",["frictionPctSpeedToRampup",
                                 "spring","damper","friction","inertia",
                                 "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
 
@@ -179,44 +179,60 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def updateTimer(self):
         self.send_commands("axis",["curpos","curspd","curaccel"],self.spinBox_axis.value())
 
-    def extract_scaler(self, gain_default, repl) :
-        infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
-        if "scale" in infos:
-            gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
-        return gain_default
+    # def extract_scaler(self, gain_default,factor_default, repl) :
+    #     infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
+    #     if "scale" in infos:
+    #         gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
+    #     if "factor" in infos:
+    #         factor_default = float(infos["factor"]) if float(infos["factor"]) > 0 else factor_default
+
+    #     return gain_default,factor_default
+    
+
 
     def set_spring_scaler_cb(self,repl):
-        self.springgain = self.extract_scaler(self.springgain, repl)
+        dat = map_infostring(repl)
+        self.springgain = dat.get("scale",self.springgain)
+        #self.springgain = self.extract_scaler(self.springgain, repl)
 
     def set_damper_scaler_cb(self,repl):
-        self.dampergain = self.extract_scaler(self.dampergain, repl)
+        #self.dampergain = self.extract_scaler(self.dampergain, repl)
+        dat = map_infostring(repl)
+        self.dampergain = dat.get("scale",self.dampergain)
+        self.damper_internal_factor = dat.get("factor",self.damper_internal_factor)
 
     def set_friction_scaler_cb(self,repl):
-        self.frictiongain = self.extract_scaler(self.frictiongain, repl)
+        #self.frictiongain = self.extract_scaler(self.frictiongain, repl)
+        dat = map_infostring(repl)
+        self.frictiongain = dat.get("scale",self.frictiongain)
+        self.friction_internal_factor = dat.get("factor",self.friction_internal_factor)
 
     def set_inertia_scaler_cb(self,repl):
-        self.inertiagain = self.extract_scaler(self.inertiagain, repl)
+        #self.inertiagain = self.extract_scaler(self.inertiagain, repl)
+        dat = map_infostring(repl)
+        self.inertiagain = dat.get("scale",self.inertiagain)
+        self.inertia_internal_factor = dat.get("factor",self.inertia_internal_factor)
 
-    def set_internal_friction_scale(self, repl):
-        self.friction_internal_scale = self.extract_scaler(1, repl)
+    # def set_internal_friction_scale(self, repl):
+    #     self.friction_internal_scale = self.extract_scaler(1, repl)
 
-    def set_internal_damper_scale(self, repl):
-        self.damper_internal_scale = self.extract_scaler(1, repl)
+    # def set_internal_damper_scale(self, repl):
+    #     self.damper_internal_scale = self.extract_scaler(1, repl)
 
-    def set_internal_inertia_scale(self, repl):
-        self.inertia_internal_scale = self.extract_scaler(1, repl)
+    # def set_internal_inertia_scale(self, repl):
+    #     self.inertia_internal_scale = self.extract_scaler(1, repl)
 
-    def set_internal_friction_factor(self, value):
-        self.friction_internal_factor = float(value)
+    # def set_internal_friction_factor(self, value):
+    #     self.friction_internal_factor = float(value)
 
-    def set_internal_damper_factor(self, value):
-        self.damper_internal_factor = float(value)
+    # def set_internal_damper_factor(self, value):
+    #     self.damper_internal_factor = float(value)
 
-    def set_internal_inertia_factor(self, value):
-        self.inertia_internal_factor = float(value)
+    # def set_internal_inertia_factor(self, value):
+    #     self.inertia_internal_factor = float(value)
 
-    def set_friction_pct_speed_rampup(self,value):
-        self.friction_pct_speed_rampup = value
+    # def set_friction_pct_speed_rampup(self,value):
+    #     self.friction_pct_speed_rampup = value
 
     def update_slider(self,val,slider : PyQt6.QtWidgets.QSlider):
         #skip the slider update if value is the same

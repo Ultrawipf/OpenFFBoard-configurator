@@ -95,3 +95,7 @@ def throttle(ms):
                 throttle.t.start()     
         return wrapper
     return decorator
+
+# Splits a reply in the format "name:value,name2:value2"... into a dict
+def map_infostring(repl,type=float):
+    return{key:type(value) for (key,value) in [entry.split(":") for entry in repl.split(",")]}
