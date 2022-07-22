@@ -10,6 +10,55 @@ from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from base_ui import CommunicationHandler
 import portconf_ui
 
+
+# Helper widget implementing common commands for analog axes
+class AnalogProcessingOptions(QWidget,CommunicationHandler):
+    def __init__(self, parent,classname : str, instance : int = 0, autoscale : bool = False, filter : bool = False, manual_tune_channels : int = 0):
+        QWidget.__init__(self,parent=parent)
+        CommunicationHandler.__init__(self)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0,0,0,0)
+        self.setLayout(self.layout)
+
+        
+        self.classname = classname
+        self.instance = instance
+        self.filter = filter
+        self.autoscale = autoscale
+
+        if filter:
+            self.filterBox = QCheckBox("Lowpass filter")
+            self.layout.addWidget(self.filterBox)
+            #self.get_value_async("apin","filter",self.filterBox.setChecked,0,conversion=int)
+
+        if autoscale:
+            self.autorangeBox = QCheckBox("Autorange")
+            self.layout.addWidget(self.autorangeBox)
+           # self.get_value_async("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
+
+        if manual_tune_channels > 0:
+            pass
+            # create min/max boxes or sliders
+
+        self.readValues()
+
+    def readValues(self):
+        if self.autoscale:
+            self.get_value_async(self.classname,"autocal",self.autorangeBox.setChecked,self.instance,conversion=int)
+        if self.filter:
+            self.get_value_async(self.classname,"filter",self.filterBox.setChecked,self.instance,conversion=int)
+
+    def apply(self):
+        if self.autoscale:
+            self.send_value(self.classname,"autocal",1 if self.autorangeBox.isChecked() else 0,instance = self.instance)
+
+        if self.filter:
+            self.send_value(self.classname,"filter",1 if self.filterBox.isChecked() else 0,instance = self.instance)
+
+        
+
+
+
 class AnalogOptionsDialog(OptionsDialog):
     def __init__(self,name,id, main):
         self.main = main
@@ -47,10 +96,12 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def initUI(self):
         layout = QVBoxLayout()
-        self.autorangeBox = QCheckBox("Autorange")
-        layout.addWidget(self.autorangeBox)
-        self.filterBox = QCheckBox("Lowpass filters")
-        layout.addWidget(self.filterBox)
+        self.processingOptions = AnalogProcessingOptions(self,"apin",0,True,True,0)
+        layout.addWidget(self.processingOptions)
+        # self.autorangeBox = QCheckBox("Autorange")
+        # layout.addWidget(self.autorangeBox)
+        # self.filterBox = QCheckBox("Lowpass filters")
+        # layout.addWidget(self.filterBox)
         layout.addWidget(self.buttonBox)
         self.setLayout(layout)
 
@@ -66,9 +117,10 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.send_commands("apin",["values"],self.prefix)
 
     def readValues(self):
+        self.processingOptions.readValues()
         self.get_value_async("apin","pins",self.createAinButtons,0,conversion=int)
-        self.get_value_async("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
-        self.get_value_async("apin","filter",self.filterBox.setChecked,0,conversion=int)
+        # self.get_value_async("apin","autocal",self.autorangeBox.setChecked,0,conversion=int)
+        # self.get_value_async("apin","filter",self.filterBox.setChecked,0,conversion=int)
 
     def createAinButtons(self,axes):
         self.axes = axes
@@ -112,14 +164,15 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
                 pgb.setValue(-32768)
 
     def apply(self):
+        self.processingOptions.apply()
         mask = 0
         for i in range(self.axes):
             if (self.analogbtns.button(i).isChecked()):
                 mask |= 1 << i
         self.axismask = mask
         self.send_value("apin","mask",mask)
-        self.send_value("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
-        self.send_value("apin","filter",1 if self.filterBox.isChecked() else 0)
+        # self.send_value("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
+        # self.send_value("apin","filter",1 if self.filterBox.isChecked() else 0)
 
     def onshown(self):
         self.register_callback("apin","values",self.valueCb,self.prefix,str)
@@ -205,6 +258,9 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
 
     def initUI(self):
         layout = QFormLayout()
+
+        self.processingOptions = AnalogProcessingOptions(self,"adsAnalog",0,True,True,0)
+        layout.addRow(self.processingOptions)
 
         self.numAinBox = QSpinBox()
         self.numAinBox.setMinimum(1)
