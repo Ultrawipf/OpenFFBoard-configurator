@@ -24,7 +24,12 @@ class Crosshairs():
         self.m_xline.setZValue(11)
 
         # add lines and text to scene
+        self.scene = scene
         scene.addItem(self.m_xline)
+    
+    def __del__(self):
+        # Removes line from scene
+        self.scene.removeItem(self.m_xline)
     
     def update_position(self, metrics):
         point = PyQt6.QtCore.QPointF(metrics, 0)
