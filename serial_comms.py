@@ -34,7 +34,8 @@ class SerialComms(QObject):
         callbackObj = {"handler":handler,"callback":callback,"convert":conversion,"instance":instance,"class":cls,"cmd":cmd,"address":adr,"delete":delete,"typechar":typechar}
         if callbackObj not in SerialComms.callbackDict[cls]:
             SerialComms.callbackDict[cls].append(callbackObj)
-            #print("New callback",cls,cmd)
+            if(adr != None):
+                print("New callback",cls,cmd)
 
     def removeCallbacks(handler):
         for cls,item in (SerialComms.callbackDict.items()):
@@ -47,18 +48,21 @@ class SerialComms(QObject):
         if typechar == None:
             typechar = ''
         SerialComms.registerCallback(handler=handler,cls=cls,cmd=cmd,callback=callback,instance=instance,conversion=conversion,adr=adr,delete=delete,typechar=typechar)
-        if not adr:
+        if adr == None:
             self.serialWriteRaw(f"{cls}.{instance}.{cmd}{typechar};")
         else:
             self.serialWriteRaw(f"{cls}.{instance}.{cmd}{typechar}{adr};")
 
-    def sendCommand(self,cls,cmd,instance=0,typechar='?'):
-        cmdstring = f"{cls}.{instance}.{cmd}{typechar};"
+    def sendCommand(self,cls,cmd,instance=0,typechar='?',adr=None):
+        if(adr):
+            cmdstring = f"{cls}.{instance}.{cmd}{typechar}{adr};"
+        else:
+            cmdstring = f"{cls}.{instance}.{cmd}{typechar};"
         self.serialWriteRaw(cmdstring)
 
     def sendValue(self,handler,cls,cmd,val,adr=None,instance=0):
         cmdstring  = f"{cls}.{instance}.{cmd}={val}"
-        if adr:
+        if adr != None:
             cmdstring+="?"+str(adr)
         cmdstring += ";"
         SerialComms.registerCallback(handler=handler,cls=cls,cmd=cmd,callback=self.checkOk,instance=instance,adr=adr,delete=True,typechar='=')
@@ -122,9 +126,9 @@ class SerialComms(QObject):
         typechar = groups[GRP_TYPE] if groups[GRP_TYPE] else ''
         cmd = groups[GRP_CMD]
         deleted = False
-        adr = groups[GRP_CMDVAL2] if groups[GRP_CMDVAL2] else None
-        val = groups[GRP_CMDVAL1] if groups[GRP_CMDVAL1] else None
-        
+        adr = int(groups[GRP_CMDVAL2]) if groups[GRP_CMDVAL2] != None else int(groups[GRP_CMDVAL1]) if groups[GRP_CMDVAL1] != None and typechar == '?' else None  
+        val = int(groups[GRP_CMDVAL1]) if groups[GRP_CMDVAL1] != None  else None
+    
         if cls in SerialComms.callbackDict:
             for callbackObject in SerialComms.callbackDict[cls]:
                 if callbackObject["cmd"] != cmd:
@@ -137,7 +141,7 @@ class SerialComms(QObject):
                     continue
 
                 if adr != None and adr != callbackObject["address"]:
-                    #print("Ignoring address",callbackObject,groups)
+                    #print("Ignoring address",callbackObject,adr)
                     continue
 
                 if reply == "NOT_FOUND":
