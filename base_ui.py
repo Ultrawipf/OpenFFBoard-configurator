@@ -131,13 +131,16 @@ class CommunicationHandler:
             self, cls=cls, cmd=cmd, val=val, adr=adr, instance=instance
         )
 
-    def send_command(self, cls, cmd, instance=0, typechar="?"):
+    def send_command(self, cls, cmd, instance=0, typechar="?",adr=None):
         """Send one command to the board."""
-        self.comms.sendCommand(cls, cmd, instance=instance, typechar=typechar)
+        self.comms.sendCommand(cls, cmd, instance=instance, typechar=typechar,adr=adr)
 
-    def send_commands(self, cls, cmds, instance=0, typechar="?"):
+    def send_commands(self, cls, cmds, instance=0, typechar="?",adr=None):
         """Send colection of command to the board."""
         cmdstring = ""
         for cmd in cmds:
-            cmdstring += f"{cls}.{instance}.{cmd}{typechar};"
+            if adr != None:
+                cmdstring += f"{cls}.{instance}.{cmd}{typechar}{adr};"
+            else:
+                cmdstring += f"{cls}.{instance}.{cmd}{typechar};"
         self.comms.serialWriteRaw(cmdstring)
