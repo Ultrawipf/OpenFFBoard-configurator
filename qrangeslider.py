@@ -36,7 +36,7 @@ class QtRangeSlider(QWidget):
     WIDTH = 120
     THUMB_WIDTH = 5
     THUMB_HEIGHT = 16
-    TRACK_HEIGHT = 3
+    TRACK_HEIGHT = 2
     FILL_HEIGHT = 10
     TRACK_COLOR = QColor(0xc7, 0xc7, 0xc7,127)
     TRACK_FILL_COLOR = QColor(0x01, 0x81, 0xff,127)
