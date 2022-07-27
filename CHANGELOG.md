@@ -1,5 +1,6 @@
 - Added analog filter option
 - Added ADS111X source dialog
+- Added manual range tuning option for local analog and ADS111X
   
 Redesign:
 - Redesigned UI layout

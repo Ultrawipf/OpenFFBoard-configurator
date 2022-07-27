@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog,QSizePolicy
 from PyQt6.QtWidgets import QWidget,QGroupBox,QProgressBar,QSpacerItem 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QHBoxLayout,QGridLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox,QFormLayout
 from PyQt6 import uic
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer,Qt
 import main
 from helper import res_path,classlistToIds,updateListComboBox
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
@@ -18,7 +18,7 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         QWidget.__init__(self,parent=parent)
         CommunicationHandler.__init__(self)
         self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
+        self.layout.setContentsMargins(0,2,0,2)
         self.setLayout(self.layout)
 
         self.channels = channels
@@ -98,6 +98,8 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
 
     def rawValueCb(self, str):
         val_list = str.split("\n")
+        if "OK" in str: # no reply
+            return
         j=0
         for i in range(len(self.tune_list)):
             pgb = self.tune_list[i][1]
@@ -112,44 +114,33 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         self.channels = channels
         
         if self.manual_tune:
-            for ch,row in enumerate(self.tune_list):
-                for widget in row:
-                    widget.setVisible(ch < channels)
-      
+            self.tuneBox.setVisible(channels > 0)
+            start_row = len(self.tune_list) # Start index row
             for i in range(channels):
                 if len(self.tune_list) >= channels:
                     continue # Do not add more
-                
-                # minBox,maxBox = QSpinBox(self),QSpinBox(self)
-                # minBox.setRange(-0x7fff,0x7fff)
-                # maxBox.setRange(-0x7fff,0x7fff)
-                # newWidgets = [QLabel(f"Min {i+1}"),minBox,QLabel(f"Max {i+1}"),maxBox]
-                rangeSlider = QtRangeSlider(self,0xffff) # TODO fix slider to allow non 0 start values
+                rangeSlider = QtRangeSlider(self,0xfffe) # TODO fix slider to allow non 0 start values
                 
                 rawProgressBar = QProgressBar(self)
                 rawProgressBar.setRange(-32768, 32767)
                 rawProgressBar.setFixedHeight(QtRangeSlider.HEIGHT//2)
                 rawProgressBar.setTextVisible(False)
-                #rawProgressBar.setStyleSheet(f"padding :{QtRangeSlider.TRACK_PADDING}px")
-                #rawProgressBar.setFormat(f"%p% (%v) Ch{i+1}")
-                
                 
                 self.tune_list.append([rangeSlider,rawProgressBar])
-                # self.tuneBoxLayout.addWidget(rangeSlider)
-                # self.tuneBoxLayout.addWidget(rawProgressBar)
-                
-                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed ) ,i,0)
-                self.tuneBoxLayout.addWidget(rawProgressBar,i,1)
-                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed) ,i,2)
-                self.tuneBoxLayout.addWidget(rangeSlider,i,0,1,2)
+                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed) ,i+start_row,0)
+                self.tuneBoxLayout.addWidget(rawProgressBar,i+start_row,1)
+                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed) ,i+start_row,2)
+                self.tuneBoxLayout.addWidget(rangeSlider,i+start_row,0,1,2)
                 #rangeSlider.setValue(0x7fff)
-                print(i)
                 self.register_callback(self.classname,"min",lambda v,slider=rangeSlider : slider.set_left_thumb_value(v+0x7fff) ,self.instance,adr=i,conversion=int)
                 self.register_callback(self.classname,"max",lambda v,slider=rangeSlider : slider.set_right_thumb_value(v+0x7fff),self.instance,adr=i,conversion=int)
                 
                 # for col,widget in enumerate(newWidgets):
                 #     self.tuneBoxLayout.addWidget(widget,i,col)
                 #     widget.setVisible(True)
+            for ch,row in enumerate(self.tune_list):
+                for widget in row:
+                    widget.setVisible(ch < channels)
 
         if self.values:
             for i in range(channels):
@@ -158,7 +149,8 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
 
                 pgb = QProgressBar(self)
                 pgb.setVisible(False)
-                pgb.setFixedHeight(10)
+                pgb.setFixedHeight(16)
+                pgb.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 pgb.setRange(-32768, 32767)
                 pgb.setValue(-32768)
                 pgb.setFormat(f"%p% (%v) Ch{i+1}")
@@ -177,12 +169,15 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         #         self.send_commands(self.classname,["min","max"],instance = self.instance,adr=i)
 
     def apply(self):
+        manual_allowed = True
         if self.autoscale:
+            manual_allowed = not self.autorangeBox.isChecked()
             self.send_value(self.classname,"autocal",1 if self.autorangeBox.isChecked() else 0,instance = self.instance)
 
         if self.filter:
             self.send_value(self.classname,"filter",1 if self.filterBox.isChecked() else 0,instance = self.instance)
-        if self.manual_tune:
+
+        if self.manual_tune and manual_allowed: # Do not send if autorange is checked
             for i in range(self.channels):
                 min = self.tune_list[i][0].get_left_thumb_value() - 0x7fff
                 max = self.tune_list[i][0].get_right_thumb_value() - 0x7fff
@@ -215,8 +210,8 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         CommunicationHandler.__init__(self)
         self.analogbtns = QButtonGroup()
         self.analogbtns.setExclusive(False)
-        self.buttonBox = QGroupBox("Pins")
-        self.buttonBoxLayout = QVBoxLayout()
+        self.buttonBox = QGroupBox("Output channels")
+        self.buttonBoxLayout = QFormLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
 
         self.axes = 0
@@ -228,7 +223,7 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         self.timer.timeout.connect(self.updateTimer)
 
     def initUI(self):
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
         self.processingOptions = AnalogProcessingOptions(self,"apin",0,filter=True,autoscale=True,values=False,manual_tune=True)
         layout.addWidget(self.processingOptions)
         # self.autorangeBox = QCheckBox("Autorange")
@@ -272,20 +267,26 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(axes):
             btn=QCheckBox(str(i+1),self)
             pgb = QProgressBar(self)
-            pgb.setFixedHeight(10)
+            pgb.setFixedHeight(20)
+            pgb.setAlignment(Qt.AlignmentFlag.AlignCenter)
             pgb.setRange(-32768, 32767)
             pgb.setValue(-32768)
             self.analogbtns.addButton(btn,i)
-            self.buttonBoxLayout.addWidget(btn)
-            self.buttonBoxLayout.addWidget(pgb)
+            self.buttonBoxLayout.addRow(btn,pgb)
+            #self.buttonBoxLayout.addWidget(pgb)
             self.pgb_list.append(pgb)
 
         def f(axismask):
             self.axismask = axismask
+            channels = 0
             for i in range(self.axes):
-                self.analogbtns.button(i).setChecked(axismask & (1 << i))
+                on = axismask & (1 << i)
+                self.analogbtns.button(i).setChecked(on)
+                if on:
+                    channels+=1
+            self.processingOptions.setChannels(channels)
+
         self.get_value_async("apin","mask",f,0,conversion=int)
-        self.processingOptions.setChannels(int(axes))
 
     def valueCb(self, str):
         val_list = str.split("\n")
@@ -301,11 +302,14 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
     def apply(self):
         self.processingOptions.apply()
         mask = 0
+        channels = 0
         for i in range(self.axes):
             if (self.analogbtns.button(i).isChecked()):
+                channels += 1
                 mask |= 1 << i
         self.axismask = mask
         self.send_value("apin","mask",mask)
+        self.processingOptions.setChannels(channels)
         # self.send_value("apin","autocal",1 if self.autorangeBox.isChecked() else 0)
         # self.send_value("apin","filter",1 if self.filterBox.isChecked() else 0)
 
@@ -394,7 +398,7 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
     def initUI(self):
         layout = QFormLayout()
 
-        self.processingOptions = AnalogProcessingOptions(self,"adsAnalog",0,filter=True,autoscale=True,values=False,manual_tune=False,channels = 4)
+        self.processingOptions = AnalogProcessingOptions(self,"adsAnalog",0,filter=True,autoscale=True,values=True,manual_tune=True,channels = 4)
         layout.addRow(self.processingOptions)
 
         self.numAinBox = QSpinBox()
