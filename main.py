@@ -634,13 +634,13 @@ class WrapperStatusBar(base_ui.WidgetUI):
 class AboutDialog(PyQt6.QtWidgets.QDialog):
     """Display the about dialog box."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent : MainUi = None ):
         """Display the about box with the release number updated."""
         PyQt6.QtWidgets.QDialog.__init__(self, parent)
         PyQt6.uic.loadUi(helper.res_path("about.ui"), self)
         verstr = "Version: " + VERSION
-        if parent.fwverstr:
-            verstr += " / Firmware: " + parent.fwverstr
+        if parent.fw_version_str:
+            verstr += " / Firmware: " + parent.fw_version_str
         self.version.setText(verstr)
 
 
