@@ -32,10 +32,10 @@ class QtRangeSlider(QWidget):
             * left_thumb_value_changed (int)
             * right_thumb_value_changed (int)
     """
-    HEIGHT = 30
+    HEIGHT = 21
     WIDTH = 120
     THUMB_WIDTH = 5
-    THUMB_HEIGHT = 16
+    THUMB_HEIGHT = 15
     TRACK_HEIGHT = 2
     FILL_HEIGHT = 10
     TRACK_COLOR = QColor(0xc7, 0xc7, 0xc7,127)
@@ -52,7 +52,7 @@ class QtRangeSlider(QWidget):
 
         self.setSizePolicy(
             QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed
+            QSizePolicy.Policy.MinimumExpanding
         )
         self.setMinimumWidth(self.WIDTH)
         self.setMinimumHeight(self.HEIGHT)
@@ -109,7 +109,7 @@ class QtRangeSlider(QWidget):
         available_width = canvas_width - 2 * self.TRACK_PADDING
         x1 = self.TRACK_PADDING#self._left_thumb.value / self._right_value * available_width + self.TRACK_PADDING
         x2 = self._value / self._right_value * available_width + self.TRACK_PADDING
-        rect = QRect(round(x1), self._canvas_height // 2 - self.FILL_HEIGHT // 2, \
+        rect = QRect(round(x1), canvas_height // 2 - self.FILL_HEIGHT // 2, \
             round(x2) - round(x1), self.FILL_HEIGHT)
         painter.fillRect(rect, brush)
 

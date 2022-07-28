@@ -111,6 +111,8 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         
      # create min/max boxes or sliders
     def setChannels(self,channels : int):
+        if channels == self.channels:
+            return
         self.channels = channels
         
         if self.manual_tune:
@@ -123,13 +125,13 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
                 
                 rawProgressBar = QProgressBar(self)
                 rawProgressBar.setRange(-32768, 32767)
-                rawProgressBar.setFixedHeight(QtRangeSlider.HEIGHT//2)
+                rawProgressBar.setFixedHeight(QtRangeSlider.HEIGHT-4)
                 rawProgressBar.setTextVisible(False)
                 
                 self.tune_list.append([rangeSlider,rawProgressBar])
-                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed) ,i+start_row,0)
+                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,1,QSizePolicy.Policy.Fixed,QSizePolicy.Policy.Minimum) ,i+start_row,0)
                 self.tuneBoxLayout.addWidget(rawProgressBar,i+start_row,1)
-                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,0,QSizePolicy.Policy.Fixed) ,i+start_row,2)
+                self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,1,QSizePolicy.Policy.Fixed,QSizePolicy.Policy.Minimum) ,i+start_row,2)
                 self.tuneBoxLayout.addWidget(rangeSlider,i+start_row,0,1,2)
                 #rangeSlider.setValue(0x7fff)
                 self.register_callback(self.classname,"min",lambda v,slider=rangeSlider : slider.set_left_thumb_value(v+0x7fff) ,self.instance,adr=i,conversion=int)
