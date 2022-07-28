@@ -164,9 +164,9 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
             self.get_value_async(self.classname,"autocal",self.autorangeBox.setChecked,self.instance,conversion=int)
         if self.filter:
             self.get_value_async(self.classname,"filter",self.filterBox.setChecked,self.instance,conversion=int)
-        # if self.manual_tune:
-        #     for i in range(self.channels):
-        #         self.send_commands(self.classname,["min","max"],instance = self.instance,adr=i)
+        if self.manual_tune:
+            for i in range(self.channels):
+                self.send_commands(self.classname,["min","max"],instance = self.instance,adr=i)
 
     def apply(self):
         manual_allowed = True
@@ -183,7 +183,7 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
                 max = self.tune_list[i][0].get_right_thumb_value() - 0x7fff
                 self.send_value(self.classname,"min",min,instance = self.instance,adr=i)
                 self.send_value(self.classname,"max",max,instance = self.instance,adr=i)
-            self.readValues()
+            #self.readValues()
 
         
 
