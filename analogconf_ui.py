@@ -298,8 +298,10 @@ class AnalogInputConf(OptionsDialogGroupBox,CommunicationHandler):
             if self.axismask & (1<<i):
                 pgb.setValue(int(val_list[j]))
                 j=j+1
+                pgb.setEnabled(True)
             else:
                 pgb.setValue(-32768)
+                pgb.setEnabled(False)
 
     def apply(self):
         self.processingOptions.apply()
