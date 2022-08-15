@@ -84,6 +84,9 @@ class ErrorsDialog(QDialog):
     def registerCallbacks(self):
         self.ui.registerCallbacks()
 
+    def connected_cb(self,connected):
+        if connected:
+            self.ui.clear_stored_errors()
 
 class ErrorsUI(WidgetUI, CommunicationHandler):
     def __init__(self, main=None, parent=None):
@@ -104,6 +107,11 @@ class ErrorsUI(WidgetUI, CommunicationHandler):
     def append_log(self, message):
         """Display the log message."""
         self.logBox_1.append(message)
+
+    def clear_stored_errors(self):
+        """Clears stored errors but does not clear them on the device"""
+        self.errors.clearErrors()
+        self.readErrors()
 
     def clear_errors(self):
         """Remove errors in the board by serial command and clear UI."""
@@ -126,7 +134,8 @@ class ErrorsUI(WidgetUI, CommunicationHandler):
             self.send_command("sys", "errors", 0)
 
     def errorCallback(self, errorstring):
-        self.parent.show()
+        if errorstring != "None":
+            self.parent.show()
         errors = []
         for errorline in errorstring.split("\n"):
             e = errorline.split(":", 2)
