@@ -31,6 +31,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.dfu_device = None
         self.first_fail = True
         self.elements = None
+        self.uploading = False
 
         self.pushButton_DFU.clicked.connect(self.dfu)
         self.pushButton_filechooser.clicked.connect(self.file_clicked)
@@ -46,7 +47,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def hideEvent(self, a0) -> None:  # pylint: disable=invalid-name
         """Close the dfu mode in pydfu lib and call the UI close event."""
-        if self.dfu_device:
+        if self.dfu_device and not self.uploading:
             pydfu.exit_dfu()
         return super().hideEvent(a0)
 
@@ -79,11 +80,11 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             try:
                 pydfu.init()
             except ValueError as e:
-                self.log("Found DFU device but could not connect: " + str(e.args[1]))
+                self.log("Found DFU device but could not connect: " + str(e.args[1]) + "\n")
                 self.timer.start()
                 return
             self.log("Found DFU device. Please select an option")
-            self.dfuDevice = dfu_devices[0]
+            self.dfu_device = dfu_devices[0]
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
@@ -134,6 +135,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def upload_clicked(self):
         """Start the upload after the button click event."""
+        self.uploading = True
         elements = self.elements
         mass_erase = self.checkBox_massErase.isChecked()
         self.groupbox_controls.setEnabled(False)
@@ -150,7 +152,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         except pydfu.DFUException as exception:
             self.log(str(exception))
             self.log("USB Exception during flashing... Please reflash firmware!\n")
-
+        self.uploading = False
         pydfu.exit_dfu()
         self.log("Done. Please reset\n")
         self.groupbox_controls.setEnabled(True)
