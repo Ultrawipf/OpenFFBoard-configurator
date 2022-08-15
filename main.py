@@ -88,6 +88,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
         self.tabWidget_main.addTab(self.serialchooser, "Serial")
 
+        # Error dialog clear
+        self.serialchooser.connected.connect(self.errors_dlg.connected_cb)
+
         # Systray
         self.systray = SystrayWrapper(self)
         self.systray.open_main_ui_signal.connect(self.display_ui)
