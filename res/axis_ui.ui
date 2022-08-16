@@ -140,16 +140,6 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QCheckBox" name="checkBox_invert">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the axis.&lt;br/&gt;Also reverses the forces so they keep pointing in the correct direction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>Invert axis</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="pushButton_center">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Zero the X axis (Center)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -278,15 +268,8 @@
          <property name="bottomMargin">
           <number>5</number>
          </property>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="pushButton_apply_options">
-           <property name="text">
-            <string>Apply</string>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="0" colspan="2">
-          <widget class="QFrame" name="frame">
+          <widget class="QFrame" name="frame_reduction">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -315,6 +298,13 @@
             <property name="bottomMargin">
              <number>4</number>
             </property>
+            <item row="0" column="0" colspan="3">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder reduction &lt;br/&gt;prescaler for &lt;br/&gt;range selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="0">
              <widget class="QSpinBox" name="spinBox_reduction_numerator">
               <property name="sizePolicy">
@@ -367,14 +357,24 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0" colspan="3">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder reduction &lt;br/&gt;prescaler for &lt;br/&gt;range selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
            </layout>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="pushButton_apply_options">
+           <property name="text">
+            <string>Apply</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="checkBox_invert">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reverses the axis.&lt;br/&gt;Also reverses the forces so they keep pointing in the correct direction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Invert axis</string>
+           </property>
           </widget>
          </item>
         </layout>
