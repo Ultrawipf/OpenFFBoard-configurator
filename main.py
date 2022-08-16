@@ -88,7 +88,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
         self.tabWidget_main.addTab(self.serialchooser, "Serial")
 
-        # Error dialog clear
+        # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
         self.serialchooser.connected.connect(self.errors_dlg.connected_cb)
 
         # Systray
