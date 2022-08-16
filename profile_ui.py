@@ -229,7 +229,8 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.log(F"Profile: can't save the profile '{self._profilename_tosave}'" +
                         ", connection is closed.")
         else:
-            self.log("Profile: can't save the profile 'None'")
+            # if profile to save is "None", we first save in flash and save in profile after
+            self.save_clicked()
 
     def _read_running_class_and_go_cb(self, call_back):
         """Get the running class from board, and process the call_back when board respond."""
