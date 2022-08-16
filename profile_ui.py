@@ -104,10 +104,15 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.profiles_dlg.set_profiles(self.profiles)
         self.profiles_dlg.show()
 
-    def close_profile_manager(self):
+    def close_profile_manager(self, profile_name:str = ''):
         """Close the profile list manager."""
-        self.create_or_update_profile_file()
+        self.comboBox_profiles.currentIndexChanged.disconnect(self.apply_config)
         self.refresh_combox_list()
+        self.comboBox_profiles.currentIndexChanged.connect(self.apply_config)
+        if (profile_name):
+            self.select_profile(profile_name)
+        self.create_or_update_profile_file()
+        self.log('Profile: profiles list updated')
 
     def load_profile_settings(self):
         """Load the settings for the profile manager in profile.cfg file."""
@@ -134,7 +139,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.log("Profile: profiles are not compatible, need to redo them")
             else:
                 self.log("Profile: profiles loaded")
-                self.refresh_combox_list()
+            self.refresh_combox_list()
 
     def create_or_update_profile_file(self, create: bool = False):
         """Create a profile file if not exist, else update the existing one."""
@@ -150,10 +155,6 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         with file as profile_file:
             json.dump(self.profiles, profile_file)
 
-        #VMA
-        self.refresh_combox_list()
-
-        self.log("Profile: profiles saved")
         return True
 
     def refresh_combox_list(self):
@@ -185,7 +186,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             index = self.comboBox_profiles.findText(
                 profilename, PyQt6.QtCore.Qt.MatchFlag.MatchFixedString
             )
-            if index >= 0:
+            if index >= 0 and index != self.comboBox_profiles.currentIndex():
                 self.comboBox_profiles.setCurrentIndex(index)
 
     def apply_config(self):
@@ -201,7 +202,6 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # read the selected profile name, if profile is None, remove the last message
         profilename = str(self.comboBox_profiles.currentText())
         if profilename == "" or profilename == ProfileUI.NONE_PROFILE_NAME:
-            self.log('')
             return
 
         # get the Running Active class and process result with the write config profile
@@ -214,23 +214,29 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def save_config_in_profile(self, profile_name: str = ""):
         """Save the current config in the selected profile.
 
-        If the  method is called without parameter : read the profile name in the dropbox.
+        If the  method is called without parameter, save order come from Save-Icon click :
+            1- read the profile name in the dropbox.
+            2- if the name is 'None' or 'Profile flash', store in flash before all
+        When the profile_name is pass, we don't check if "None or Flash Profile", else we have recursivity with method
+        'save_clicked'.
         """
         if not(profile_name) or profile_name == "":
             self._profilename_tosave = str(self.comboBox_profiles.currentText())
+            
+            if self._profilename_tosave == self.NONE_PROFILE_NAME or \
+            self._profilename_tosave == self.FLASH_PROFILE_NAME:  
+                # if profile to save is "None" or "Profile Flash", we first save in flash and save in profile after
+                self.save_clicked()
         else:
             self._profilename_tosave = profile_name
 
         # get the Running Active class and process result with the read config profile
-        if self._profilename_tosave != self.NONE_PROFILE_NAME:
-            try:
-                self._read_running_class_and_go_cb(self._read_profile_cb)
-            except OSError:
-                self.log(F"Profile: can't save the profile '{self._profilename_tosave}'" +
-                        ", connection is closed.")
-        else:
-            # if profile to save is "None", we first save in flash and save in profile after
-            self.save_clicked()
+        try:
+            self._read_running_class_and_go_cb(self._read_profile_cb)
+        except OSError:
+            self.log(F"Profile: can't save the profile '{self._profilename_tosave}'" +
+                    ", connection is closed.")
+
 
     def _read_running_class_and_go_cb(self, call_back):
         """Get the running class from board, and process the call_back when board respond."""
@@ -503,7 +509,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 class ProfilesDialog(PyQt6.QtWidgets.QDialog):
     """This class manage the dialog box which contain the list profile manager."""
 
-    closeSignal = PyQt6.QtCore.pyqtSignal(bool)
+    closeSignal = PyQt6.QtCore.pyqtSignal(str)
 
     def __init__(self, profile_ui=None):
         """Create and attach the DLG to the profile_ui and store locally the profiles list."""
@@ -523,7 +529,15 @@ class ProfilesDialog(PyQt6.QtWidgets.QDialog):
 
     def closeEvent(self, a0: PyQt6.QtGui.QCloseEvent) -> None:  # pylint: disable=invalid-name
         """Emit the close signal before to close, this help parent to resfresh combobox."""
-        self.closeSignal.emit(True)
+
+        # get the current selection item to push it to the main UI on closing action
+        name = None
+
+        if self.profile_manager_ui.selection_model.selection() and \
+            len(self.profile_manager_ui.selection_model.selection().indexes()) != 0:
+            name = self.profile_manager_ui.selection_model.selection().indexes()[0].data()
+
+        self.closeSignal.emit(name)
         return super().closeEvent(a0)
 
 
