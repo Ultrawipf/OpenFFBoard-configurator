@@ -44,40 +44,54 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.spinBox_minDeg.valueChanged.connect(self.compute_speed)
         self.spinBox_minSec.valueChanged.connect(self.compute_speed)
 
-        self.register_callback(
-            "axis",
-            "filterSpeed_freq",
-            self.spinBox_speedFreq.setValue,
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
-            "filterSpeed_q",
-            lambda q: self.doubleSpinBox_speedQ.setValue(q / 100.0),
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
-            "filterAccel_freq",
-            self.spinBox_accelFreq.setValue,
-            self.axis_instance,
-            int,
-        )
-        self.register_callback(
-            "axis",
-            "filterAccel_q",
-            lambda q: self.doubleSpinBox_accelQ.setValue(q / 100.0),
-            self.axis_instance,
-            int,
-        )
+        # self.register_callback(
+        #     "axis",
+        #     "filterSpeed_freq",
+        #     self.spinBox_speedFreq.setValue,
+        #     self.axis_instance,
+        #     int,
+        # )
+        # self.register_callback(
+        #     "axis",
+        #     "filterSpeed_q",
+        #     lambda q: self.doubleSpinBox_speedQ.setValue(q / 100.0),
+        #     self.axis_instance,
+        #     int,
+        # )
+        # self.register_callback(
+        #     "axis",
+        #     "filterAccel_freq",
+        #     self.spinBox_accelFreq.setValue,
+        #     self.axis_instance,
+        #     int,
+        # )
+        # self.register_callback(
+        #     "axis",
+        #     "filterAccel_q",
+        #     lambda q: self.doubleSpinBox_accelQ.setValue(q / 100.0),
+        #     self.axis_instance,
+        #     int,
+        # )
         self.register_callback(
             "axis",
             "filterProfile_id",
             self.received_profile,
             self.axis_instance,
             int,
+        )
+
+        self.register_callback(
+            "axis",
+            "filterAccel",
+            self.filter_accel_cb,
+            self.axis_instance,
+        )
+
+        self.register_callback(
+            "axis",
+            "filterSpeed",
+            self.filter_speed_cb,
+            self.axis_instance,
         )
 
         self.min_randomize_value = []
@@ -87,6 +101,18 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.nb_pulse_at_max_speed = 0
         self.max_speed_deg_sec = 0
         self.first_profile_id = -1
+
+    def filter_accel_cb(self,val):
+        """Callback to set accel related filter values"""
+        f,q100 = map(float,val.split(":"))
+        self.doubleSpinBox_accelQ.setValue(q100 / 100.0)
+        self.spinBox_accelFreq.setValue(f)
+
+    def filter_speed_cb(self,val):
+        """Callback to set speed related filter values"""
+        f,q100 = map(float,val.split(":"))
+        self.doubleSpinBox_speedQ.setValue(q100 / 100.0)
+        self.spinBox_speedFreq.setValue(f)
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -109,6 +135,11 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def load_profile(self):
         """Load the profile : compute the speed to init the UI and load data from board."""
+        self.send_commands(
+            "axis",
+            ["filterSpeed", "filterAccel"],
+            self.axis_instance
+        )
         self.compute_speed()
         self.send_command("axis", "filterProfile_id", self.axis_instance)
 
@@ -123,7 +154,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
         self.send_commands(
             "axis",
-            ["filterSpeed_freq", "filterSpeed_q", "filterAccel_freq", "filterAccel_q"],
+            ["filterSpeed", "filterAccel"],
             self.axis_instance
         )
 
@@ -143,6 +174,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         max_speed = self.spinBox_maxSpeed.value()
         min_speed_degree = self.spinBox_minDeg.value()
         min_speed_duration = self.spinBox_minSec.value()
+
+        if min_speed_duration <= 0 or ffb_rate <= 0 or enc_resolution <= 0:
+            return # Illegal parameter values
 
         # compute the min speed detectable by the encoder in rpm : 1 position at the ffb rate
         self.min_speed_detectable = (
