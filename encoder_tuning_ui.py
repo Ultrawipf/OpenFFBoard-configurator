@@ -159,10 +159,11 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         )
 
     def suggest_settings(self):
+        """Suggests a profile depending on the entered resolution"""
         enc_resolution = self.spinBox_encRes.value()
         if enc_resolution <= 20000:
             self.comboBox_profileSelected.setCurrentIndex(0)
-        elif enc_resolution <= 262144:
+        elif enc_resolution <= 0xffff:
             self.comboBox_profileSelected.setCurrentIndex(1)
         else :
             self.comboBox_profileSelected.setCurrentIndex(2)

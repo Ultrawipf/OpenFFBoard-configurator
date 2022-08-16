@@ -50,6 +50,10 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
 
+        self.spinBox_reduction_numerator.valueChanged.connect(self.updateReductionText)
+        self.spinBox_reduction_denominator.valueChanged.connect(self.updateReductionText)
+        self.pushButton_apply_options.clicked.connect(self.applyOptions)
+
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
@@ -67,8 +71,22 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("axis","axisdamper",lambda val : self.updateDamper(val),self.axis,int)
 
+        self.register_callback("axis","reduction",lambda val : self.updateReduction(val),self.axis,lambda x : tuple(map(int,x.split(":"))))
+
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
     
+    def updateReduction(self,val):
+        numerator,denominator = val
+        self.spinBox_reduction_numerator.setValue(numerator)
+        self.spinBox_reduction_denominator.setValue(denominator)
+        self.updateReductionText()
+
+    def updateReductionText(self):
+        self.label_gear_reduction_value.setText(f"Reduction: {round(self.spinBox_reduction_numerator.value()/self.spinBox_reduction_denominator.value(),5)}")
+
+    def applyOptions(self):
+        self.send_value("axis","reduction",self.spinBox_reduction_numerator.value(),self.spinBox_reduction_denominator.value(),self.axis)
+
     def updateEsgain(self,val):
         qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
         qtBlockAndCall(self.horizontalSlider_esgain,self.horizontalSlider_esgain.setValue,val)
@@ -91,6 +109,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getEncoder()
             #self.updateSliders()
             self.send_command("axis","invert",self.axis)
+            self.send_command("axis","reduction",self.axis)
        
         except:
             self.main.log("Error initializing Axis tab")
