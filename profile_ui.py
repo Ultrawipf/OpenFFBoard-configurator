@@ -128,8 +128,13 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Load profiles from file profiles.json ."""
         with open(self.__PROFILES_FILENAME, "r", encoding="utf_8") as profile_file:
             self.profiles = json.load(profile_file)
-        self.log("Profile: profiles loaded")
-        self.refresh_combox_list()
+            if self.profiles['release'] < self.__RELEASE :
+                os.rename(self.__PROFILES_FILENAME, self.__PROFILES_FILENAME + '.' + str(self.profiles['release']) + '.old')
+                self.create_or_update_profile_file(create=True)
+                self.log("Profile: profiles are not compatible, need to redo them")
+            else:
+                self.log("Profile: profiles loaded")
+                self.refresh_combox_list()
 
     def create_or_update_profile_file(self, create: bool = False):
         """Create a profile file if not exist, else update the existing one."""
