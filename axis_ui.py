@@ -48,7 +48,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.send_value("axis","axisdamper",val,instance=self.axis))
         self.pushButton_center.clicked.connect(lambda : self.send_command("axis","zeroenc",instance=self.axis))
         
-        self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
+        #self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
 
         self.spinBox_reduction_numerator.valueChanged.connect(self.updateReductionText)
         self.spinBox_reduction_denominator.valueChanged.connect(self.updateReductionText)
@@ -73,6 +73,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("axis","reduction",lambda val : self.updateReduction(val),self.axis,lambda x : tuple(map(int,x.split(":"))))
 
+        self.register_callback("axis","cmdinfo",lambda val : self.frame_reduction.setVisible(val>0),self.axis,int,adr = 17)
+
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
     
     def updateReduction(self,val):
@@ -85,7 +87,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.label_gear_reduction_value.setText(f"Reduction: {round(self.spinBox_reduction_numerator.value()/self.spinBox_reduction_denominator.value(),5)}")
 
     def applyOptions(self):
-        self.send_value("axis","reduction",self.spinBox_reduction_numerator.value(),self.spinBox_reduction_denominator.value(),self.axis)
+        self.send_value("axis","invert",(0 if self.checkBox_invert.isChecked() == 0 else 1),instance=self.axis)
+        if(self.frame_reduction.isVisible()):
+            self.send_value("axis","reduction",self.spinBox_reduction_numerator.value(),self.spinBox_reduction_denominator.value(),self.axis)
 
     def updateEsgain(self,val):
         qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
@@ -110,6 +114,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             #self.updateSliders()
             self.send_command("axis","invert",self.axis)
             self.send_command("axis","reduction",self.axis)
+            self.send_command("axis","cmdinfo",self.axis,adr=17)
        
         except:
             self.main.log("Error initializing Axis tab")
