@@ -552,13 +552,18 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def onClicked(self, index):  # pylint: disable=invalid-name, unused-argument
         """Activate all button if it's not the "None" or "Flash profile" one."""
         item = self.selection_model.selection().indexes()[0]
-        if item.data() == ProfileUI.NONE_PROFILE_NAME \
-            or item.data() == ProfileUI.FLASH_PROFILE_NAME:
+        if item.data() == ProfileUI.NONE_PROFILE_NAME:
             self.pushButton_delete.setEnabled(False)
             self.pushButton_rename.setEnabled(False)
+            self.pushButton_copyas.setEnabled(False)
+        elif item.data() == ProfileUI.FLASH_PROFILE_NAME:
+            self.pushButton_delete.setEnabled(False)
+            self.pushButton_rename.setEnabled(False)
+            self.pushButton_copyas.setEnabled(True)
         else:
             self.pushButton_delete.setEnabled(True)
             self.pushButton_rename.setEnabled(True)
+            self.pushButton_copyas.setEnabled(True)
 
     def delete(self):
         """Remove the selected item when click on remove, and refresh profiles list."""
