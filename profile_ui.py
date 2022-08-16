@@ -551,6 +551,9 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def onClicked(self, index):  # pylint: disable=invalid-name, unused-argument
         """Activate all button if it's not the "None" or "Flash profile" one."""
+        if len(self.selection_model.selection().indexes()) <= 0:
+            return
+
         item = self.selection_model.selection().indexes()[0]
         if item.data() == ProfileUI.NONE_PROFILE_NAME:
             self.pushButton_delete.setEnabled(False)
