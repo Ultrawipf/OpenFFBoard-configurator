@@ -553,6 +553,9 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def onClicked(self, index):  # pylint: disable=invalid-name, unused-argument
         """Activate all button if it's not the "None" or "Flash profile" one."""
         if len(self.selection_model.selection().indexes()) <= 0:
+            self.pushButton_delete.setEnabled(False)
+            self.pushButton_rename.setEnabled(False)
+            self.pushButton_copyas.setEnabled(False)
             return
 
         item = self.selection_model.selection().indexes()[0]
@@ -571,6 +574,8 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def delete(self):
         """Remove the selected item when click on remove, and refresh profiles list."""
+        if len(self.selection_model.selection().indexes()) <= 0:
+            return
         item_name = self.selection_model.selection().indexes()[0].data()
         for i in range(len(self.profile_dlg.profiles["profiles"])):
             if self.profile_dlg.profiles["profiles"][i]["name"] == item_name:
@@ -580,6 +585,8 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def copy_as(self):
         """Prompt the new name, copy the selected item and refresh profiles list."""
+        if len(self.selection_model.selection().indexes()) <= 0:
+            return
         item_name = self.selection_model.selection().indexes()[0].data()
         name, status = PyQt6.QtWidgets.QInputDialog.getText(self, "Copy as", "new name")
         if status and (name != "") and (name not in self.get_profiles_name()):
@@ -598,6 +605,8 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def rename(self):
         """Prompt the new name, rename the selected item and refresh profiles list."""
+        if len(self.selection_model.selection().indexes()) <= 0:
+            return
         item_name = self.selection_model.selection().indexes()[0].data()
         name, status = PyQt6.QtWidgets.QInputDialog.getText(
             self, "Copy as", "new name", text=item_name
