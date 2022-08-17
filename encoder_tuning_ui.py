@@ -200,7 +200,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Restore the default min speed."""
         self.load_profile()
         self.spinBox_maxSpeed.setValue(80)
-        self.spinBox_minDeg.setValue(10)
+        self.spinBox_minDeg.setValue(15)
         self.spinBox_minSec.setValue(5)
         self.suggest_settings()
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1105</width>
-    <height>996</height>
+    <width>716</width>
+    <height>857</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -514,7 +514,7 @@
          <item row="7" column="0">
           <widget class="QPushButton" name="pushButton_submitpid">
            <property name="text">
-            <string>Change pids</string>
+            <string>Apply PID settings</string>
            </property>
           </widget>
          </item>
@@ -556,7 +556,7 @@
   <customwidget>
    <class>QChartView</class>
    <extends>QWidget</extends>
-   <header>PyQt6/QtCharts</header>
+   <header location="global">PyQt6/QtCharts</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
