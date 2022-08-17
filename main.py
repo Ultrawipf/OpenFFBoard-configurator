@@ -53,7 +53,7 @@ MIN_FW = "1.9.3"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
-
+    tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
     def __init__(self):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
@@ -89,7 +89,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.tabWidget_main.addTab(self.serialchooser, "Serial")
 
         # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
-        self.serialchooser.connected.connect(self.errors_dlg.connected_cb)
+        self.tabsinitialized.connect(self.errors_dlg.connected_cb)
 
         # Systray
         self.systray = SystrayWrapper(self)
@@ -281,6 +281,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         for i in range(self.tabWidget_main.count() - 1, 0, -1):
             self.del_tab(self.tabWidget_main.widget(i))
         self.comms.removeAllCallbacks()
+        self.tabsinitialized.emit(False)
 
     def update_tabs(self):
         """Get the active classes from the board, and add tab when not exist."""
@@ -358,6 +359,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.active_classes[name] = classe
                     self.add_tab(classe, name_axis)
                     self.profile_ui.set_save_btn(True)
+
+                self.tabsinitialized.emit(True)
 
         self.get_value_async("sys", "lsactive", update_tabs_cb, delete=True)
         self.get_value_async(
