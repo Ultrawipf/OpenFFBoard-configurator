@@ -44,34 +44,14 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.spinBox_minDeg.valueChanged.connect(self.compute_speed)
         self.spinBox_minSec.valueChanged.connect(self.compute_speed)
 
-        # self.register_callback(
-        #     "axis",
-        #     "filterSpeed_freq",
-        #     self.spinBox_speedFreq.setValue,
-        #     self.axis_instance,
-        #     int,
-        # )
-        # self.register_callback(
-        #     "axis",
-        #     "filterSpeed_q",
-        #     lambda q: self.doubleSpinBox_speedQ.setValue(q / 100.0),
-        #     self.axis_instance,
-        #     int,
-        # )
-        # self.register_callback(
-        #     "axis",
-        #     "filterAccel_freq",
-        #     self.spinBox_accelFreq.setValue,
-        #     self.axis_instance,
-        #     int,
-        # )
-        # self.register_callback(
-        #     "axis",
-        #     "filterAccel_q",
-        #     lambda q: self.doubleSpinBox_accelQ.setValue(q / 100.0),
-        #     self.axis_instance,
-        #     int,
-        # )
+        self.register_callback(
+            "axis",
+            "cpr",
+            self.spinBox_encRes.setValue,
+            self.axis_instance,
+            int,
+        )
+
         self.register_callback(
             "axis",
             "filterProfile_id",
@@ -137,7 +117,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Load the profile : compute the speed to init the UI and load data from board."""
         self.send_commands(
             "axis",
-            ["filterSpeed", "filterAccel"],
+            ["filterSpeed", "filterAccel","cpr"],
             self.axis_instance
         )
         self.compute_speed()
@@ -163,7 +143,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         enc_resolution = self.spinBox_encRes.value()
         if enc_resolution <= 20000:
             self.comboBox_profileSelected.setCurrentIndex(0)
-        elif enc_resolution <= 0xffff:
+        elif enc_resolution < 0xffff:
             self.comboBox_profileSelected.setCurrentIndex(1)
         else :
             self.comboBox_profileSelected.setCurrentIndex(2)
@@ -218,7 +198,7 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def restore_default_min_speed(self):
         """Restore the default min speed."""
-        self.spinBox_encRes.setValue(40000)
+        self.load_profile()
         self.spinBox_maxSpeed.setValue(80)
         self.spinBox_minDeg.setValue(10)
         self.spinBox_minSec.setValue(5)
