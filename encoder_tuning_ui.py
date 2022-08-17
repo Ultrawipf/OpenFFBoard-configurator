@@ -218,7 +218,12 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def restore_default_min_speed(self):
         """Restore the default min speed."""
-        self.comboBox_profileSelected.setCurrentItem(0)
+        self.spinBox_encRes.setValue(40000)
+        self.spinBox_maxSpeed.setValue(80)
+        self.spinBox_minDeg.setValue(10)
+        self.spinBox_minSec.setValue(5)
+        self.suggest_settings()
+
 
     def simulate_min_speed(self):
         """Compute and draw graph when the button."""

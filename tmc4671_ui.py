@@ -436,7 +436,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setWindowTitle("Calibration required")
             msg.setText("A calibration of ADC offsets and encoder settings is required.")
-            msg.setInformativeText("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or manually later.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done.")
+            msg.setInformativeText("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done.")
             msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
             ret = msg.exec()
             # Warning displayed
@@ -472,7 +472,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
                 msg = QMessageBox(QMessageBox.Icon.Information,"Encoder align",res)
                 msg.exec()
 
-        res = self.get_value_async("tmc","encalign",f,self.axis,typechar='?')
+        self.get_value_async("tmc","encalign",f,self.axis,typechar='?')
         self.main.log("Started encoder alignment")
         
 
