@@ -45,11 +45,11 @@ import effects_monitor
 import effects_graph_ui
 
 # This GUIs version
-VERSION = "1.9.2"
+VERSION = "1.9.3"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.9.4"
+MIN_FW = "1.9.5"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
@@ -446,6 +446,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.get_value_async("main", "id", id_cb, 0)
             self.errors_dlg.registerCallbacks()
             self.get_value_async("sys", "swver", self.version_check)
+            self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
 
         else:
             self.connected = False
@@ -612,13 +613,18 @@ class WrapperStatusBar(base_ui.WidgetUI):
             self.label_ffb.hide()
             self.label_ffbfreq.hide()
 
+    def set_board_text(self,text):
+        self.label_board.setText(text)
+
     def update_ffb_rate(self, event):
-        status, rate = event
+        status, rate, cfrate = event
         if status == 1:
             self.label_ffbcnx.setPixmap(self.icon_ok)
+            self.label_ffbfreq.setText(F"{rate} hz (CF {cfrate} hz)")
         else :
             self.label_ffbcnx.setPixmap(self.icon_ko)
-        self.label_ffbfreq.setText(F"{rate} hz")
+            self.label_ffbfreq.setText(F"{rate} hz")
+        
 
     def update_status(self, msg):
         """Change the status message in the bottom right."""
@@ -631,6 +637,7 @@ class WrapperStatusBar(base_ui.WidgetUI):
         else:
             self.label_cnx.setPixmap(self.icon_ko)
             self.update_ffb_block_display(False)
+            self.label_board.setText("disconnected")
 
     def append_log(self, message):
         """Display the last log message in the status bar."""

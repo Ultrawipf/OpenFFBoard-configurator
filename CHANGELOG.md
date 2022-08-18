@@ -8,3 +8,4 @@ Redesign:
 - Added advanced effect tuning window
 - Added basic profile management system
 - Added encoder gear reduction option (For belt/gear driven wheels if there is a reduction between the wheel and encoder. Prescales all internal positions)
+- Added constant force rate readout
