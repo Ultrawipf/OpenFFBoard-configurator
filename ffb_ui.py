@@ -37,6 +37,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.axisconfbuttons = []
         self.active = 0
         self.rate = 0
+        self.cfrate = 0
         self.springgain = 4
         self.dampergain = 2
         self.inertiagain = 2
@@ -85,6 +86,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.register_callback("main","hidsendspd",self.hidreportrate_cb,0,typechar='!')
         self.register_callback("main","hidsendspd",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
         self.register_callback("main","hidrate",self.ffbRateCB,0,int)
+        self.register_callback("main","cfrate",self.ffbCfRateCB,0,int)
         self.register_callback("main","ffbactive",self.ffbActiveCB,0,int)
 
         self.register_callback("main","lsbtn",self.updateButtonClassesCB,0)
@@ -146,14 +148,17 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
     def ffbActiveCB(self,active):
         self.active = active
-        self.ffb_rate_event.emit((self.active,self.rate))
+        self.ffb_rate_event.emit((self.active,self.rate,self.cfrate))
         
     def ffbRateCB(self,rate):
         self.rate = rate
+
+    def ffbCfRateCB(self,rate):
+        self.cfrate = rate
  
     def updateTimer(self):
         try:
-            self.send_commands("main",["hidrate","ffbactive"],0)
+            self.send_commands("main",["hidrate","ffbactive","cfrate"],0)
         except:
             self.main.log("Update error")
     
