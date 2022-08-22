@@ -43,9 +43,10 @@ import odrive_ui
 import vesc_ui
 import effects_monitor
 import effects_graph_ui
+import updater
 
 # This GUIs version
-VERSION = "1.9.3"
+VERSION = "1.9.4"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -105,6 +106,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.get_ports()
         self.actionAbout.triggered.connect(self.open_about)
         self.serialchooser.connected.connect(self.serial_connected)
+
+        self.actionUpdates.triggered.connect(self.open_updater)
 
         self.timer.start(5000)
         self.profile_ui = profile_ui.ProfileUI(main=self)
@@ -195,6 +198,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def open_about(self):
         """Open the about dialog box."""
         AboutDialog(self).exec()
+
+    def open_updater(self):
+        updater.UpdateBrowser(self).exec()
+
 
     def save_flashdump_to_file(self):
         """Send a async message to get the flashdump from board."""
