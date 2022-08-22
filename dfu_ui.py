@@ -1,4 +1,4 @@
-"""DFU module for UI and upgrade procee.
+"""DFU module for UI and upgrade process.
 
 Regroup all required classes to manage the DFU UI.
 

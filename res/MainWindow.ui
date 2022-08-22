@@ -64,7 +64,7 @@
      <x>0</x>
      <y>0</y>
      <width>644</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -73,6 +73,7 @@
     </property>
     <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
+    <addaction name="actionUpdates"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -195,6 +196,11 @@
   <action name="actionAdvanced_tweaks">
    <property name="text">
     <string>Encoder tuning...</string>
+   </property>
+  </action>
+  <action name="actionUpdates">
+   <property name="text">
+    <string>Updates</string>
    </property>
   </action>
  </widget>
