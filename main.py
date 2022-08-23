@@ -226,8 +226,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             # Message
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Warning,
-                "Can't restaure flash dump",
-                "Please connect board firt.",
+                "Can't restore flash dump",
+                "Please connect board first.",
             )
 
 
@@ -327,7 +327,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
                     self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate)
+                    # Start ffb timer
+                    self.serialchooser.hidden.connect(self.main_class_ui.startTimer)
+                    self.serialchooser.shown.connect(self.main_class_ui.stopTimer)
+                    self.serialchooser.shown.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(False))
+                    self.serialchooser.hidden.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(True))
                     self.wrapper_status_bar.update_ffb_block_display(True)
+                    
                 elif classe_active["id"] == 0xA01:
                     classe = axis_ui.AxisUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
