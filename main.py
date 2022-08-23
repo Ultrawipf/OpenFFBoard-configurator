@@ -103,7 +103,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.wrapper_status_bar.serial_connected)
 
         # self.serial.readyRead.connect(self.serialReceive)
-        self.serialchooser.get_ports()
         self.actionAbout.triggered.connect(self.open_about)
         self.serialchooser.connected.connect(self.serial_connected)
 
@@ -152,6 +151,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.profile_ui)
         self.groupBox_main.setLayout(layout)
+
+        # after UI load get serial port and if only one : autoconnect
+        self.serialchooser.get_ports()
 
     def reboot(self):
         """Send the reboot message to the board."""

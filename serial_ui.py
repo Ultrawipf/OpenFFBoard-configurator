@@ -6,6 +6,7 @@ and the link with the communication module.
 Module : serial_ui
 Authors : yannick
 """
+from concurrent.futures import process
 import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6.QtCore
@@ -32,7 +33,6 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         base_ui.CommunicationHandler.__init__(self)
         self._serial = serial
         self.main = main_ui
-        #VMA self.connected = PyQt6.QtCore.pyqtSignal(bool)
         self.main_id = None
         self._classes = []
         self._class_ids = {}
@@ -45,7 +45,6 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.lineEdit_cmd.returnPressed.connect(self.send_line)
         self.pushButton_ok.clicked.connect(self.main_btn)
 
-        self.get_ports()
         self.update()
 
     def showEvent(self, event): # pylint: disable=unused-argument, invalid-name
@@ -131,7 +130,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def select_port(self, port_id):
         """Change the selected port."""
-        if port_id != -1:
+        if port_id != -1 and len(self._ports) != 0:
             self._port = self._ports[port_id]
         else:
             self._port = None
@@ -145,32 +144,25 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         oldport = self._port if self._port else None
 
         self._ports = PyQt6.QtSerialPort.QSerialPortInfo().availablePorts()
+        ports_compatible = []
         self.comboBox_port.clear()
-        sel_idx = 0
-        for i, port in enumerate(self._ports):
+        i=0
+        for port in self._ports:
             supported_vid_pid = (
                 port.vendorIdentifier(),
                 port.productIdentifier(),
             ) in self.OFFICIAL_VID_PID
             name = port.portName() + " : " + port.description()
-            if supported_vid_pid:
-                name += " (FFBoard device)"
-            else:
-                name += " (Unsupported device)"
-            self.comboBox_port.addItem(name)
-            if supported_vid_pid:
-                sel_idx = i
-                self.comboBox_port.setItemData(
-                    i,
-                    PyQt6.QtGui.QColor("green"),
-                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
-                )
-            else:
-                self.comboBox_port.setItemData(
-                    i,
-                    PyQt6.QtGui.QColor("red"),
-                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
-                )
+
+            if supported_vid_pid and not name.startswith("cu."):
+                self.comboBox_port.addItem(name)
+                i = i+1
+                ports_compatible.append(port)
+
+        self._ports = ports_compatible
+
+        if self.comboBox_port.count() == 0 :
+            self.comboBox_port.addItem("No compatible device found")
 
         plist = [p.portName() for p in self._ports]
         if (
@@ -183,9 +175,13 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         ):
             self.comboBox_port.setCurrentIndex(plist.index(oldport.portName()))
         else:
-            self.comboBox_port.setCurrentIndex(sel_idx)  # preselect found entry
+            self.comboBox_port.setCurrentIndex(0)  # preselect found entry
+
         self.select_port(self.comboBox_port.currentIndex())
         self.update()
+
+        if (self.comboBox_port.count() == 1) :
+            self.serial_connect_button()
 
     def update_mains(self, dat):
         """Parse the list of main classes received from board, and update the combobox."""
