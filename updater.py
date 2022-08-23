@@ -7,7 +7,7 @@ Authors : yannick
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
-from PyQt6.QtWidgets import QListWidgetItem
+from PyQt6.QtWidgets import QListWidgetItem,QGroupBox,QHBoxLayout,QVBoxLayout,QLabel,QDialog,QTextBrowser,QPushButton
 import base_ui
 import pydfu
 import requests
@@ -16,6 +16,11 @@ import re
 import helper
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
+from datetime import datetime
+from optionsdialog import OptionsDialogGroupBox
+
+MAINREPO = "Ultrawipf/OpenFFBoard"
+GUIREPO = "Ultrawipf/OpenFFBoard-Configurator"
 
 class GithubRelease():
 
@@ -54,6 +59,11 @@ class GithubRelease():
         return(release)
 
     @staticmethod
+    def get_time(release : dict):
+        """Returns a datetime object of the creation time"""
+        return datetime.strptime(release['created_at'],'%Y-%m-%dT%H:%M:%SZ')
+
+    @staticmethod
     def get_version(release : dict):
         """Returns None if invalid tag, otherwise (version,postfix) like ("1.2.3","dev")"""
 
@@ -78,9 +88,17 @@ class UpdateChecker():
     @staticmethod
     def compare_versions(curver,comparever):
         """Returns False if current version newer or identical, True if comparever is newer"""
+        if not curver or not comparever:
+            return False
         comparever_i = [int(i) for i in comparever.split(".")]
         curver_i = [int(i) for i in curver.split(".")]
-        return comparever_i[0] > curver_i[0] or comparever_i[1] > curver_i[1] or comparever_i[2] > curver_i[2]
+        outdated = (
+            comparever_i[0] > curver_i[0] \
+            or comparever_i[1] > curver_i[1] and comparever_i[0] == curver_i[0]  \
+            or comparever_i[2] > curver_i[2] and comparever_i[1] ==  curver_i[1] and  comparever_i[0] == curver_i[0]
+        )
+        # return comparever_i[0] > curver_i[0] or comparever_i[1] > curver_i[1] or comparever_i[2] > curver_i[2] 
+        return outdated
 
 
     @staticmethod
@@ -103,8 +121,7 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
         self.listWidget_release.currentItemChanged.connect(self.release_changed)
         self.listWidget_files.currentItemChanged.connect(self.file_changed)
         self.buttonGroup_repo.buttonClicked.connect(self.repo_changed)
-
-        self.read_releases("Ultrawipf/OpenFFBoard")
+        self.read_releases(MAINREPO)
 
     def fill_releases(self,releases : dict):
         self.listWidget_release.clear()
@@ -130,9 +147,9 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
     
     def repo_changed(self,button):
         if button == self.radioButton_configurator:
-            self.read_releases("Ultrawipf/OpenFFBoard-Configurator")
+            self.read_releases(GUIREPO)
         else:
-            self.read_releases("Ultrawipf/OpenFFBoard")
+            self.read_releases(MAINREPO)
 
     def read_releases(self,repo : str):
         releases = GithubRelease.get_releases(repo,True)
@@ -155,9 +172,12 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
         if not current:
             return
         release = current.data(Qt.ItemDataRole.UserRole)
-        self.textBrowser_releasenotes.setText(GithubRelease.get_description(release))
+        self.textBrowser_releasenotes.setMarkdown(GithubRelease.get_description(release))
         self.label_releaseUrl.setText(f"<a href=\"{release['html_url']}\">{release['html_url']}</a>")
         self.fill_files(release)
+        publishtime = GithubRelease.get_time(release)
+        infotext = f"Date: {publishtime}"
+        self.label_releaseInfo.setText(infotext)
 
     def file_changed(self,current : QListWidgetItem,old : QListWidgetItem):
         if not current:
@@ -167,11 +187,43 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
 
 
 
-if __name__ == "__main__":
-    ##test
-    newver,r = UpdateChecker.check_update("Ultrawipf/OpenFFBoard","1.2.3")
-    print(GithubRelease.get_version(r),newver)
+class UpdateNotification(QDialog):
+    """Shows a dialog with release information"""
+    def __init__(self,release,main,desc,curver):
+        self.main = main
+        QDialog.__init__(self, main)
+        self.setWindowTitle("Update available")
+        self.vbox = QVBoxLayout()
+        self.setLayout(self.vbox)
+        self.infolabel = QLabel(desc)
+        self.infolabel.setOpenExternalLinks(True)
+        self.infolabel.setTextFormat(Qt.TextFormat.RichText)
+        self.vbox.addWidget(self.infolabel)
+        if not release:
+            self.vbox.addWidget(QLabel("Error displaying release"))
+            return
+        self.releaseversion = release["tag_name"]
+        url = release['html_url']
+        self.versionlabel = QLabel(f"New version: <a href=\"{url}\"> {self.releaseversion}</a>, Current version: {curver}")
+        self.versionlabel.setOpenExternalLinks(True)
+        self.versionlabel.setTextFormat(Qt.TextFormat.RichText)
+        self.vbox.addWidget(self.versionlabel)
 
-    releasest = GithubRelease.get_releases("Ultrawipf/OpenFFBoard",True)
-    if releasest:
-        print(GithubRelease.get_title(releasest[0]))
+        self.titlelabel = QLabel(f"<a href=\"{url}\"> {GithubRelease.get_title(release)}</a>")
+        self.titlelabel.setOpenExternalLinks(True)
+        self.vbox.addWidget(self.titlelabel)
+
+        self.updatebrowserbutton = QPushButton("Open update browser",self)
+        self.updatebrowserbutton.clicked.connect(self.open_updater)
+        
+        self.releasenotes = QTextBrowser(self)
+        self.releasenotes.setMarkdown(GithubRelease.get_description(release))
+        self.vbox.addWidget(self.releasenotes)
+        self.vbox.addWidget(self.updatebrowserbutton)
+
+        
+
+    def open_updater(self):
+        """Opens the updatebrowser"""
+        self.close()
+        UpdateBrowser(self).exec()

@@ -46,7 +46,7 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.9.4"
+VERSION = "1.9.5"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -83,6 +83,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.fw_version_str = None
 
         self.setup()
+        self.check_configurator_update()
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
@@ -157,6 +158,18 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Send the reboot message to the board."""
         self.send_command("sys", "reboot")
         self.reconnect()
+
+    def check_configurator_update(self):
+        """Checks if there is an update for the configurator only"""
+        release = updater.GithubRelease.get_latest_release(updater.GUIREPO)
+        if not release:
+            return
+        releaseversion,_ = updater.GithubRelease.get_version(release)
+        if updater.UpdateChecker.compare_versions(VERSION,releaseversion):
+            # New release available for firmware
+            msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
+            notification = updater.UpdateNotification(release,self,msg,VERSION)
+            notification.exec()
 
     def open_dfu_dialog(self):
         """Open the dfu dialog and start managing."""
@@ -412,10 +425,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         gui_outdated = False
 
         fw_outdated = (
-            min_fw_split[0] > fw_ver_split[0] or min_fw_split[1] > fw_ver_split[1] \
-                or min_fw_split[2] > fw_ver_split[2]
+            min_fw_split[0] > fw_ver_split[0] \
+            or min_fw_split[1] > fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]  \
+            or min_fw_split[2] > fw_ver_split[2] and min_fw_split[1] ==  fw_ver_split[1] and  min_fw_split[0] == fw_ver_split[0]
         )
-        gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1]
+        gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]
 
         if gui_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
@@ -439,6 +453,16 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "and GUI are up to date if you encounter errors."
             )
             msg.exec()
+        # Check github
+        mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
+        releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
+        if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
+            # New release available for firmware
+            msg =  "New firmware available"
+            notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
+            notification.exec()
+   
+
 
     def serial_connected(self, connected):
         """Check the release when a board is connected."""
