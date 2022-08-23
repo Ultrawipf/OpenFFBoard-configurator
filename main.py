@@ -408,7 +408,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serial.close()
         self.comms.reset()
         self.timeouting = False
-        self.serialchooser.get_ports()
+        self.serialchooser.update()
         self.reset_tabs()
 
     def version_check(self, ver):
