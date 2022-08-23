@@ -113,6 +113,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         if(self.init_ui()):
             tabId = self.main.add_tab(self,title)
             self.main.select_tab(tabId)
+            self.timer.start(500) # timer always updates
 
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
@@ -139,12 +140,20 @@ class FfbUI(WidgetUI,CommunicationHandler):
         return True
 
     # Tab is currently shown
-    def showEvent(self,event):
+    # def showEvent(self,event):
+    #     self.timer.start(500)
+
+    # # Tab is hidden
+    # def hideEvent(self,event):
+    #     self.timer.stop()
+
+    def startTimer(self):
         self.timer.start(500)
 
     # Tab is hidden
-    def hideEvent(self,event):
+    def stopTimer(self):
         self.timer.stop()
+        self.ffb_rate_event.emit((0,0,0))
 
     def ffbActiveCB(self,active):
         self.active = active

@@ -25,6 +25,9 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     OFFICIAL_VID_PID = [(0x1209, 0xFFB0)]  # Highlighted in serial selector
     connected = PyQt6.QtCore.pyqtSignal(bool)
+    shown = PyQt6.QtCore.pyqtSignal()
+    hidden = PyQt6.QtCore.pyqtSignal()
+    visible = PyQt6.QtCore.pyqtSignal(bool)
 
     def __init__(self, serial: PyQt6.QtSerialPort.QSerialPort, main_ui: main.MainUi):
         """Initialize the manager with the QSerialPort for serial commmunication and the mainUi."""
@@ -54,6 +57,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Connect the communication module with the history widget to load the board response.
         """
         self.main.comms.rawReply.connect(self.serial_log)
+        self.shown.emit()
 
     # Tab is hidden
     def hideEvent(self, event): # pylint: disable=unused-argument, invalid-name
@@ -63,6 +67,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         to stop to log the board response.
         """
         self.main.comms.rawReply.disconnect(self.serial_log)
+        self.hidden.emit()
 
     def serial_log(self, txt):
         """Add a new text in the history widget."""
