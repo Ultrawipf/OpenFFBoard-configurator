@@ -373,16 +373,20 @@
       <enum>QFrame::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_6">
-      <item row="0" column="5">
-       <widget class="QSpinBox" name="spinBox_axis">
-        <property name="minimumSize">
-         <size>
-          <width>40</width>
-          <height>0</height>
-         </size>
+      <item row="0" column="10">
+       <widget class="QPushButton" name="pushButton_restore">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
         </property>
-        <property name="maximum">
-         <number>1</number>
+        <property name="text">
+         <string>Restore Default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="7">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Filter's profile</string>
         </property>
        </widget>
       </item>
@@ -399,13 +403,30 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="7">
-       <widget class="QPushButton" name="pushButton_restore">
-        <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
+      <item row="0" column="8">
+       <widget class="QComboBox" name="comboBox_filter_profile">
+        <item>
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Custom</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QSpinBox" name="spinBox_axis">
+        <property name="minimumSize">
+         <size>
+          <width>40</width>
+          <height>0</height>
+         </size>
         </property>
-        <property name="text">
-         <string>Restore Default</string>
+        <property name="maximum">
+         <number>1</number>
         </property>
        </widget>
       </item>
@@ -415,6 +436,19 @@
          <string>Read metrics on axis</string>
         </property>
        </widget>
+      </item>
+      <item row="0" column="9">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
