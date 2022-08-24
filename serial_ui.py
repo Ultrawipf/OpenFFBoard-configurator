@@ -196,6 +196,9 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.select_port(self.comboBox_port.currentIndex())
         self.update()
 
+        return nb_compatible_device
+    
+    def auto_connect(self, nb_compatible_device):
         if (nb_compatible_device == 1) :
             self.serial_connect_button()
 

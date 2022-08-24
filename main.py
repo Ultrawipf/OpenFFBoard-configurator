@@ -154,7 +154,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.groupBox_main.setLayout(layout)
 
         # after UI load get serial port and if only one : autoconnect
-        self.serialchooser.get_ports()
+        nb_device_compat = self.serialchooser.get_ports()
+        self.serialchooser.auto_connect(nb_device_compat)
 
     def reboot(self):
         """Send the reboot message to the board."""
