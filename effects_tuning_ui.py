@@ -62,6 +62,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.inertia_internal_factor = 1
         self.friction_internal_factor = 1
         self.friction_pct_speed_rampup = 1
+        self.filter_profile_id = -1
         self.timer = PyQt6.QtCore.QTimer(self)
         self.cross_hairs_spring : Crosshairs = None
         self.cross_hairs_inertia : Crosshairs = None
@@ -85,6 +86,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # on button
         self.pushButton_restore.clicked.connect(self.restore_default)
+
+        # On combobox profile
+        self.comboBox_filter_profile.currentIndexChanged.connect(self.change_profile)
 
         # add timer handler
         self.timer.timeout.connect(self.updateTimer)
@@ -113,17 +117,9 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.register_callback("fx","damper",lambda val : self.update_slider(val,self.horizontalSlider_damper_gain),0,int)
         self.register_callback("fx","friction",lambda val : self.update_slider(val,self.horizontalSlider_friction_gain),0,int)
         self.register_callback("fx","inertia",lambda val : self.update_slider(val,self.horizontalSlider_inertia_gain),0,int)
-
-        # register internal factor for scaler and factor
-        # self.register_callback("fx","scaler_friction",self.set_internal_friction_scale,0,str,typechar="!")
-        # self.register_callback("fx","scaler_damper",self.set_internal_damper_scale,0,str,typechar="!")
-        # self.register_callback("fx","scaler_inertia",self.set_internal_inertia_scale,0,str,typechar="!")
-
-        # self.register_callback("fx","scaler_friction",self.set_internal_friction_factor,0,str)
-        # self.register_callback("fx","scaler_damper",self.set_internal_damper_factor,0,str)
-        # self.register_callback("fx","scaler_inertia",self.set_internal_inertia_factor,0,str)
-
+        
         # register biquad factor
+        self.register_callback("fx", "filterProfile_id", self.change_profile ,0,int)
         self.register_callback("fx","damper_f",self.spinBox_damper_freq.setValue,0,int)
         self.register_callback("fx","damper_q",lambda val : self.doubleSpinBox_damper_q.setValue((float)(val) / 100.0),0,str)
         self.register_callback("fx","friction_f",self.spinBox_friction_freq.setValue,0,int)
@@ -149,12 +145,39 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         msg.exec()
         return super().hideEvent(a0)
 
+    def update_filter_ui(self):
+        """"Enable the filter input box if profile filter is 1"""
+        visible = self.comboBox_filter_profile.currentIndex() == 1
+        self.spinBox_damper_freq.setEnabled(visible)
+        self.doubleSpinBox_damper_q.setEnabled(visible)
+        self.spinBox_friction_freq.setEnabled(visible)
+        self.doubleSpinBox_friction_q.setEnabled(visible)
+        self.spinBox_inertia_freq.setEnabled(visible)
+        self.doubleSpinBox_inertia_q.setEnabled(visible)
+
+    def change_profile(self, idx):
+        """Change the profile of filter and update the UI"""
+        # on the profile id received from board, we store the fw value
+        if self.filter_profile_id == -1:
+            self.filter_profile_id = idx
+            self.comboBox_filter_profile.setCurrentIndex(idx)
+        # else if it's not the first received value and profile is <> from fw
+        # we update fw
+        elif self.filter_profile_id != idx:
+            self.filter_profile_id = idx
+            self.send_value("fx","filterProfile_id", idx)
+            self.send_command("fx","filterProfile_id")
+        elif self.filter_profile_id == idx:
+            self.send_commands("fx",
+                                ["damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
+        self.update_filter_ui()
+
     def load_settings(self):
         """Load the settings."""
         self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
         self.send_commands("fx",["frictionPctSpeedToRampup",
                                 "spring","damper","friction","inertia",
-                                "damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
+                                "filterProfile_id"],0)
 
         self.get_value_async("main","id",self.get_main_id,0,int)
     
@@ -174,74 +197,35 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         self.horizontalSlider_friction_smooth.setValue(25)
 
-        self.spinBox_inertia_freq.setValue(15)
-        self.doubleSpinBox_inertia_q.setValue(0.20)
-        self.spinBox_damper_freq.setValue(30)
-        self.doubleSpinBox_damper_q.setValue(0.40)
-        self.spinBox_friction_freq.setValue(50)
-        self.doubleSpinBox_friction_q.setValue(0.20)
+        # Restore the default filter
+        self.comboBox_filter_profile.setCurrentIndex(0)
 
     def updateTimer(self):
         self.send_commands("axis",["curpos","curspd","curaccel"],self.spinBox_axis.value())
 
-    # def extract_scaler(self, gain_default,factor_default, repl) :
-    #     infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
-    #     if "scale" in infos:
-    #         gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
-    #     if "factor" in infos:
-    #         factor_default = float(infos["factor"]) if float(infos["factor"]) > 0 else factor_default
-
-    #     return gain_default,factor_default
-    
-
-
     def set_spring_scaler_cb(self,repl):
         dat = map_infostring(repl)
         self.springgain = dat.get("scale",self.springgain)
-        #self.springgain = self.extract_scaler(self.springgain, repl)
 
     def set_damper_scaler_cb(self,repl):
-        #self.dampergain = self.extract_scaler(self.dampergain, repl)
         dat = map_infostring(repl)
         self.dampergain = dat.get("scale",self.dampergain)
         self.damper_internal_factor = dat.get("factor",self.damper_internal_factor)
 
     def set_friction_scaler_cb(self,repl):
-        #self.frictiongain = self.extract_scaler(self.frictiongain, repl)
         dat = map_infostring(repl)
         self.frictiongain = dat.get("scale",self.frictiongain)
         self.friction_internal_factor = dat.get("factor",self.friction_internal_factor)
 
     def set_inertia_scaler_cb(self,repl):
-        #self.inertiagain = self.extract_scaler(self.inertiagain, repl)
         dat = map_infostring(repl)
         self.inertiagain = dat.get("scale",self.inertiagain)
         self.inertia_internal_factor = dat.get("factor",self.inertia_internal_factor)
 
-    # def set_internal_friction_scale(self, repl):
-    #     self.friction_internal_scale = self.extract_scaler(1, repl)
-
-    # def set_internal_damper_scale(self, repl):
-    #     self.damper_internal_scale = self.extract_scaler(1, repl)
-
-    # def set_internal_inertia_scale(self, repl):
-    #     self.inertia_internal_scale = self.extract_scaler(1, repl)
-
-    # def set_internal_friction_factor(self, value):
-    #     self.friction_internal_factor = float(value)
-
-    # def set_internal_damper_factor(self, value):
-    #     self.damper_internal_factor = float(value)
-
-    # def set_internal_inertia_factor(self, value):
-    #     self.inertia_internal_factor = float(value)
-
-    # def set_friction_pct_speed_rampup(self,value):
-    #     self.friction_pct_speed_rampup = value
-
     def update_slider(self,val,slider : PyQt6.QtWidgets.QSlider):
         #skip the slider update if value is the same
-        if (slider.value() == val) : return
+        if (slider.value() == val) : 
+            return
         
         #update the slider value and the graph
         slider.setValue(val)
@@ -265,7 +249,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.draw_graph_friction()
 
     def filter_changed(self, val, filter, scale = 1):
-        if val != 0 :
+        if val != 0 and self.filter_profile_id == 1:
             self.send_value("fx", filter, val * scale)
 
     def get_pos_metrics(self, value):
