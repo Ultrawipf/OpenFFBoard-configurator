@@ -149,10 +149,10 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         oldport = self._port if self._port else None
 
         self._ports = PyQt6.QtSerialPort.QSerialPortInfo().availablePorts()
-        ports_compatible = []
         self.comboBox_port.clear()
-        i=0
-        for port in self._ports:
+        sel_idx = 0
+        nb_compatible_device = 0
+        for i, port in enumerate(self._ports):
             supported_vid_pid = (
                 port.vendorIdentifier(),
                 port.productIdentifier(),
@@ -160,14 +160,25 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
             name = port.portName() + " : " + port.description()
 
             if supported_vid_pid and not name.startswith("cu."):
-                self.comboBox_port.addItem(name)
-                i = i+1
-                ports_compatible.append(port)
+                name += " (FFBoard device)"
+            else:
+                name += " (Unsupported device)"
+            self.comboBox_port.addItem(name)
 
-        self._ports = ports_compatible
-
-        if self.comboBox_port.count() == 0 :
-            self.comboBox_port.addItem("No compatible device found")
+            if supported_vid_pid and not name.startswith("cu."):
+                sel_idx = i
+                nb_compatible_device = nb_compatible_device + 1
+                self.comboBox_port.setItemData(
+                    i,
+                    PyQt6.QtGui.QColor("green"),
+                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
+                )
+            else:
+                self.comboBox_port.setItemData(
+                    i,
+                    PyQt6.QtGui.QColor("red"),
+                    PyQt6.QtCore.Qt.ItemDataRole.ForegroundRole,
+                )
 
         plist = [p.portName() for p in self._ports]
         if (
@@ -180,12 +191,15 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         ):
             self.comboBox_port.setCurrentIndex(plist.index(oldport.portName()))
         else:
-            self.comboBox_port.setCurrentIndex(0)  # preselect found entry
+            self.comboBox_port.setCurrentIndex(sel_idx)  # preselect found entry
 
         self.select_port(self.comboBox_port.currentIndex())
         self.update()
 
-        if (self.comboBox_port.count() == 1) :
+        return nb_compatible_device
+    
+    def auto_connect(self, nb_compatible_device):
+        if (nb_compatible_device == 1) :
             self.serial_connect_button()
 
     def update_mains(self, dat):
