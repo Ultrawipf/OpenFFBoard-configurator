@@ -57,6 +57,9 @@
          </item>
          <item row="1" column="1">
           <widget class="QSpinBox" name="spinBox_poles">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="value">
             <number>50</number>
            </property>
@@ -160,6 +163,9 @@
          </item>
          <item row="0" column="1">
           <widget class="QSpinBox" name="spinBox_fluxoffset">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>10000</number>
            </property>
@@ -328,6 +334,9 @@
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder resolution after quadrature (4 * PPR = CPR)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>65535</number>
            </property>
@@ -454,6 +463,9 @@
          </item>
          <item row="0" column="1">
           <widget class="QSpinBox" name="spinBox_tp">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>32767</number>
            </property>
@@ -468,6 +480,9 @@
          </item>
          <item row="1" column="1">
           <widget class="QSpinBox" name="spinBox_ti">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>32767</number>
            </property>
@@ -482,6 +497,9 @@
          </item>
          <item row="2" column="1">
           <widget class="QSpinBox" name="spinBox_fp">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>32767</number>
            </property>
@@ -496,6 +514,9 @@
          </item>
          <item row="3" column="1">
           <widget class="QSpinBox" name="spinBox_fi">
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
            <property name="maximum">
             <number>32767</number>
            </property>
