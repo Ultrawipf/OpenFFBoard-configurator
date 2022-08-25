@@ -209,6 +209,9 @@
       </item>
       <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_friction">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
         <property name="maximum">
          <double>2.000000000000000</double>
         </property>
@@ -281,6 +284,9 @@
       </item>
       <item row="4" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
         <property name="maximum">
          <double>2.000000000000000</double>
         </property>
@@ -291,6 +297,9 @@
       </item>
       <item row="1" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_spring">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
         <property name="decimals">
          <number>2</number>
         </property>
@@ -385,6 +394,9 @@
       </item>
       <item row="2" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_damper">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
         <property name="maximum">
          <double>2.000000000000000</double>
         </property>
@@ -458,6 +470,9 @@
       </item>
       <item row="1" column="4">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_CFq">
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
         <property name="minimum">
          <double>0.010000000000000</double>
         </property>
