@@ -385,8 +385,11 @@
       </item>
       <item row="0" column="7">
        <widget class="QLabel" name="label_13">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Filter mode for conditional effects. Custom or default (recommended) filter values.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
-         <string>Filter's profile</string>
+         <string>Effect filter profile (advanced)</string>
         </property>
        </widget>
       </item>

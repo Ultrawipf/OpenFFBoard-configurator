@@ -141,6 +141,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
         msg = PyQt6.QtWidgets.QMessageBox(self)
         msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Information)
+        msg.setWindowTitle("Info")
         msg.setText("Don't forget to save in flash.")
         msg.exec()
         return super().hideEvent(a0)
@@ -177,7 +178,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.send_commands("fx",["spring","damper","friction","inertia"],0,typechar="!")
         self.send_commands("fx",["frictionPctSpeedToRampup",
                                 "spring","damper","friction","inertia",
-                                "filterProfile_id"],0)
+                                "filterProfile_id","damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
 
         self.get_value_async("main","id",self.get_main_id,0,int)
     
