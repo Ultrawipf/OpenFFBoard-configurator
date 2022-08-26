@@ -182,7 +182,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Effects stats...</string>
+    <string>Effect stats</string>
    </property>
   </action>
   <action name="actionEffects_forces">
@@ -190,7 +190,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Effects forces...</string>
+    <string>Effect live forces</string>
    </property>
   </action>
   <action name="actionAdvanced_tweaks">

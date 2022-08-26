@@ -128,10 +128,14 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.get_value_async("fx", "effectsForces", self.display_data)
 
     def display_data(self, data):
-        """Decode the json data received."""
-        json_data = json.loads("[" + data.replace('\n',',') + "]")
-        if len(json_data) == 12:
-            self.update_current(json_data)
+        """Decode the data received."""
+        #data = data.replace('\n',',')
+        forces = [ int(e.split(":")[0]) for e in data.split("\n") ]
+        effects = [ int(e.split(":")[1]) for e in data.split("\n") ]
+        #json_data = json.loads("[" + data + "]")
+        if len(forces) == 12:
+            self.update_current(forces)
+            self.update_effect_stats(effects)
 
     def init_ui(self):
         """Init the ui by clear all data in series."""
@@ -140,6 +144,20 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.chart_last_x = 0
         for i in range(12):
             self.lines[i].clear()
+
+    def update_effect_stats(self,dat):
+        self.spinBox_1.setValue(dat[0])
+        self.spinBox_2.setValue(dat[1])
+        self.spinBox_3.setValue(dat[2])
+        self.spinBox_4.setValue(dat[3])
+        self.spinBox_5.setValue(dat[4])
+        self.spinBox_6.setValue(dat[5])
+        self.spinBox_7.setValue(dat[6])
+        self.spinBox_8.setValue(dat[7])
+        self.spinBox_9.setValue(dat[8])
+        self.spinBox_10.setValue(dat[9])
+        self.spinBox_11.setValue(dat[10])
+        self.spinBox_12.setValue(dat[11])
 
     def update_current(self, forces):
         """Display on graph the response of the board."""
