@@ -736,6 +736,7 @@ if __name__ == "__main__":
         if windows_theme_is_light() == 0:
             app.setStyle("Fusion")
             app.setPalette(dark_palette.PALETTE_DARK)
+            window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
 
     window.setWindowTitle("Open FFBoard Configurator")
     window.setWindowIcon(PyQt6.QtGui.QIcon('res/app.ico'))
