@@ -256,7 +256,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         layout.setContentsMargins(12,5,12,5)
         #clear
         for b in self.buttonconfbuttons:
-            SerialComms.removeCallbacks(b[1])
+            self.remove_callbacks(b[1])
             b[0].setParent(None)
             del b
         self.buttonconfbuttons.clear() # Clear buttons
@@ -303,7 +303,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         layout = QGridLayout()
         #clear
         for b in self.axisconfbuttons:
-            SerialComms.removeCallbacks(b[1])
+            self.remove_callbacks(b[1])
             b[0].setParent(None)
             del b
         self.axisconfbuttons.clear()
