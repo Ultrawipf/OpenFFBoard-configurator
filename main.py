@@ -21,6 +21,7 @@ import PyQt6.QtCore
 import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
+from PyQt6.QtCore import QEventLoop,QThread
 import config
 import helper
 
@@ -84,6 +85,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.setup()
         self.check_configurator_update()
+
+        self.process_events_timer = PyQt6.QtCore.QTimer()
+        self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
@@ -216,6 +220,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         AboutDialog(self).exec()
 
     def open_updater(self):
+        """Opens updater window"""
         updater.UpdateBrowser(self).exec()
 
 
@@ -251,6 +256,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
+        self.process_events_timer.stop()
         if port_checked != self.serialchooser.main_id:
             self.reset_port()
             self.log("Communication error. Please reconnect")
@@ -267,7 +273,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 return
             else:
                 self.timeouting = True
-                # print("Timeouting")
+                self.process_events_timer.start(100)
                 self.get_value_async("main", "id", self.timeout_check_cb, conversion=int)
                 self.get_value_async(
                     "sys", "heapfree", self.wrapper_status_bar.update_ram_used
@@ -718,6 +724,11 @@ def windows_theme_is_light():
         # do not have this key
         return None
     return subkey
+
+
+def process_events():
+    """Function to force processing background events. Do NOT call from any slots in the main thread without blocking as that may lead to recursion"""
+    app.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents,50)
 
 
 if __name__ == "__main__":
