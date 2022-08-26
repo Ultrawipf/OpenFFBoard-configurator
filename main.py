@@ -64,7 +64,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.serial = PyQt6.QtSerialPort.QSerialPort()
         base_ui.CommunicationHandler.comms = serial_comms.SerialComms(self, self.serial)
-
         self.main_class_ui = None
         self.timeouting = False
         self.connected = False
@@ -236,7 +235,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         if self.connected:
             for sector in dump["flash"]:
-                self.comms.sendValue(self, "sys", "flashraw", sector["val"], sector["addr"], 0)
+                self.send_value(self, "sys", "flashraw", sector["val"], sector["addr"], 0)
             # Message
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
@@ -309,7 +308,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.profile_ui.set_save_btn(False)
         for i in range(self.tabWidget_main.count() - 1, 0, -1):
             self.del_tab(self.tabWidget_main.widget(i))
-        self.comms.removeAllCallbacks()
+        self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
     def update_tabs(self):
@@ -405,15 +404,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
         self.reset_port()
-        PyQt6.QtCore.QTimer.singleShot(1000, self.serialchooser.serial_connect)
+        PyQt6.QtCore.QTimer.singleShot(1000, self.serialchooser.serial_connect_button)
 
     def reset_port(self):
         """Close serial port and remove tabs."""
         self.log("Reset port")
         self.profile_ui.setEnabled(False)
-        self.serial.waitForBytesWritten(500)
         self.serial.close()
-        self.comms.reset()
+        self.comms_reset()
         self.timeouting = False
         self.serialchooser.update()
         self.reset_tabs()

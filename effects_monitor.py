@@ -27,6 +27,8 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
 
     def setEnabled(self, a0: bool) -> None:
         self.pushButton_ResetData.setEnabled(a0)
+        if not a0 and self.isVisible() and self.timer.isActive : 
+            self.parent.hide()
         return super().setEnabled(a0)
 
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
@@ -34,7 +36,8 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None:
-        self.timer.stop()
+        if self.timer.isActive : self.timer.stop()
+        self.parent.hide()
         return super().hideEvent(a0)
     
     def resetData(self):

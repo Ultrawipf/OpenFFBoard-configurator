@@ -20,6 +20,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Init graph component and communication tools."""
         base_ui.WidgetUI.__init__(self, dlg, "effects_graph.ui")
         base_ui.CommunicationHandler.__init__(self)
+        self.parent = dlg
 
         self.max_datapoints = 1000
         self.max_datapoints_visible_time = 30
@@ -113,6 +114,11 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer)  # pylint: disable=no-value-for-parameter
 
+    def setEnabled(self, a0: bool) -> None:
+        if not a0 and self.isVisible() and self.timer.isActive : 
+            self.hide()
+        return super().setEnabled(a0)
+
     def showEvent(self, event):  # pylint: disable=invalid-name, unused-argument
         """Display the UI and start calling board  for data."""
         self.init_ui()
@@ -121,7 +127,10 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     # Tab is hidden
     def hideEvent(self, event):  # pylint: disable=invalid-name, unused-argument
         """Stop the timer on close event."""
-        self.timer.stop()
+        if self.timer.isActive : 
+            self.timer.stop()
+        self.parent.hide()
+        return super().hideEvent(event)
 
     def update_timer(self):
         """Call the board to get instant data."""
