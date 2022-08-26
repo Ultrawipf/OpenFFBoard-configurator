@@ -1,6 +1,6 @@
 import json
 from base_ui import WidgetUI,CommunicationHandler
-from PyQt6 import QtGui
+from PyQt6 import QtGui,QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QDialog, QVBoxLayout
 
@@ -15,6 +15,15 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
 
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.refreshUi)
+            icon_ok = QtGui.QIcon(
+            self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogYesButton)
+            )
+            icon_ko = QtGui.QIcon(
+                self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogNoButton)
+            )
+            self.icon_ok = icon_ok.pixmap(18, 18)
+            self.icon_ko = icon_ko.pixmap(18, 18)
+            self.setActiveState_cb(0)
 
     def setEnabled(self, a0: bool) -> None:
         self.pushButton_ResetData.setEnabled(a0)
@@ -33,7 +42,26 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
 
     def refreshUi(self):
         self.get_value_async("fx","effectsDetails",self.decodeData_cb)
+        self.get_value_async("fx","effects",self.setActiveState_cb,conversion=int)
     
+    def setLabelPixmapState(self,label,state):
+        label.setPixmap(self.icon_ok if state else self.icon_ko)
+
+    def setActiveState_cb(self,state):
+        self.setLabelPixmapState(self.label_used_1,state & 0x1 != 0)
+        self.setLabelPixmapState(self.label_used_2,state & 0x2 != 0)
+        self.setLabelPixmapState(self.label_used_3,state & 0x4 != 0)
+        self.setLabelPixmapState(self.label_used_4,state & 0x8 != 0)
+        self.setLabelPixmapState(self.label_used_5,state & 0x10 != 0)
+        self.setLabelPixmapState(self.label_used_6,state & 0x20 != 0)
+        self.setLabelPixmapState(self.label_used_7,state & 0x40 != 0)
+        self.setLabelPixmapState(self.label_used_8,state & 0x80 != 0)
+        self.setLabelPixmapState(self.label_used_9,state & 0x100 != 0)
+        self.setLabelPixmapState(self.label_used_10,state & 0x200 != 0)
+        self.setLabelPixmapState(self.label_used_11,state & 0x400 != 0)
+        self.setLabelPixmapState(self.label_used_11,state & 0x800 != 0)
+        self.setLabelPixmapState(self.label_used_12,state & 0x1000 != 0)
+
     def decodeData_cb(self, data):
         json_data = json.loads( '[' + data + ']' )
         if len(json_data) == 12:
@@ -61,18 +89,6 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             self.progressBar_10.setValue(json_data[9]["max"])
             self.progressBar_11.setValue(json_data[10]["max"])
             self.progressBar_12.setValue(json_data[11]["max"])
-            self.spinBox.setValue(json_data[0]["nb"])
-            self.spinBox_2.setValue(json_data[1]["nb"])
-            self.spinBox_3.setValue(json_data[2]["nb"])
-            self.spinBox_4.setValue(json_data[3]["nb"])
-            self.spinBox_5.setValue(json_data[4]["nb"])
-            self.spinBox_6.setValue(json_data[5]["nb"])
-            self.spinBox_7.setValue(json_data[6]["nb"])
-            self.spinBox_8.setValue(json_data[7]["nb"])
-            self.spinBox_9.setValue(json_data[8]["nb"])
-            self.spinBox_10.setValue(json_data[9]["nb"])
-            self.spinBox_11.setValue(json_data[10]["nb"])
-            self.spinBox_12.setValue(json_data[11]["nb"])
 
 class EffectsMonitorDialog(QDialog):
     def __init__(self,main=None):
