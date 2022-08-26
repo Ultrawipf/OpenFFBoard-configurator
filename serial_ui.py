@@ -55,7 +55,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         Connect the communication module with the history widget to load the board response.
         """
-        self.main.comms.rawReply.connect(self.serial_log)
+        self.get_raw_reply().connect(self.serial_log)
         self.shown.emit()
 
     # Tab is hidden
@@ -65,7 +65,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Disconnect the communication module with the history widget
         to stop to log the board response.
         """
-        self.main.comms.rawReply.disconnect(self.serial_log)
+        self.get_raw_reply().disconnect(self.serial_log)
         self.hidden.emit()
 
     def serial_log(self, txt):
@@ -80,7 +80,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Read the command input text, display it in history widget and send it to the board."""
         cmd = self.lineEdit_cmd.text() + "\n"
         self.serial_log(">" + cmd)
-        self.main.comms.serialWriteRaw(cmd)
+        self.serial_write_raw(cmd)
 
     def write(self, data):
         """Write data to the serial port."""
@@ -115,7 +115,8 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.serial_connect()
         else:
             self._serial.close()
-            self.update()
+
+        self.update()
 
     def serial_connect(self):
         """Check if port is not open and open it with right settings."""
@@ -130,8 +131,6 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.main.log("Can not open port")
             else:
                 self._serial.setDataTerminalReady(True)
-
-        self.update()
 
     def select_port(self, port_id):
         """Change the selected port."""

@@ -77,10 +77,7 @@ class SerialComms(QObject):
 
     def serialWriteRaw(self,cmdraw):
         if self.serial.isOpen():
-            #print(f"{cmdraw}")
             self.serial.write(bytes(cmdraw,"utf-8"))
-        else:
-            raise OSError(1, "Serial is not opened.")
 
     def serialReceive(self):
         data = self.serial.readAll()

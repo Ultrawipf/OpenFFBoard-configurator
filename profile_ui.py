@@ -490,13 +490,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                     + str(pararmeter["value"])
                     + "]"
                 )
-                first_end_marker = replytext.find("]")
-                first_start_marker = replytext.find("[")
-                match = self.comms.cmdRegex.search(
-                    replytext, first_start_marker, first_end_marker + 1
-                )
-                if match:
-                    self.comms.processMatchedReply(match)
+                self.process_virtual_comms_buffer(replytext)
 
             # self.sendCommand(cls=pararmeter["cls"],
             # cmd=pararmeter["cmd"], instance=pararmeter["instance"])

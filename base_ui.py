@@ -67,9 +67,10 @@ class CommunicationHandler:
         self.remove_callbacks()
 
     # deletes all callbacks to this class
-    def remove_callbacks(self):
+    def remove_callbacks(self, handler = None):
         """Remove all callback in SerialComms object (static)."""
-        serial_comms.SerialComms.removeCallbacks(self)
+        if handler is None : handler = self
+        serial_comms.SerialComms.removeCallbacks(handler)
 
     def register_callback(
         self,
@@ -144,3 +145,22 @@ class CommunicationHandler:
             else:
                 cmdstring += f"{cls}.{instance}.{cmd}{typechar};"
         self.comms.serialWriteRaw(cmdstring)
+
+    def comms_reset(self):
+        """Send the reset reply."""
+        self.comms.reset()
+
+    def process_virtual_comms_buffer(self, buffer:str):
+        """Inject the string buffer in the comms parser and process it as it a board answer."""
+        first_end_marker = buffer.find("]")
+        first_start_marker = buffer.find("[")
+        match = self.comms.cmdRegex.search(
+            buffer, first_start_marker, first_end_marker + 1
+        )
+        if match:
+            self.comms.processMatchedReply(match)
+        self.comms.processMatchedReply(match)
+
+    def get_raw_reply(self):
+        """Expose the raw reply pySignal to connect on it."""
+        return self.comms.rawReply

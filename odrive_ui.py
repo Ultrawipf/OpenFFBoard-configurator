@@ -98,14 +98,14 @@ class OdriveUI(WidgetUI,CommunicationHandler):
 
     def updateTimer(self):
         self.send_commands("odrv",["connected","vbus","errors","state"],self.prefix)
-        #self.main.comms.serialGetAsync(["odriveVbus?","odriveErrors?","odriveState?"],self.statusUpdateCb,int,self.prefix)
+        #self.serial_get_async(["odriveVbus?","odriveErrors?","odriveState?"],self.statusUpdateCb,int,self.prefix)
 
         
     def apply(self):
         #spdPreset = str(self.comboBox_baud.currentIndex()+3) # 3 is lowest preset!
         canId = str(self.spinBox_id.value())
         torqueScaler = str(int(self.doubleSpinBox_torque.value() * 100))
-        #self.sendValue("odrv","canspd",spdPreset,instance=self.prefix)
+        #self.send_value("odrv","canspd",spdPreset,instance=self.prefix)
         self.send_value("odrv","canid",canId,instance=self.prefix)
         self.send_value("odrv","maxtorque",torqueScaler,instance=self.prefix)
 
