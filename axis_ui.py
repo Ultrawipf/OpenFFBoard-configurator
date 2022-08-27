@@ -89,7 +89,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.send_command("axis","reduction",self.axis)
 
     def updateReductionText(self):
-        self.label_gear_reduction_value.setText(f"Reduction: {round(self.spinBox_reduction_numerator.value()/self.spinBox_reduction_denominator.value(),5)}")
+        self.label_gear_reduction_value.setText(f"Prescaler: {round(self.spinBox_reduction_numerator.value()/self.spinBox_reduction_denominator.value(),5)}")
 
     def applyOptions(self):
         self.send_value("axis","invert",(0 if self.checkBox_invert.isChecked() == 0 else 1),instance=self.axis)
