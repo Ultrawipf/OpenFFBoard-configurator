@@ -1,4 +1,4 @@
-# OpenFFBoard-configurator [![Build Configurator](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build-pyinstaller.yml/badge.svg)](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build-pyinstaller.yml)
+# OpenFFBoard-configurator [![Build Configurator](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build.yml/badge.svg)](https://github.com/Ultrawipf/OpenFFBoard-configurator/actions/workflows/build.yml)
 A simple GUI to configure the [Open FFBoard](https://github.com/Ultrawipf/OpenFFBoard) written in Python 3 with PyQt. 
 
 This allows complete configuration of all settings in the Open FFBoard firmware at runtime.
