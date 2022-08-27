@@ -186,6 +186,7 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
                 self.send_value(self.classname,"min",min,instance = self.instance,adr=i)
                 self.send_value(self.classname,"max",max,instance = self.instance,adr=i)
             #self.readValues()
+                
 
         
 
@@ -445,9 +446,11 @@ class ADS111XAnalogConf(OptionsDialogGroupBox,CommunicationHandler):
         self.send_value("adsAnalog","gain",int(self.gainCombobox.currentData()))
         self.send_value("adsAnalog","rate",int(self.samplerateCombobox.currentData()))
         self.processingOptions.setChannels(self.numAinBox.value())
+        self.processingOptions.apply()
         
     
     def readValues(self):
+        self.processingOptions.readValues()
         self.get_value_async("adsAnalog","gain",lambda d : updateListComboBox(self.gainCombobox,d),0,typechar='!')
         self.get_value_async("adsAnalog","rate",lambda d : updateListComboBox(self.samplerateCombobox,d),0,typechar='!')
 
