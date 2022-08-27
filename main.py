@@ -163,7 +163,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def reboot(self):
         """Send the reboot message to the board."""
         self.send_command("sys", "reboot")
-        self.reconnect()
+        PyQt6.QtCore.QTimer.singleShot(150, self.reconnect)
 
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
