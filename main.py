@@ -21,7 +21,7 @@ import PyQt6.QtCore
 import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
-from PyQt6.QtCore import QEventLoop,QThread
+from PyQt6.QtCore import QEventLoop
 import config
 import helper
 

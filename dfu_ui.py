@@ -151,7 +151,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("Uploaded!\n")
         except pydfu.DFUException as exception:
             self.log(str(exception))
-            self.log("USB Exception during flashing... Please reflash firmware!\n")
+            self.log("\nUSB Exception during flashing... Please reflash firmware!\n")
         self.uploading = False
         pydfu.exit_dfu()
         self.log("Done. Please reset\n")
@@ -189,7 +189,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             except pydfu.DFUException as exception:
                 self.progress(0, 100, 100)
                 self.log(str(exception))
-                self.log("USB Exception during erasing... Please reflash firmware!\n")
+                self.log("\nUSB Exception during erasing... Please reflash firmware!\n")
 
     def log(self, txt):
         """Append a message in the displayed log."""
