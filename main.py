@@ -83,7 +83,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.fw_version_str = None
 
         self.setup()
-        self.check_configurator_update()
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
@@ -187,6 +186,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         msg.setLayout(layout)
         msg.exec()
         dfu.deleteLater()
+        
 
     def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
         """Move all modal dialog when moving main ui."""
@@ -751,6 +751,7 @@ if __name__ == "__main__":
     window.setWindowTitle("Open FFBoard Configurator")
     window.setWindowIcon(PyQt6.QtGui.QIcon('res/app.ico'))
     window.show()
+    window.check_configurator_update() # Check for updates after window is shown
 
     # exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
     # sys.exit(exit_code)

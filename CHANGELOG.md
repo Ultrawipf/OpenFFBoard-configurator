@@ -21,3 +21,4 @@
 
 ### Fixed since 1.8.6:
 - Fixed serial port not writing pending data on reset/reboot/mainclass change
+- Fixed UI crashing on configurator update notification
