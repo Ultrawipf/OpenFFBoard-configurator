@@ -18,3 +18,6 @@
 - Added basic profile management system
 - Added encoder gear reduction option (For belt/gear driven wheels if there is a reduction between the wheel and encoder. Prescales all internal positions)
 - Added constant force rate readout
+
+### Fixed since 1.8.6:
+- Fixed serial port not writing pending data on reset/reboot/mainclass change
