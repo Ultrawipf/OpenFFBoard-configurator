@@ -27,6 +27,7 @@ class SerialComms(QObject):
         self.serial.aboutToClose.connect(self.reset)
         self.replytext = ""
 
+    @staticmethod
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
         if cls not in SerialComms.callbackDict:
             SerialComms.callbackDict[cls] = []
@@ -34,7 +35,7 @@ class SerialComms(QObject):
         callbackObj = {"handler":handler,"callback":callback,"convert":conversion,"instance":instance,"class":cls,"cmd":cmd,"address":adr,"delete":delete,"typechar":typechar}
         if callbackObj not in SerialComms.callbackDict[cls]:
             SerialComms.callbackDict[cls].append(callbackObj)
-
+    @staticmethod
     def removeCallbacks(handler):
         for cls,item in (SerialComms.callbackDict.items()):
             SerialComms.callbackDict[cls] = [ entry for entry in item if entry["handler"] != handler]

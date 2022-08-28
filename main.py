@@ -47,7 +47,7 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.9.6"
+VERSION = "1.9.7"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -163,7 +163,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def reboot(self):
         """Send the reboot message to the board."""
         self.send_command("sys", "reboot")
-        PyQt6.QtCore.QTimer.singleShot(150, self.reconnect)
+        self.reconnect()
 
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
@@ -235,7 +235,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         if self.connected:
             for sector in dump["flash"]:
-                self.send_value(self, "sys", "flashraw", sector["val"], sector["addr"], 0)
+                self.send_value("sys", "flashraw", sector["val"], sector["addr"], 0)
             # Message
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
@@ -404,12 +404,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
         self.reset_port()
-        PyQt6.QtCore.QTimer.singleShot(1000, self.serialchooser.serial_connect_button)
+        PyQt6.QtCore.QTimer.singleShot(1500, self.serialchooser.serial_connect_button)
 
     def reset_port(self):
         """Close serial port and remove tabs."""
         self.log("Reset port")
         self.profile_ui.setEnabled(False)
+        self.serial.waitForBytesWritten(250)
         self.serial.close()
         self.comms_reset()
         self.timeouting = False
