@@ -25,8 +25,8 @@ def classlistToIds(dat):
                 n+=1
     return (idToIdx,classes)
 
-# Populates a combobox with entries from a parsed classchooser reply
 def updateClassComboBox(combobox,ids,classes,selected = None):
+    """Populates a combobox with entries from a parsed classchooser reply"""
     combobox.clear()
     if(selected != None):
         selected = int(selected)
@@ -38,17 +38,20 @@ def updateClassComboBox(combobox,ids,classes,selected = None):
     if(selected in ids and combobox.currentIndex() != ids[selected][0]):
         combobox.setCurrentIndex(ids[selected][0])
 
-# Populates a combobox with entries formatted as "Entrylabel<datasep>data<entrysep>..."
-def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None):
+def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dataconv = None):
+    """Populates a combobox with entries formatted as Entrylabel<datasep>data<entrysep>..."""
     combobox.clear()
-    if lookup:
+    if lookup != None:
         lookup.clear()
     i = 0
     for s in reply.split(entrySep):
         e = s.split(dataSep)
-        combobox.addItem(e[0],e[1])
-        if lookup:
-            lookup[e[1]] = i
+        data = e[1]
+        if dataconv != None:
+            data = dataconv(data)
+        combobox.addItem(e[0],data)
+        if lookup != None:
+            lookup[data] = i
         i += 1
 
 def splitListReply(reply,itemdelim = ':', entrydelim = '\n'):
