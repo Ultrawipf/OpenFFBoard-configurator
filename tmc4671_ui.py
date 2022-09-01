@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QGroupBox,QComboBox,QLabel,QApplication
-from helper import res_path,classlistToIds
+from helper import res_path,classlistToIds,updateListComboBox
 from PyQt6.QtCore import QTime, QTimer
 from PyQt6.QtCore import Qt,QMargins
 from PyQt6.QtGui import QColor
@@ -25,6 +25,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def __init__(self, main=None, unique=0):
         self.axis = 0
+        self.init_done = False
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         CommunicationHandler.__init__(self)
         self.main = main #type: main.MainUi
@@ -157,10 +158,23 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.register_callback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
+
+        self.filter_type_to_index = {}
+        self.register_callback("tmc","trqbq_mode",self.filtersCb,self.axis,str,typechar='!')
+        self.register_callback("tmc","trqbq_mode",self.comboBox_torqueFilter.setCurrentIndex,self.axis,int)
+        self.register_callback("tmc","trqbq_f",self.spinBox_torqueFilterFreq.setValue,self.axis,int)
     
         self.register_callback("tmc","calibrated",self.calibrated,instance=self.axis,conversion=int)
         
         self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
+
+
+    def torqueFilterChanged(self,v):
+        self.spinBox_torqueFilterFreq.setEnabled(v > 0)
+        if v in self.filter_type_to_index:
+            self.send_value("tmc","trqbq_mode",val=self.filter_type_to_index[v],instance=self.axis)
+
+
 
     # TODO do not send updates when window is moved. Blocks serial port receive on windows
     def showEvent(self,event):
@@ -403,14 +417,17 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Temps.setMax(90)
         try:
             # Fill encoder source types
-            self.send_commands("tmc",["mtype","encsrc","tmcHwType"],self.axis,'!')
-            self.send_commands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated"],self.axis)
+            self.send_commands("tmc",["mtype","encsrc","tmcHwType","trqbq_mode"],self.axis,'!')
+            self.send_commands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated","trqbq_f"],self.axis)
             self.getMotor()
             self.getPids()
-
-            self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.send_value("tmc","fluxoffset",v,instance=self.axis))
-            self.pushButton_submitmotor.clicked.connect(self.submitMotor)
-            self.pushButton_submitpid.clicked.connect(self.submitPid)
+            if not self.init_done:
+                self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.send_value("tmc","fluxoffset",v,instance=self.axis))
+                self.pushButton_submitmotor.clicked.connect(self.submitMotor)
+                self.pushButton_submitpid.clicked.connect(self.submitPid)
+                self.comboBox_torqueFilter.currentIndexChanged.connect(self.torqueFilterChanged)
+                self.spinBox_torqueFilterFreq.valueChanged.connect(lambda x : self.send_value("tmc","trqbq_f",x,instance=self.axis))
+                self.init_done = True
 
             # Check if calibrated
         except Exception as e:
@@ -445,24 +462,14 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 
     def encsCb(self,encsrcs):
-        self.comboBox_enc.clear()
-        self.encoder_type_to_index.clear()
-        i = 0
-        for s in encsrcs.split(","):
-            e = s.split("=")
-            self.comboBox_enc.addItem(e[0],int(e[1]))
-            self.encoder_type_to_index[int(e[1])] = i
-            i += 1
+        updateListComboBox(combobox=self.comboBox_enc,reply=encsrcs,dataSep="=",lookup=self.encoder_type_to_index,dataconv=int)
+
+    def filtersCb(self,filters):
+        updateListComboBox(combobox=self.comboBox_torqueFilter,reply=filters,dataSep="=",lookup=self.filter_type_to_index,dataconv=int)
+        self.send_command("tmc","trqbq_mode",self.axis)
 
     def motsCb(self,mots):
-        self.comboBox_mtype.clear()
-        self.motor_type_to_index.clear()
-        i = 0
-        for s in mots.split(","):
-            e = s.split("=")
-            self.comboBox_mtype.addItem(e[0],int(e[1]))
-            self.motor_type_to_index[int(e[1])] = i
-            i += 1
+        updateListComboBox(combobox=self.comboBox_mtype,reply=mots,dataSep="=",lookup=self.motor_type_to_index,dataconv=int)
 
     def alignEnc(self):
         self.pushButton_align.setEnabled(False)
