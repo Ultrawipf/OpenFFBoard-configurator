@@ -154,14 +154,14 @@
          <string>More</string>
         </property>
         <layout class="QFormLayout" name="formLayout_3">
-         <item row="0" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="label_9">
            <property name="text">
             <string>Max field weakening</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="2" column="1">
           <widget class="QSpinBox" name="spinBox_fluxoffset">
            <property name="keyboardTracking">
             <bool>false</bool>
@@ -171,42 +171,42 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0" colspan="2">
+         <item row="3" column="0" colspan="2">
           <widget class="QLabel" name="label_10">
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Can increase max speed on steppers.&lt;br/&gt;Caution. Reasonable values are ~500-2000&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0" colspan="2">
+         <item row="4" column="0" colspan="2">
           <widget class="Line" name="line">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
-         <item row="4" column="0" colspan="2">
+         <item row="6" column="0" colspan="2">
           <widget class="QPushButton" name="pushButton_align">
            <property name="text">
             <string>Force encoder alignment</string>
            </property>
           </widget>
          </item>
-         <item row="6" column="0" colspan="2">
+         <item row="8" column="0" colspan="2">
           <widget class="Line" name="line_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="10" column="0">
           <widget class="QLabel" name="label_11">
            <property name="text">
             <string>Motor current:</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
+         <item row="10" column="1">
           <widget class="QLabel" name="label_Current">
            <property name="text">
             <string>0A</string>
@@ -216,14 +216,14 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="11" column="0">
           <widget class="QLabel" name="label_12">
            <property name="text">
             <string>Temperature:</string>
            </property>
           </widget>
          </item>
-         <item row="9" column="1">
+         <item row="11" column="1">
           <widget class="QLabel" name="label_Temp">
            <property name="text">
             <string>0°C</string>
@@ -233,14 +233,14 @@
            </property>
           </widget>
          </item>
-         <item row="10" column="0">
+         <item row="12" column="0">
           <widget class="QLabel" name="label_13">
            <property name="text">
             <string>Voltage:</string>
            </property>
           </widget>
          </item>
-         <item row="10" column="1">
+         <item row="12" column="1">
           <widget class="QLabel" name="label_volt">
            <property name="text">
             <string>0V</string>
@@ -250,28 +250,28 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="5" column="1">
           <widget class="QPushButton" name="pushButton_hwversion">
            <property name="text">
             <string>Select hardware</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="5" column="0">
           <widget class="QLabel" name="label_hwversion">
            <property name="text">
             <string>HW Version</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="9" column="0">
           <widget class="QLabel" name="label_14">
            <property name="text">
             <string>State:</string>
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
+         <item row="9" column="1">
           <widget class="QLabel" name="label_state">
            <property name="text">
             <string>State</string>
@@ -281,10 +281,46 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
+         <item row="7" column="0" colspan="2">
           <widget class="QPushButton" name="pushButton_calibrate">
            <property name="text">
             <string>Start full calibration</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="comboBox_torqueFilter"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Torque Filter</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Torque Filter freq.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinBox_torqueFilterFreq">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="suffix">
+            <string> Hz</string>
+           </property>
+           <property name="minimum">
+            <number>10</number>
+           </property>
+           <property name="maximum">
+            <number>8192</number>
+           </property>
+           <property name="value">
+            <number>1000</number>
            </property>
           </widget>
          </item>
@@ -539,7 +575,7 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
+         <item row="5" column="0">
           <widget class="QCheckBox" name="checkBox_P_Precision">
            <property name="enabled">
             <bool>false</bool>
@@ -552,7 +588,7 @@
            </attribute>
           </widget>
          </item>
-         <item row="6" column="0" colspan="2">
+         <item row="5" column="1">
           <widget class="QCheckBox" name="checkBox_I_Precision">
            <property name="enabled">
             <bool>false</bool>
