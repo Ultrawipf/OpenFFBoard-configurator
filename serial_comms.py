@@ -3,7 +3,11 @@ from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QApplication
 from collections import deque
 import re
+import PyQt6.QtSerialPort
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QTimer
+
+from helper import throttle
 
 # Regex group indices:
 GRP_CLS         = 0
@@ -15,17 +19,25 @@ GRP_CMDVAL2     = 5
 GRP_REPLY       = 6
 
 class SerialComms(QObject):
+    MAX_REQUEST_SIZE = 1024
+    MAX_DELAY_SEND_CMD = 70
+
     cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d+))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
     rawReply = pyqtSignal(str)
+    send_buffer = []
 
-    def __init__(self,main,serialport):
+    def __init__(self,main,serialport : PyQt6.QtSerialPort.QSerialPort):
         QObject.__init__(self)
-        self.serial = serialport
+        self.serial : PyQt6.QtSerialPort.QSerialPort = serialport 
         self.main=main
         self.serial.readyRead.connect(self.serialReceive)
         self.serial.aboutToClose.connect(self.reset)
         self.replytext = ""
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._send_over_uart)
+        self.timer.start(SerialComms.MAX_DELAY_SEND_CMD)
 
     @staticmethod
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
@@ -76,9 +88,50 @@ class SerialComms(QObject):
         else:
             self.main.log(reply)
 
+    def pack_cmd(self,cmd):
+        # if buffer is empty, add the line
+        if len(self.send_buffer) == 0 :
+            self.send_buffer.append(cmd)
+        else :
+        # if buffer is not empty, take the last line, append the new line
+            last_line = self.send_buffer.pop()
+            last_line += cmd
+            if len(last_line) < SerialComms.MAX_REQUEST_SIZE :
+                self.send_buffer.append(last_line)
+                #print(F"pack cmd: {len(last_line)}")
+            else:
+                # if the last buffer + cmd is over 1024, we split all the commands and make 1024 max size new_line
+                # and append it to be sent
+                new_line = ""
+                for line in last_line.split(";"):
+                    if (len(new_line) + len(line) +1) < SerialComms.MAX_REQUEST_SIZE :
+                        new_line += line + ";"
+                    else:
+                        self.send_buffer.append(new_line)
+                        new_line = line
+                self.send_buffer.append(new_line)
+                #print(F"pack new line created line/size: {len(self.send_buffer)}-{len(new_line)}")
+
     def serialWriteRaw(self,cmdraw):
-        if self.serial.isOpen():
-            self.serial.write(bytes(cmdraw,"utf-8"))
+        self.pack_cmd(cmdraw)
+        self._send_over_uart()
+    
+    @throttle(MAX_DELAY_SEND_CMD)
+    def _send_over_uart(self):
+        # exit if serial is not opened
+        if not self.serial.isOpen() : return
+
+        ## send buffer commands to the board if the port is opened
+        cmd_not_sent = []
+        for cmdraw in self.send_buffer:
+            if self.serial.isOpen():
+                # if command can't be send, we reput them in the buffer for a retry
+                if self.serial.write(bytes(cmdraw,"utf-8")) == -1:
+                    cmd_not_sent.append(cmdraw)
+            else:
+                cmd_not_sent.append(cmdraw)
+        self.send_buffer = cmd_not_sent
+
 
     def serialReceive(self):
         data = self.serial.readAll()
