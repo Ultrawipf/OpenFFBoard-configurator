@@ -6,6 +6,7 @@ inner EventLogger.
 Module : base_ui
 Authors : yannick, vincet
 """
+import logging
 import PyQt6.QtCore
 import PyQt6.QtWidgets
 import helper
@@ -38,10 +39,12 @@ class WidgetUI(PyQt6.QtWidgets.QWidget):
     """Load the .ui file and set item to the current class. Provide a quick access to logger."""
 
     logger = EventLogger()
+    tech_log : logging.Logger = None 
 
     def __init__(self, parent: PyQt6.QtWidgets.QWidget = None, ui_form: str = ""):
         """Load the .ui file and map it."""
         PyQt6.QtWidgets.QWidget.__init__(self, parent)
+        self.tech_log = logging.getLogger(ui_form)
         if ui_form:
             PyQt6.uic.loadUi(helper.res_path(ui_form), self)
 

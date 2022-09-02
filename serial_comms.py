@@ -20,7 +20,7 @@ GRP_REPLY       = 6
 
 class SerialComms(QObject):
     MAX_REQUEST_SIZE = 1024
-    MAX_DELAY_SEND_CMD = 70
+    MAX_DELAY_SEND_CMD = 30
 
     cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d+))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
@@ -34,10 +34,6 @@ class SerialComms(QObject):
         self.serial.readyRead.connect(self.serialReceive)
         self.serial.aboutToClose.connect(self.reset)
         self.replytext = ""
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self._send_over_uart)
-        self.timer.start(SerialComms.MAX_DELAY_SEND_CMD)
 
     @staticmethod
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
