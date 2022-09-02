@@ -14,6 +14,7 @@ version = "1.8.7"
 """
 import sys
 import functools
+import logging
 from typing import List
 
 import PyQt6.QtWidgets
@@ -731,6 +732,7 @@ def process_events():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     app = PyQt6.QtWidgets.QApplication(sys.argv)
     window = MainUi()
     if (sys.platform == "win32" or "Windows" in sys.platform):

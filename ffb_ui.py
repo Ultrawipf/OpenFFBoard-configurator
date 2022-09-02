@@ -336,6 +336,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         
     @throttle(50)
     def cffilter_changed(self,v,send=True):
+        self.tech_log.debug("Freq %s send %d", v, send)
         freq = max(min(v,500),0)
         if(send):
             self.send_value("fx","filterCfFreq",(freq))
