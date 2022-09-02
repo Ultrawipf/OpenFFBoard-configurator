@@ -79,6 +79,8 @@ def throttle(ms):
 
             # Call immediately if last call is older than timeout
             if time_since_last_call > ms/1000:
+                if throttle.t.isActive():
+                    throttle.t.stop()
                 return call()
 
             else: # delay execution
