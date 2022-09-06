@@ -1,4 +1,5 @@
 from os import path
+from functools import wraps
 import sys
 import time
 
@@ -61,40 +62,40 @@ def qtBlockAndCall(object : QObject,function,value):
     function(value)
     object.blockSignals(False)
 
-
 def throttle(ms):
 
-    throttle.time_of_last_call = time.time()
-    throttle.t = QTimer()
-    throttle.t.setSingleShot(True)
+    time_of_last_call = time.time()
+    timer = QTimer()
+    timer.setSingleShot(True)
 
     def decorator(fn):
         def wrapper(*args, **kwargs):
             def call():
-                throttle.time_of_last_call = time.time()
+                nonlocal time_of_last_call 
+                time_of_last_call = time.time()
                 fn(*args, **kwargs)
             
             now = time.time()
-            time_since_last_call = now - throttle.time_of_last_call
+            time_since_last_call = now - time_of_last_call
 
             # Call immediately if last call is older than timeout
             if time_since_last_call > ms/1000:
-                if throttle.t.isActive():
-                    throttle.t.stop()
+                if timer.isActive():
+                    timer.stop()
                 return call()
 
             else: # delay execution
-                if throttle.t.isActive():
-                    throttle.t.stop()
+                if timer.isActive():
+                    timer.stop()
 
                 # Disconnect previous call
-                try: throttle.t.timeout.disconnect()
+                try: timer.timeout.disconnect()
                 except Exception: pass
 
                 # Connect timer
-                throttle.t.timeout.connect(call)
-                throttle.t.setInterval(ms)
-                throttle.t.start()     
+                timer.timeout.connect(call)
+                timer.setInterval(ms)
+                timer.start()     
         return wrapper
     return decorator
 
