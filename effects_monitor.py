@@ -62,8 +62,7 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
         self.setLabelPixmapState(self.label_used_9,state & 0x100 != 0)
         self.setLabelPixmapState(self.label_used_10,state & 0x200 != 0)
         self.setLabelPixmapState(self.label_used_11,state & 0x400 != 0)
-        self.setLabelPixmapState(self.label_used_11,state & 0x800 != 0)
-        self.setLabelPixmapState(self.label_used_12,state & 0x1000 != 0)
+        self.setLabelPixmapState(self.label_used_12,state & 0x800 != 0)
 
     def decodeData_cb(self, data):
         json_data = json.loads( '[' + data + ']' )
