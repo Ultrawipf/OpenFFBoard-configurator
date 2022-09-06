@@ -6,6 +6,7 @@ import re
 import PyQt6.QtSerialPort
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtCore import QTimer
+import logging
 
 from helper import throttle
 
@@ -34,6 +35,7 @@ class SerialComms(QObject):
         self.serial.readyRead.connect(self.serialReceive)
         self.serial.aboutToClose.connect(self.reset)
         self.replytext = ""
+        self.logger = logging.getLogger("serial_comms")
 
     @staticmethod
     def registerCallback(handler,cls,cmd,callback,instance=0,conversion=None,adr=None,delete=False,typechar='?'):
@@ -88,13 +90,14 @@ class SerialComms(QObject):
         # if buffer is empty, add the line
         if len(self.send_buffer) == 0 :
             self.send_buffer.append(cmd)
+            self.logger.debug("First command added")
         else :
         # if buffer is not empty, take the last line, append the new line
             last_line = self.send_buffer.pop()
             last_line += cmd
             if len(last_line) < SerialComms.MAX_REQUEST_SIZE :
                 self.send_buffer.append(last_line)
-                #print(F"pack cmd: {len(last_line)}")
+                self.logger.debug("New command packed (size %d)", len(last_line))
             else:
                 # if the last buffer + cmd is over 1024, we split all the commands and make 1024 max size new_line
                 # and append it to be sent
@@ -106,7 +109,7 @@ class SerialComms(QObject):
                         self.send_buffer.append(new_line)
                         new_line = line
                 self.send_buffer.append(new_line)
-                #print(F"pack new line created line/size: {len(self.send_buffer)}-{len(new_line)}")
+                self.logger.debug("New command packed with new line (size %d/line %d)", len(self.send_buffer) ,len(new_line))
 
     def serialWriteRaw(self,cmdraw):
         self.pack_cmd(cmdraw)
@@ -119,6 +122,7 @@ class SerialComms(QObject):
 
         ## send buffer commands to the board if the port is opened
         cmd_not_sent = []
+        self.logger.debug(F"Send %d lines to uart, commm is %d", len(self.send_buffer), self.serial.isOpen())
         for cmdraw in self.send_buffer:
             if self.serial.isOpen():
                 # if command can't be send, we reput them in the buffer for a retry
