@@ -1,6 +1,9 @@
 name: Build Configurator
 
 inputs:
+  python-version:
+    description: 'Python version. 3.9 default'
+    default: '3.9'
   path: 
     description: 'input path'
     required: true
@@ -16,7 +19,7 @@ runs:
   steps:
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: ${{ inputs.python-version }}
 
     # Setup toolchain
     - name: Setup environment
