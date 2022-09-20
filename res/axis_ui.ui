@@ -769,21 +769,5 @@
     </hint>
    </hints>
   </connection>
-  <connection>
-   <sender>horizontalSlider_degrees</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBox_range</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>463</x>
-     <y>360</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>793</x>
-     <y>360</y>
-    </hint>
-   </hints>
-  </connection>
  </connections>
 </ui>
