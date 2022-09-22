@@ -83,7 +83,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.log("Found DFU device but could not connect: " + str(e.args[1]) + "\n")
                 self.timer.start()
                 return
-            self.log("Found DFU device. Please select an option")
+            self.log("Found DFU device. Please select an option\n")
             self.dfu_device = dfu_devices[0]
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
