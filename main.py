@@ -412,13 +412,24 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Close serial port and remove tabs."""
         self.log("Reset port")
         self.profile_ui.setEnabled(False)
-        self.serial.waitForBytesWritten(250)
-        self.serial.close()
-        self.comms_reset()
-        self.timeouting = False
-        self.serialchooser.update()
-        self.reset_tabs()
+        # self.serial.waitForBytesWritten(250) # Broken on pyqt6.3
 
+        # Workaround until waitForBytesWritten works again or a better solution has been found
+        def close():
+            self.serial.close()
+            self.comms_reset()
+            self.timeouting = False
+            self.serialchooser.update()
+            self.reset_tabs()
+
+        if self.serial.bytesToWrite() > 0:
+            # Not everything has been sent
+            self.serial.flush() # Immediately send
+            PyQt6.QtCore.QTimer.singleShot(250, close) # Close port after 250ms because no signal is currently working. Should ensure data has been sent.
+
+        else:
+            close() # Close port
+        
     def version_check(self, ver):
         """Check if the UI is compatible with this board firmware."""
         self.fw_version_str = ver.replace("\n", "")
