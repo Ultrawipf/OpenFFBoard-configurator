@@ -29,11 +29,11 @@ exe = EXE(pyz,
           [],
           exclude_binaries=True,
           name='OpenFFBoard',
-          debug=False,
+          debug=True,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False , icon='app.ico')
+          console=True , icon='app.ico')
 
 coll = COLLECT(exe,
                a.binaries,
