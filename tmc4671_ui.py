@@ -21,7 +21,7 @@ source is not recommended"""
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
-    STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration"]
+    STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration","ExternalEncoderInit"]
 
     def __init__(self, main=None, unique=0):
         self.axis = 0
