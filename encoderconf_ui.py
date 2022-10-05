@@ -87,15 +87,21 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
         self.spinBox_cpr = QSpinBox()
         self.spinBox_cpr.setRange(0,0xffff)
         layout.addWidget(QLabel("CPR = 4x PPR"))
-        layout.addRow(QLabel("CPR"),self.spinBox_cpr)
+        layout.addRow(QLabel("CPR:"),self.spinBox_cpr)
+
+        self.checkBox_index = QCheckBox("Use index homing")
+        layout.addRow(QLabel("Index:"),self.checkBox_index)
+
         self.setLayout(layout)
 
     def onshown(self):
         self.get_value_async("localenc","cpr",self.spinBox_cpr.setValue,0,int)
+        self.get_value_async("localenc","index",self.checkBox_index.setChecked,0,int)
 
     def apply(self):
         val = self.spinBox_cpr.value()
         self.send_value("localenc","cpr",val=val)
+        self.send_value("localenc","index",val = 1 if self.checkBox_index.checkState() else 0)
 
 
 class MtEncoderConf(EncoderOption,CommunicationHandler):
