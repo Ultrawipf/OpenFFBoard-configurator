@@ -108,7 +108,7 @@
          </sizepolicy>
         </property>
         <property name="title">
-         <string>Analog Axes</string>
+         <string>Analog axes</string>
         </property>
        </widget>
       </item>

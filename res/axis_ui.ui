@@ -47,13 +47,6 @@
          <property name="verticalSpacing">
           <number>5</number>
          </property>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Encoder source</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="1" colspan="3">
           <widget class="QStackedWidget" name="stackedWidget_encoder">
            <property name="sizePolicy">
@@ -70,6 +63,13 @@
            </property>
            <widget class="QWidget" name="page"/>
            <widget class="QWidget" name="page_2"/>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Encoder source</string>
+           </property>
           </widget>
          </item>
          <item row="0" column="2">
@@ -298,13 +298,6 @@
             <property name="bottomMargin">
              <number>4</number>
             </property>
-            <item row="0" column="0" colspan="3">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder reduction &lt;br/&gt;prescaler for &lt;br/&gt;range selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="0">
              <widget class="QSpinBox" name="spinBox_reduction_numerator">
               <property name="sizePolicy">
@@ -357,6 +350,13 @@
               </property>
              </widget>
             </item>
+            <item row="0" column="0" colspan="3">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder reduction &lt;br/&gt;prescaler for &lt;br/&gt;range selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </widget>
          </item>
@@ -386,7 +386,7 @@
    <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>Mechanical settings (Game independant)</string>
+      <string>Mechanical settings (Game independent)</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_6" rowstretch="0,0,0" columnstretch="0,0,0" columnminimumwidth="130,0,0">
       <property name="horizontalSpacing">
@@ -424,7 +424,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Deskstop spring</string>
+         <string>Desktop spring (No FFB)</string>
         </property>
        </widget>
       </item>
@@ -434,7 +434,7 @@
          <bool>false</bool>
         </property>
         <property name="suffix">
-         <string/>
+         <string>°</string>
         </property>
         <property name="minimum">
          <number>10</number>
