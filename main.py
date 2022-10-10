@@ -49,11 +49,11 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.9.9"
+VERSION = "1.10.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.9.9"
+MIN_FW = "1.10.0"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
