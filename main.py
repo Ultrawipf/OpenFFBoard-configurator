@@ -49,7 +49,7 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.10.0"
+VERSION = "1.10.1"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal

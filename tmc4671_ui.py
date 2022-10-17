@@ -137,7 +137,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.register_callback("tmc","torqueI",self.spinBox_ti.setValue,self.axis,int)
         self.register_callback("tmc","fluxP",self.spinBox_fp.setValue,self.axis,int)
         self.register_callback("tmc","fluxI",self.spinBox_fi.setValue,self.axis,int)
-        self.register_callback("tmc","fluxoffset",self.spinBox_fluxoffset.setValue,self.axis,int)
+        self.register_callback("tmc","fluxoffset",lambda x : self.doubleSpinBox_fluxoffset.setValue(x*self.adc_to_amps),self.axis,int)
         self.register_callback("tmc","seqpi",self.checkBox_advancedpid.setChecked,self.axis,int)
 
         self.register_callback("tmc","tmctype",self.tmcChipTypeCB,self.axis,str,typechar='?')
@@ -391,12 +391,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         entriesList = v.split("\n")
         entriesList = [m.split(":") for m in entriesList if m]
         self.hwversions = {int(entry[0]):entry[1] for entry in entriesList}
+
     def hwtcb(self,t):
         self.hwversion = int(t)
         
         self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
-        # change scaler
-        self.send_command("tmc","iScale",self.axis) # request scale update
         if self.hwversion == 0 and self.versionWarningShow and len(self.hwversions) > 0:
             # no version set. ask user to select version
             self.versionWarningShow = False
@@ -418,11 +417,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         try:
             # Fill encoder source types
             self.send_commands("tmc",["mtype","encsrc","tmcHwType","trqbq_mode"],self.axis,'!')
-            self.send_commands("tmc",["tmctype","tmcHwType","tmcIscale","calibrated","trqbq_f"],self.axis)
+            self.send_commands("tmc",["tmctype","tmcHwType","iScale","calibrated","trqbq_f"],self.axis)
             self.getMotor()
             self.getPids()
             if not self.init_done:
-                self.spinBox_fluxoffset.valueChanged.connect(lambda v : self.send_value("tmc","fluxoffset",v,instance=self.axis))
+                self.doubleSpinBox_fluxoffset.valueChanged.connect(lambda v : self.send_value("tmc","fluxoffset",v/self.adc_to_amps,instance=self.axis))
                 self.pushButton_submitmotor.clicked.connect(self.submitMotor)
                 self.pushButton_submitpid.clicked.connect(self.submitPid)
                 self.comboBox_torqueFilter.currentIndexChanged.connect(self.torqueFilterChanged)
@@ -489,12 +488,15 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 
     def getPids(self):
-        commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","fluxoffset","seqpi"]
+        commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","seqpi"]
         self.send_commands("tmc",commands,self.axis)
 
         
 
     def setCurrentScaler(self,x):
+        self.send_command("tmc","fluxoffset",self.axis)
+        self.doubleSpinBox_fluxoffset.setEnabled(x > 0)
+        self.doubleSpinBox_fluxoffset.setMaximum(round((0x7fff*x) / 3))
         if(x != self.adc_to_amps):
             self.adc_to_amps = x
             if(x > 0):
@@ -526,6 +528,8 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
     def apply(self):
         self.send_value("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
+        # change scaler
+        self.send_command("tmc","iScale",self.axis) # request scale update
     
     def typeCb(self,entries):
         #print("Reply",entries)
