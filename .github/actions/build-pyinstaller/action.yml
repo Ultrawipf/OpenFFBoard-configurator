@@ -2,8 +2,8 @@ name: Build Configurator
 
 inputs:
   python-version:
-    description: 'Python version. 3.9 default'
-    default: '3.9'
+    description: 'Python version. 3.11 default'
+    default: '3.11'
   path: 
     description: 'input path'
     required: true
@@ -17,7 +17,7 @@ runs:
 
   # Steps represent a sequence of tasks that will be executed as part of the job
   steps:
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
 
