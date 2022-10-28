@@ -1,5 +1,6 @@
 ### Changes this version:
 - Changed units for flux offset to A
+- Properly delete ffb rate connections when changing mainclass
 
 ### Changes since v1.9.x:
 - Support for local encoder index

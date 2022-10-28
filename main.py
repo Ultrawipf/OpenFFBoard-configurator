@@ -74,6 +74,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.systray : SystrayWrapper = None
 
+        self.tab_connections = [] # Signals to disconnect on reset
+
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
         self.tabWidget_main.currentChanged.connect(self.tab_changed)
@@ -287,10 +289,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Add a new tab in the tabWidget with a specific name."""
         return self.tabWidget_main.addTab(widget, name)
 
-    def del_tab(self, widget):
+    def del_tab(self, widget : PyQt6.QtWidgets.QWidget):
         """Remove a tab in the widget and unregister the serial callback."""
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
         base_ui.CommunicationHandler.remove_callbacks(widget)
+        widget.deleteLater()
         del widget
 
     def select_tab(self, idx):
@@ -312,6 +315,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.del_tab(self.tabWidget_main.widget(i))
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
+
+        # Delete signals
+        for connection in self.tab_connections:
+            PyQt6.QtCore.QObject.disconnect(connection)
 
     def update_tabs(self):
         """Get the active classes from the board, and add tab when not exist."""
@@ -349,12 +356,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
-                    self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate)
+                    self.tab_connections.append(self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate))
                     # Start ffb timer
-                    self.serialchooser.hidden.connect(self.main_class_ui.startTimer)
-                    self.serialchooser.shown.connect(self.main_class_ui.stopTimer)
-                    self.serialchooser.shown.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(False))
-                    self.serialchooser.hidden.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(True))
+                    
+                    self.tab_connections.append(self.serialchooser.hidden.connect(self.main_class_ui.startTimer))
+                    self.tab_connections.append(self.serialchooser.shown.connect(self.main_class_ui.stopTimer))
+                    self.tab_connections.append(self.serialchooser.shown.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(False)))
+                    self.tab_connections.append(self.serialchooser.hidden.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(True)))
                     self.wrapper_status_bar.update_ffb_block_display(True)
                     
                 elif classe_active["id"] == 0xA01:
@@ -412,7 +420,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Close serial port and remove tabs."""
         self.log("Reset port")
         self.profile_ui.setEnabled(False)
-        # self.serial.waitForBytesWritten(250) # Broken on pyqt6.3
+        #self.serial.waitForBytesWritten(250) # Broken on pyqt6.3
 
         # Workaround until waitForBytesWritten works again or a better solution has been found
         def close():
