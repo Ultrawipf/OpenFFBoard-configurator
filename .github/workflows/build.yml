@@ -29,7 +29,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - id: build
         uses: ./.github/actions/build-pyinstaller
@@ -37,7 +37,7 @@ jobs:
           path: '${{ github.workspace }}'
           python-version: '${{ matrix.conf.pyver }}'
         
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: OpenFFBoard-Configurator-${{ matrix.conf.os }}-py${{ matrix.conf.pyver }}
           path: ${{ steps.build.outputs.distpath }}

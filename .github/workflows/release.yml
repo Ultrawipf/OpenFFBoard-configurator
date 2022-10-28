@@ -20,7 +20,7 @@ jobs:
 
     steps:
     # Checkout  
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Download artifacts for release
       - uses: actions/download-artifact@v3
