@@ -73,6 +73,7 @@
     </property>
     <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
+    <addaction name="actionDebug_mode"/>
     <addaction name="actionUpdates"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -201,6 +202,20 @@
   <action name="actionUpdates">
    <property name="text">
     <string>Updates</string>
+   </property>
+  </action>
+  <action name="actionDebug_mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Debug mode</string>
    </property>
   </action>
  </widget>

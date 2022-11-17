@@ -49,7 +49,7 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.10.1"
+VERSION = "1.10.2"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -115,6 +115,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.actionUpdates.triggered.connect(self.open_updater)
 
+        self.actionDebug_mode.triggered.connect(self.toggle_debug)
+
         self.timer.start(5000)
         self.profile_ui = profile_ui.ProfileUI(main=self)
         self.serialchooser.connected.connect(self.profile_ui.setEnabled)
@@ -134,6 +136,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.active_class_dlg.show
         )  # Open active classes list
         self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
+        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
         self.actionRestore_chip_config.triggered.connect(self.load_flashdump_from_file)
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
@@ -225,6 +228,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def open_updater(self):
         """Opens updater window"""
         updater.UpdateBrowser(self).exec()
+
+    def toggle_debug(self,enabled):
+        self.send_value("sys","debug",1 if enabled else 0)
+        # Reload mainclasses
+        self.serialchooser.get_main_classes() # TODO better move somewhere else
 
 
     def save_flashdump_to_file(self):
@@ -513,6 +521,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.errors_dlg.registerCallbacks()
             self.get_value_async("sys", "swver", self.version_check)
             self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
+            self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
 
         else:
             self.connected = False
