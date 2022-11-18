@@ -412,7 +412,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.add_tab(classe, name_axis)
                     self.profile_ui.set_save_btn(True)
 
-                self.tabsinitialized.emit(True)
+            self.tabsinitialized.emit(True)
 
         self.get_value_async("sys", "lsactive", update_tabs_cb, delete=True)
         self.get_value_async(
