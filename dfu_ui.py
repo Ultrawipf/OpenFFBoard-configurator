@@ -60,7 +60,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.log("Searching devices...\n")
                 self.log(
                     "Make sure the bootloader is detected and drivers installed. Short boot0 to "
-                    "force the bootloader when connecting\n"
+                    "force the bootloader when connecting.\n"
                 )
                 self.log("No DFU device found.\nRetrying..")
                 self.first_fail = False
@@ -80,10 +80,10 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             try:
                 pydfu.init()
             except ValueError as e:
-                self.log("Found DFU device but could not connect: " + str(e.args[1]) + "\n")
+                self.log("\nFound DFU device but could not connect: " + str(e.args[1]) + "\n")
                 self.timer.start()
                 return
-            self.log("Found DFU device. Please select an option\n")
+            self.log("\nFound DFU device. Please select an option\n")
             self.dfu_device = dfu_devices[0]
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)

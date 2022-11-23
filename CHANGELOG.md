@@ -1,6 +1,7 @@
 ### Changes this version:
 - Added debug toggle option in help menu
 - Read errors/emit signal only once after all tabs are initialized
+- Using new odrive error codes
 
 ### Changes since v1.9.x:
 - Changed units for flux offset to A
