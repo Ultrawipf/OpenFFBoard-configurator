@@ -323,7 +323,7 @@ def read_dfu_file(filename):
     If an error occurs while parsing the file, then None is returned.
     """
 
-    print("File: {}".format(filename))
+    print("DFU file: {}".format(filename))
     with open(filename, 'rb') as fin:
         data = fin.read()
     crc = compute_crc(data[:-4])
@@ -412,11 +412,11 @@ def read_hex_file(filename):
     -Richter 2021
     Reads a hex file and generates flashable elements like with a dfu file
     """
-    print("File: {}".format(filename))
+    #print("Loading hex file: {}".format(filename))
     ih = IntelHex()
     ih.loadhex(filename)
     segments = ih.segments()
-    print("Segments:",segments)
+    #print("Segments:",segments)
     elements = []
     for segId,segment in enumerate(segments):
         size = segment[1]-segment[0]
