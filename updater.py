@@ -7,9 +7,7 @@ Authors : yannick
 import PyQt6.QtGui
 import PyQt6.QtCore
 import PyQt6.QtWidgets
-from PyQt6.QtWidgets import QListWidgetItem,QGroupBox,QHBoxLayout,QVBoxLayout,QLabel,QDialog,QTextBrowser,QPushButton
-import base_ui
-import pydfu
+from PyQt6.QtWidgets import QListWidgetItem,QCheckBox,QGroupBox,QHBoxLayout,QVBoxLayout,QLabel,QDialog,QTextBrowser,QPushButton
 import requests
 import json
 import re
@@ -18,6 +16,7 @@ from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
 from datetime import datetime
 from optionsdialog import OptionsDialogGroupBox
+from profile_ui import ProfileUI
 
 MAINREPO = "Ultrawipf/OpenFFBoard"
 GUIREPO = "Ultrawipf/OpenFFBoard-Configurator"
@@ -114,7 +113,7 @@ class UpdateChecker():
     
 class UpdateBrowser(PyQt6.QtWidgets.QDialog):
     """Gets updates and displays them in a list"""
-    def __init__(self,parentWidget):
+    def __init__(self,parentWidget,settingsmanager : ProfileUI = None):
         PyQt6.QtWidgets.QDialog.__init__(self, parentWidget)
         PyQt6.uic.loadUi(helper.res_path("updatebrowser.ui"), self)
 
@@ -122,6 +121,17 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
         self.listWidget_files.currentItemChanged.connect(self.file_changed)
         self.buttonGroup_repo.buttonClicked.connect(self.repo_changed)
         self.read_releases(MAINREPO)
+        self.settingsmanager = settingsmanager
+
+        if settingsmanager:
+            self.checkBox_notify.setChecked(not self.settingsmanager.get_global_setting("donotnotify_updates",False))
+            self.checkBox_notify.toggled.connect(self.notify_checkbox_toggled)
+        else:
+            self.checkBox_notify.setVisible(False)
+
+    def notify_checkbox_toggled(self,status):
+        self.settingsmanager.set_global_setting("donotnotify_updates",not status)
+
 
     def fill_releases(self,releases : dict):
         self.listWidget_release.clear()
@@ -189,7 +199,7 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
 
 class UpdateNotification(QDialog):
     """Shows a dialog with release information"""
-    def __init__(self,release,main,desc,curver):
+    def __init__(self,release,main,desc,curver,donotnotifysetting = None):
         self.main = main
         QDialog.__init__(self, main)
         self.setWindowTitle("Update available")
@@ -221,9 +231,18 @@ class UpdateNotification(QDialog):
         self.vbox.addWidget(self.releasenotes)
         self.vbox.addWidget(self.updatebrowserbutton)
 
+        if donotnotifysetting:
+            self.donotnotify = QCheckBox("Notify about releases at startup",self)
+            self.donotnotify.setChecked(not self.main.profile_ui.get_global_setting(donotnotifysetting,False))
+            self.vbox.addWidget(self.donotnotify)
+
+            def donotnotify_save(status):
+                self.main.profile_ui.set_global_setting(donotnotifysetting,not status)
+
+            self.donotnotify.toggled.connect(donotnotify_save)
         
 
     def open_updater(self):
         """Opens the updatebrowser"""
         self.close()
-        UpdateBrowser(self).exec()
+        UpdateBrowser(self,self.main.profile_ui).exec()

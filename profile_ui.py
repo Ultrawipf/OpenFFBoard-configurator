@@ -19,11 +19,12 @@ import base_ui
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the Profile selector and the board communication about them."""
 
-    __RELEASE = 1
+    __RELEASE = 2
     __PROFILES_FILENAME = "profiles.json"
     __PROFILESSETUP_FILENAME = "res/profile.cfg"
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
+        "global":{},
         "profiles": [{"name": "None", "data": {}}],
     }
     FLASH_PROFILE_NAME = "Flash profile"
@@ -133,13 +134,13 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Load profiles from file profiles.json ."""
         with open(self.__PROFILES_FILENAME, "r", encoding="utf_8") as profile_file:
             self.profiles = json.load(profile_file)
-            if self.profiles['release'] < self.__RELEASE :
-                os.rename(self.__PROFILES_FILENAME, self.__PROFILES_FILENAME + '.' + str(self.profiles['release']) + '.old')
-                self.create_or_update_profile_file(create=True)
-                self.log("Profile: profiles are not compatible, need to redo them")
-            else:
-                self.log("Profile: profiles loaded")
-            self.refresh_combox_list()
+        if self.profiles['release'] < self.__RELEASE :
+            os.rename(self.__PROFILES_FILENAME, self.__PROFILES_FILENAME + '.' + str(self.profiles['release']) + '.old')
+            self.create_or_update_profile_file(create=True)
+            self.log("Profile: profiles are not compatible, need to redo them")
+        else:
+            self.log("Profile: profiles loaded")
+        self.refresh_combox_list()
 
     def create_or_update_profile_file(self, create: bool = False):
         """Create a profile file if not exist, else update the existing one."""
@@ -156,6 +157,21 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             json.dump(self.profiles, profile_file)
 
         return True
+
+    def get_global_setting(self,key : str, default = None):
+        """Returns an entry of the global section or saves a default if set and not found"""
+        if "global" in self.profiles:
+            if (key not in self.profiles['global']) and default != None:
+                self.set_global_setting(key,default)
+            return self.profiles['global'].get(key,None)
+        return None
+
+    def set_global_setting(self,key : str, entry, save : bool = True):
+        """Adds an item to the global section of the profile file. Set save true to write file immediately"""
+        self.profiles['global'][key] = entry
+        if save:
+            self.create_or_update_profile_file()
+
 
     def refresh_combox_list(self):
         """Refresh the combo list of profile when init UI or when list change."""
