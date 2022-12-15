@@ -244,10 +244,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             
             if self.adc_to_amps != 0:
                 amps = currents * self.adc_to_amps
-                txt = f"Torque: {round(amps.real,3)}A"
+                txt = f"Torque: {amps.real:+.3f}A"
                 if(flux != None):
-                    txt += f"\nFlux: {round(amps.imag,3)}A"
-                    txt += f"\nTotal: {round(abs(amps),3)}A"
+                    txt += f"\nFlux: {amps.imag:+.3f}A"
+                    txt += f"\nTotal: {abs(amps):.3f}A"
                 self.label_Current.setText(txt)
 
             else:
@@ -395,7 +395,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     def hwtcb(self,t):
         self.hwversion = int(t)
         
-        self.label_hwversion.setText("HW: " + self.hwversions[self.hwversion])
+        self.label_hwversion.setText(self.hwversions[self.hwversion])
         if self.hwversion == 0 and self.versionWarningShow and len(self.hwversions) > 0:
             # no version set. ask user to select version
             self.versionWarningShow = False
