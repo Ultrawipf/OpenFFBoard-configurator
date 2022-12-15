@@ -49,11 +49,11 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.10.2"
+VERSION = "1.11.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.10.0"
+MIN_FW = "1.11.0"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
@@ -173,6 +173,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
+        donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
+        if donotnotify:
+            return
+
         release = updater.GithubRelease.get_latest_release(updater.GUIREPO)
         if not release:
             return
@@ -180,7 +184,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if updater.UpdateChecker.compare_versions(VERSION,releaseversion):
             # New release available for firmware
             msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
-            notification = updater.UpdateNotification(release,self,msg,VERSION)
+            notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
 
     def open_dfu_dialog(self):
@@ -227,7 +231,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def open_updater(self):
         """Opens updater window"""
-        updater.UpdateBrowser(self).exec()
+        updater.UpdateBrowser(self,self.profile_ui).exec()
 
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
@@ -360,7 +364,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 if name in self.active_classes:
                     continue
                 classname = classe_active["name"]
-                if classe_active["id"] == 1 or classe_active["id"] == 2:
+                if classe_active["id"] == 1 or classe_active["id"] == 2 or classe_active["id"] == 3:
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
@@ -494,10 +498,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
         if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
-            # New release available for firmware
-            msg =  "New firmware available"
-            notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
-            notification.exec()
+            donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
+            if not donotnotify:
+                # New release available for firmware
+                msg =  "New firmware available"
+                notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
+                notification.exec()
    
 
 
