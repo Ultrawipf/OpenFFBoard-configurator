@@ -104,6 +104,8 @@ class EffectsMonitorDialog(QDialog):
     
     def setEnabled(self, a0: bool) -> None:
         self.ui.setEnabled(a0)
+        if not a0:
+            self.close()
         return super().setEnabled(a0)
 
     def display(self):

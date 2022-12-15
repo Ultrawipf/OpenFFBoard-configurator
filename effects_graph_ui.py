@@ -5,7 +5,6 @@ Regroup all required classes to monitor the effect in a graph.
 Module : effects_graph_ui
 Authors : vincent
 """
-import json
 import PyQt6.QtWidgets
 import PyQt6.QtCore
 import PyQt6.QtGui
@@ -208,6 +207,8 @@ class EffectsGraphDialog(PyQt6.QtWidgets.QDialog):
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=invalid-name
         """Enable the UI, or disable it depends on message."""
+        if not a0:
+            self.close()
         self.graph_ui.setEnabled(a0)
         return super().setEnabled(a0)
 
