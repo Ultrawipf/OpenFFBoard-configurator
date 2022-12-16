@@ -56,8 +56,8 @@ def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dat
         i += 1
 
 def splitListReply(reply,itemdelim = ':', entrydelim = '\n'):
-    #for line in reply.split(entrydelim):
-    return [ line.split(itemdelim) for line in reply.split(entrydelim) ]
+    """Splits a reply in default format into a list of lists"""
+    return [ line.split(itemdelim) for line in reply.split(entrydelim) if line]
 
 
 def qtBlockAndCall(object : QObject,function,value):
