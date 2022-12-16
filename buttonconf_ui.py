@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QGroupBox
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QPushButton,QLabel,QSpinBox,QComboBox
 from PyQt6 import uic
-import main
+import helper
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 from helper import res_path,classlistToIds
 from base_ui import CommunicationHandler
@@ -144,6 +144,10 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.numBtnBox.setMaximum(64)
         vbox.addWidget(self.numBtnBox)
 
+        vbox.addWidget(QLabel("SPI Speed"))
+        self.speedBox = QComboBox()
+        vbox.addWidget(self.speedBox)
+
         vbox.addWidget(QLabel("Mode"))
         self.modeBox = QComboBox()
         vbox.addWidget(self.modeBox)
@@ -163,6 +167,7 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.send_value("spibtn","btnnum",self.numBtnBox.value(),instance=self.id)
         self.send_value("spibtn","btnpol",1 if self.polBox.isChecked() else 0,instance=self.id)
         self.send_value("spibtn","btn_cs",self.csBox.value(),instance=self.id)
+        self.send_value("spibtn","spispeed",self.speedBox.currentData(),instance=self.id)
 
     def onclose(self):
         self.remove_callbacks()
@@ -172,14 +177,21 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
 
         self.modeBox.clear()
         def modecb(mode):
-            modes = mode.split("\n")
-            modes = [m.split(":") for m in modes if m]
+            modes = helper.splitListReply(mode)
             for m in modes:
                 self.modeBox.addItem(m[0],m[1])
             self.get_value_async("spibtn","mode",self.modeBox.setCurrentIndex,self.id,conversion=int)
+
+        self.speedBox.clear()
+        def speedcb(mode):
+            modes = helper.splitListReply(mode)
+            for m in modes:
+                self.speedBox.addItem(m[0],m[1])
+            self.get_value_async("spibtn","spispeed",self.speedBox.setCurrentIndex,self.id,conversion=int)
             
         self.get_value_async("spibtn","btnnum",self.numBtnBox.setValue,self.id,conversion=int)
         self.get_value_async("spibtn","mode",modecb,self.id,conversion=str,typechar='!')
+        self.get_value_async("spibtn","spispeed",speedcb,self.id,conversion=str,typechar='!')
         self.get_value_async("spibtn","btnpol",self.polBox.setChecked,self.id,conversion=int)
         self.get_value_async("spibtn","cs",self.csBox.setValue,self.id,conversion=int)
 
