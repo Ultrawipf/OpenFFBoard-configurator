@@ -49,7 +49,7 @@ import effects_graph_ui
 import updater
 
 # This GUIs version
-VERSION = "1.11.0"
+VERSION = "1.11.1"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -654,8 +654,13 @@ class WrapperStatusBar(base_ui.WidgetUI):
         icon_ko = PyQt6.QtGui.QIcon(
             self.style().standardIcon(PyQt6.QtWidgets.QStyle.StandardPixmap.SP_DialogNoButton)
         )
+        icon_err = PyQt6.QtGui.QIcon(
+            self.style().standardIcon(PyQt6.QtWidgets.QStyle.StandardPixmap.SP_BrowserStop)
+        )
+        
         self.icon_ok = icon_ok.pixmap(18, 18)
         self.icon_ko = icon_ko.pixmap(18, 18)
+        self.icon_err = icon_err.pixmap(18, 18)
         self.label_cnx.setPixmap(self.icon_ko)
 
         self.label_ffbcnx.setPixmap(self.icon_ko)
@@ -702,6 +707,10 @@ class WrapperStatusBar(base_ui.WidgetUI):
         if status == 1:
             self.label_ffbcnx.setPixmap(self.icon_ok)
             self.label_ffbfreq.setText(F"{rate} hz (CF {cfrate} hz)")
+        elif status == -1:
+            # Emergency stop
+            self.label_ffbcnx.setPixmap(self.icon_err)
+            self.label_ffbfreq.setText(F"{rate} hz (EMERGENCY STOP)")
         else :
             self.label_ffbcnx.setPixmap(self.icon_ko)
             self.label_ffbfreq.setText(F"{rate} hz")
