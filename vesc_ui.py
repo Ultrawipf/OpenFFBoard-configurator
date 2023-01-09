@@ -116,7 +116,7 @@ class VescUI(WidgetUI,CommunicationHandler):
     def posCb(self,v):
         vesc_encoder_position = ( 360 * v ) / 1000000000
         self.label_pos.setText("{:.2f}".format(vesc_encoder_position))
-        self.horizontalSlider_pos.setValue(vesc_encoder_position)
+        self.horizontalSlider_pos.setValue(int(round(vesc_encoder_position)))
 
     def errorCb(self,dat):
         txt = "Ok"
