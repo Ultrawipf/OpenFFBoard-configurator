@@ -21,7 +21,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         WidgetUI.__init__(self, main,'ffbclass.ui')
         CommunicationHandler.__init__(self)
 
-        ##### TODO hides frictoin clipping label until the formula is fixed
+        ##### TODO hides friction clipping label until the formula is fixed
         self.label_friction_rpm.setVisible(False)
         self.label_4.setVisible(False)
         #####
@@ -59,20 +59,20 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 
         self.horizontalSlider_CFq.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_CFq,0.01,"filterCfQ"))
-        self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(val * 100))
+        self.doubleSpinBox_CFq.valueChanged.connect(lambda val : self.horizontalSlider_CFq.setValue(int(round(val * 100))))
 
-        self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(round(val * 256/self.springgain)))
+        self.doubleSpinBox_spring.valueChanged.connect(lambda val : self.horizontalSlider_spring.setValue(int(round(val * 256/self.springgain))))
         self.horizontalSlider_spring.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_spring,self.springgain/256,"spring"))
 
-        self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(val * 256/self.dampergain))
+        self.doubleSpinBox_damper.valueChanged.connect(lambda val : self.horizontalSlider_damper.setValue(int(round(val * 256/self.dampergain))))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_damper,self.dampergain/256,"damper"))
         self.horizontalSlider_damper.valueChanged.connect(self.display_speed_cutoff_damper)
 
-        self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(val * 256/self.frictiongain))
+        self.doubleSpinBox_friction.valueChanged.connect(lambda val : self.horizontalSlider_friction.setValue(int(round(val * 256/self.frictiongain))))
         self.horizontalSlider_friction.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_friction,self.frictiongain/256,"friction"))
         self.horizontalSlider_friction.valueChanged.connect(self.display_speed_cutoff_friction)
 
-        self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(val * 256/self.inertiagain))
+        self.doubleSpinBox_inertia.valueChanged.connect(lambda val : self.horizontalSlider_inertia.setValue(int(round(val * 256/self.inertiagain))))
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.sliderChangedUpdateSpinbox(val,self.doubleSpinBox_inertia,self.inertiagain/256,"inertia"))
         self.horizontalSlider_inertia.valueChanged.connect(self.display_accel_cutoff_inertia)
         
