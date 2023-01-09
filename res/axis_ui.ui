@@ -398,7 +398,7 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_damper">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Independent damper is an always on damper effect to smooth out acceleration spikes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Independent damper is an always on damper effect to smooth out acceleration spikes.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Mechanical damper</string>
@@ -421,7 +421,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_8">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Centering force when FFB is inactive.&lt;/p&gt;&lt;p&gt;Turned off when game effects takes place&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Desktop spring (No FFB)</string>
@@ -611,6 +611,9 @@
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_4">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How much torque going to be used from the motor. &lt;br/&gt;&lt;br/&gt;More power means more current being used from the motor as well as stronger ffb.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Power</string>
         </property>
@@ -634,6 +637,9 @@
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_7">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How much torque will be reserved to stop the motor for endstop effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Endstop gain</string>
         </property>
@@ -648,6 +654,9 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_6">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intensity of the effects used by the force feedback effects from the game.&lt;/p&gt;&lt;p&gt;It defines the peak torque of the motor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
         <property name="text">
          <string>Effects intensity</string>
         </property>
