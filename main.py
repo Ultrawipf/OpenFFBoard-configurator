@@ -47,13 +47,14 @@ import vesc_ui
 import effects_monitor
 import effects_graph_ui
 import updater
+import simplemotion_ui
 
 # This GUIs version
-VERSION = "1.11.1"
+VERSION = "1.12.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.11.0"
+MIN_FW = "1.12.0"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
@@ -415,6 +416,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.active_classes[name] = classe
                     self.add_tab(classe, name_axis)
                     self.profile_ui.set_save_btn(True)
+                elif classe_active["id"] == 0x89 or classe_active["id"] == 0x8A:
+                    classe = simplemotion_ui.SimplemotionUI(main=self, unique=classe_active["unique"])
+                    name_axis = classe_active["name"]
+                    self.active_classes[name] = classe
+                    self.add_tab(classe, name_axis)
+                    self.profile_ui.set_save_btn(True)
+
 
             self.tabsinitialized.emit(True)
 
