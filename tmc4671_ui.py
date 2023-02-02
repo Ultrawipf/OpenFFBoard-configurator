@@ -21,7 +21,7 @@ source is not recommended"""
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
-    STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration","ExternalEncoderInit"]
+    STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration","ExternalEncoderInit","PI Autotune"]
 
     def __init__(self, main=None, unique=0):
         self.axis = 0
@@ -46,6 +46,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.timer_status = QTimer(self)
     
         self.pushButton_align.clicked.connect(self.alignEnc)
+        self.pushButton_autotunepid.clicked.connect(self.autotunePid)
         #self.initUi()
         
         self.timer.timeout.connect(self.updateTimer)
@@ -469,6 +470,18 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def motsCb(self,mots):
         updateListComboBox(combobox=self.comboBox_mtype,reply=mots,dataSep="=",lookup=self.motor_type_to_index,dataconv=int)
+
+    def autotunePid(self):
+        self.pushButton_autotunepid.setEnabled(False)
+        def f(res):
+            self.pushButton_autotunepid.setEnabled(True)
+            if(res):
+                msg = QMessageBox(QMessageBox.Icon.Information,"PID autotuning",res)
+                msg.exec()
+            self.getPids()
+
+        self.get_value_async("tmc","pidautotune",f,self.axis,typechar='?')
+        self.main.log("Started PID tuning")
 
     def alignEnc(self):
         self.pushButton_align.setEnabled(False)
