@@ -86,13 +86,13 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Callback to set accel related filter values"""
         f,q100 = map(float,val.split(":"))
         self.doubleSpinBox_accelQ.setValue(q100 / 100.0)
-        self.spinBox_accelFreq.setValue(f)
+        self.spinBox_accelFreq.setValue(int(f))
 
     def filter_speed_cb(self,val):
         """Callback to set speed related filter values"""
         f,q100 = map(float,val.split(":"))
         self.doubleSpinBox_speedQ.setValue(q100 / 100.0)
-        self.spinBox_speedFreq.setValue(f)
+        self.spinBox_speedFreq.setValue(int(f))
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
