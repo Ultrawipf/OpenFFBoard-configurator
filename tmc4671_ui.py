@@ -17,7 +17,8 @@ Please select the encoder there."""
 hall_notice = """Using hall sensors as the main position
 source is not recommended"""
 
-
+aenc_notice = """Enter CPR as the amount of phases per 
+revolution (Single pole SinCos = 1 CPR)"""
 
 class TMC4671Ui(WidgetUI,CommunicationHandler):
 
@@ -220,8 +221,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.label_encoder_notice.setText(ext_notice)
         if(data == 4):
             self.label_encoder_notice.setText(hall_notice)
+        if(data == 2 or data == 3):
+            self.label_encoder_notice.setText(aenc_notice)
 
-        self.label_encoder_notice.setVisible(data == 5 or data == 4)
+
+        self.label_encoder_notice.setVisible(data == 5 or data == 4 or data == 3 or data == 2) # Visible for ext, hall and aenc
         #self.checkBox_abnpol.setEnabled(data == 1)
 
         self.spinBox_cpr.setVisible(data == 1 or data == 2 or data == 3)
