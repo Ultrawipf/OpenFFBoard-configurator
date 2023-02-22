@@ -1,5 +1,4 @@
 ### Changes this version:
 - Fixed issue in encoder tuning UI
+- Added SSI encoder ui
 
-### Changes in v1.12.x
-- Added TMC autotune button
