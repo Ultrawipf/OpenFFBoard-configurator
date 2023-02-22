@@ -46,6 +46,8 @@ def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dat
         lookup.clear()
     i = 0
     for s in reply.split(entrySep):
+        if not s:
+            continue # empty
         e = s.split(dataSep)
         data = e[1]
         if dataconv != None:

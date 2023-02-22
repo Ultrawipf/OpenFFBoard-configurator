@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QHBoxLayout,QCheckBox,QButto
 from PyQt6 import uic
 import main
 from PyQt6.QtCore import QObjectCleanupHandler
-from helper import res_path,classlistToIds
+from helper import res_path,classlistToIds,updateListComboBox
 from base_ui import CommunicationHandler
 
 class EncoderOptions(QGroupBox):
@@ -33,6 +33,9 @@ class EncoderOptions(QGroupBox):
         elif(id == 5): # BISS-C
             self.widget = (BissEncoderConf(self,self.main))
             self.setTitle("BISS Settings")
+        elif(id == 6): # SSI
+            self.widget = (SsiEncoderConf(self,self.main))
+            self.setTitle("SSI Settings")
         else:
             layout.addWidget(QLabel("No settings"))
 
@@ -147,7 +150,7 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
         self.spinBox_bits.setRange(1,32)
         layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("Bits"),self.spinBox_bits)
-        layout.addWidget(QLabel("Port is used exclusively! CS pins are not usable !"))
+        layout.addWidget(QLabel("Port is used exclusively!"))
         self.setLayout(layout)
 
     def onshown(self):
@@ -155,3 +158,48 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
 
     def apply(self):
         self.send_value("bissenc","bits",val=self.spinBox_bits.value())
+
+class SsiEncoderConf(EncoderOption,CommunicationHandler):
+    def __init__(self,parent,main):
+        self.main = main
+        EncoderOption.__init__(self,parent)
+        CommunicationHandler.__init__(self)
+        self.initUI()
+        
+
+    def initUI(self):
+        layout = QFormLayout()
+        layout.setContentsMargins(0,0,0,0)
+
+        self.spinBox_cs = QSpinBox()
+        self.spinBox_cs.setRange(1,3)   
+        self.spinBox_bits = QSpinBox()
+        self.spinBox_bits.setRange(1,32)
+        self.comboBox_mode = QComboBox()
+        self.comboBox_speed = QComboBox()
+
+        layout.addWidget(QLabel("SPI3 extension port"))
+        layout.addRow(QLabel("Bits"),self.spinBox_bits)
+        layout.addRow(QLabel("Mode"),self.comboBox_mode)
+        layout.addRow(QLabel("SPI speed"),self.comboBox_speed)
+        layout.addWidget(QLabel("Port is used exclusively!"))
+        self.setLayout(layout)
+
+    def updateSpeeds(self,reply):
+        updateListComboBox(self.comboBox_speed,reply,entrySep='\n')
+
+    def updateModes(self,reply):
+        updateListComboBox(self.comboBox_mode,reply,entrySep='\n')
+
+    def onshown(self):
+        self.get_value_async("ssienc","bits",self.spinBox_bits.setValue,0,int)
+        self.get_value_async("ssienc","speed",self.updateSpeeds,0,typechar="!")
+        self.get_value_async("ssienc","mode",self.updateModes,0,typechar="!")
+        self.get_value_async("ssienc","speed",self.comboBox_speed.setCurrentIndex,0,int,typechar="?")
+        self.get_value_async("ssienc","mode",self.comboBox_mode.setCurrentIndex,0,int,typechar="?")
+        
+
+    def apply(self):
+        self.send_value("ssienc","bits",val=self.spinBox_bits.value())
+        self.send_value("ssienc","speed",val=self.comboBox_speed.currentData())
+        self.send_value("ssienc","mode",val=self.comboBox_mode.currentData())
