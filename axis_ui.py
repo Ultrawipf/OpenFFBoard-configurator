@@ -143,7 +143,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def updatePowerLabel(self,val):
         text = str(val)
         # If tmc is used show a current estimate
-        if(self.driver_id == 1 and self.adc_to_amps != 0):
+        if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
         self.label_power.setText(text)
