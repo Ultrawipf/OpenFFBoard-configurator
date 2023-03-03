@@ -74,6 +74,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serial_timer = None
 
         self.systray : SystrayWrapper = None
+        
 
         self.tab_connections = [] # Signals to disconnect on reset
 
@@ -122,10 +123,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.profile_ui = profile_ui.ProfileUI(main=self)
         self.serialchooser.connected.connect(self.profile_ui.setEnabled)
 
-        self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled)
+        #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
         self.effects_monitor_dlg.setEnabled(False)
 
-        self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
+        #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
         self.effects_graph_dlg.setEnabled(False)
 
         # Toolbar menu items
@@ -152,10 +153,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.actionReset_Factory_Config.setEnabled)
 
         self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
-        self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
+        #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
 
         self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
-        self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
+        #self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
 
         # Main Panel
         layout = PyQt6.QtWidgets.QVBoxLayout()
@@ -329,6 +330,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
+        self.effects_monitor_dlg.setEnabled(False)
+        self.effects_graph_dlg.setEnabled(False)
+        self.actionEffectsMonitor.setEnabled(False)
+        self.actionEffects_forces.setEnabled(False)
+
         # Delete signals
         for connection in self.tab_connections:
             PyQt6.QtCore.QObject.disconnect(connection)
@@ -422,6 +428,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.active_classes[name] = classe
                     self.add_tab(classe, name_axis)
                     self.profile_ui.set_save_btn(True)
+                elif classe_active["id"] == 0xA02: # Effects manager
+                    self.effects_monitor_dlg.setEnabled(True)
+                    self.effects_graph_dlg.setEnabled(True)
+                    self.actionEffectsMonitor.setEnabled(True)
+                    self.actionEffects_forces.setEnabled(True)
+
 
 
             self.tabsinitialized.emit(True)
