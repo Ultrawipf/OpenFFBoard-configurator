@@ -23,6 +23,7 @@ class PwmDriverUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("pwmdrv","mode",self.pwmmode_cb,0,str,typechar='!')
         self.register_callback("pwmdrv","mode",self.comboBox_mode.setCurrentIndex,0,int,typechar='?')
+        self.register_callback("pwmdrv","dir",self.checkBox_invert.setChecked,0,int,typechar='?')
 
         self.init_ui()
 
@@ -30,6 +31,7 @@ class PwmDriverUI(WidgetUI,CommunicationHandler):
         # Fill menus
         self.send_command("pwmdrv","freq",0,'!')
         self.send_command("pwmdrv","mode",0,'!')
+        self.send_command("pwmdrv","dir",0,'?')
     
     def freq_cb(self,modes):
         self.comboBox_freq.clear()
@@ -49,5 +51,6 @@ class PwmDriverUI(WidgetUI,CommunicationHandler):
     def apply(self):
         self.send_value("pwmdrv","mode",self.comboBox_mode.currentData())
         self.send_value("pwmdrv","freq",self.comboBox_freq.currentData())
+        self.send_value("pwmdrv","dir",1 if self.checkBox_invert.isChecked() else 0)
         self.init_ui() # Update UI
 
