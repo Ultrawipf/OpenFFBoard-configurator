@@ -145,7 +145,7 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
         layout.setContentsMargins(0,0,0,0)
 
         self.spinBox_cs = QSpinBox()
-        self.spinBox_cs.setRange(1,3)   
+        self.spinBox_cs.setRange(1,3)
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
         layout.addWidget(QLabel("SPI3 extension port"))
@@ -172,7 +172,7 @@ class SsiEncoderConf(EncoderOption,CommunicationHandler):
         layout.setContentsMargins(0,0,0,0)
 
         self.spinBox_cs = QSpinBox()
-        self.spinBox_cs.setRange(1,3)   
+        self.spinBox_cs.setRange(1,3)
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
         self.comboBox_mode = QComboBox()
