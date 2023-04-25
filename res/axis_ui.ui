@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
-    <height>522</height>
+    <width>1008</width>
+    <height>551</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -592,7 +592,8 @@
          </size>
         </property>
         <property name="text">
-         <string>0</string>
+         <string>0
+(0%)</string>
         </property>
        </widget>
       </item>
@@ -622,7 +623,7 @@
       <item row="0" column="1">
        <widget class="QSlider" name="horizontalSlider_power">
         <property name="maximum">
-         <number>30000</number>
+         <number>32767</number>
         </property>
         <property name="pageStep">
          <number>100</number>

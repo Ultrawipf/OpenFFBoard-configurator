@@ -21,6 +21,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.main = main
         self.adc_to_amps = 0.0
+        self.max_power = 0
 
         self.driver_classes = {}
         self.driver_ids = []
@@ -141,7 +142,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def updatePowerLabel(self,val):
-        text = str(val)
+        text = "{}\n({:.0%})".format(str(val), (val / self.max_power))
         # If tmc is used show a current estimate
         if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
             current = (val * self.adc_to_amps)
@@ -217,10 +218,12 @@ class AxisUI(WidgetUI,CommunicationHandler):
     
     def updateSliders(self):
         if(self.driver_id == 1 or self.driver_id == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
-            self.horizontalSlider_power.setMaximum(28000)
+            self.max_power = 28000
+            self.horizontalSlider_power.setMaximum(self.max_power)
             self.get_value_async("tmc","iScale",self.setCurrentScaler,self.driver_id - 1,float)  
         else:
-            self.horizontalSlider_power.setMaximum(0x7fff)
+            self.max_power = 0x7fff
+            self.horizontalSlider_power.setMaximum(self.max_power)
 
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper"] # requests updates
         self.send_commands("axis",commands,self.axis)
