@@ -142,11 +142,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def updatePowerLabel(self,val):
-        text = "{}\n({:.0%})".format(str(val), (val / self.max_power))
+        text = str(val)
         # If tmc is used show a current estimate
         if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
+
+        text += "\n({:.0%})".format((val / self.max_power))
+
         self.label_power.setText(text)
 
     # Effect/Endstop ratio scaler
