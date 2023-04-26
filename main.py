@@ -50,7 +50,7 @@ import updater
 import simplemotion_ui
 
 # This GUIs version
-VERSION = "1.13.2"
+VERSION = "1.13.3"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
