@@ -60,6 +60,14 @@ class WidgetUI(PyQt6.QtWidgets.QWidget):
 class CommunicationHandler:
     """Store the serial communication to share it to subclass and offer register operation."""
 
+    CMDFLAG_GET	= 0x01
+    CMDFLAG_SET	 =	0x02
+    CMDFLAG_INFOSTRING	= 0x08
+    CMDFLAG_GETADR	 =	0x10
+    CMDFLAG_SETADR	 =	0x20
+    CMDFLAG_HIDDEN	= 0x40
+    CMDFLAG_DEBUG	= 0x80
+
     comms: serial_comms.SerialComms = None
 
     def __init__(self):

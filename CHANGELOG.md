@@ -1,5 +1,6 @@
 ### Changes this version:
 - Added percentage to power slider
+- Added axis selection for effect monitor (new firmware required)
 
 ### Changes in 1.13.x:
 - Fixed issue in encoder tuning UI

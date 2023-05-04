@@ -59,6 +59,7 @@ MIN_FW = "1.13.1"
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
     tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
+    maxaxischanged = PyQt6.QtCore.pyqtSignal(int)
     def __init__(self):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
@@ -83,7 +84,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.tabWidget_main.currentChanged.connect(self.tab_changed)
         self.errors_dlg = errors.ErrorsDialog(self)
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
+        self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
         self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
+        self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
         self.active_class_dlg = activelist.ActiveClassDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
@@ -92,6 +95,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
+        self.axes = 0
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
@@ -334,6 +338,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.effects_graph_dlg.setEnabled(False)
         self.actionEffectsMonitor.setEnabled(False)
         self.actionEffects_forces.setEnabled(False)
+        self.axes = 0
+        self.maxaxischanged.emit(self.axes)
 
         # Delete signals
         for connection in self.tab_connections:
@@ -390,6 +396,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.active_classes[name] = classe
                     self.add_tab(classe, name_axis)
                     self.profile_ui.set_save_btn(True)
+                    self.axes = max(self.axes,classe.axis)
+                    self.maxaxischanged.emit(self.axes)
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
