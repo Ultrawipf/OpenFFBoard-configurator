@@ -12,6 +12,7 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             self.parent = parent
 
             self.pushButton_ResetData.clicked.connect(self.resetData)
+            self.spinBox_axis.valueChanged.connect(self.setAxis)
 
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.refreshUi)
@@ -24,6 +25,13 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             self.icon_ok = icon_ok.pixmap(18, 18)
             self.icon_ko = icon_ko.pixmap(18, 18)
             self.setActiveState_cb(0)
+            self.axis = None
+
+
+    def cmdflags(self,flags):
+        if flags & CommunicationHandler.CMDFLAG_GETADR:
+            # enable axis selection
+            self.spinBox_axis.setEnabled(True)
 
     def setEnabled(self, a0: bool) -> None:
         self.pushButton_ResetData.setEnabled(a0)
@@ -33,6 +41,8 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
 
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
         self.timer.start(1000)
+        if self.axis == None:
+            self.get_value_async("fx", "cmdinfo", self.cmdflags,adr=16,conversion=int) # TODO remove in later version
         return super().showEvent(a0)
 
     def hideEvent(self, a0) -> None:
@@ -43,8 +53,11 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
     def resetData(self):
         self.send_value("fx","effectsDetails",0)
 
+    def setAxis(self,axis):
+        self.axis = axis
+
     def refreshUi(self):
-        self.get_value_async("fx","effectsDetails",self.decodeData_cb)
+        self.get_value_async("fx","effectsDetails",self.decodeData_cb,adr=self.axis)
         self.get_value_async("fx","effects",self.setActiveState_cb,conversion=int)
     
     def setLabelPixmapState(self,label,state):
@@ -101,6 +114,9 @@ class EffectsMonitorDialog(QDialog):
         self.layout.addWidget(self.ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Effects statistics")
+    
+    def set_max_axes(self,axes):
+        self.ui.spinBox_axis.setMaximum(axes)
     
     def setEnabled(self, a0: bool) -> None:
         self.ui.setEnabled(a0)

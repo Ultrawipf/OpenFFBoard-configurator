@@ -55,6 +55,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.axisbtns.setExclusive(False)
 
         self.effect_tuning_dlg = effects_tuning_ui.AdvancedFFBTuneDialog(self)
+        self.main.maxaxischanged.connect(self.effect_tuning_dlg.set_max_axes)
 
         self.horizontalSlider_cffilter.valueChanged.connect(self.cffilter_changed)
 

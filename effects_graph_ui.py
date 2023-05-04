@@ -27,6 +27,9 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.start_time = 0
         self.chart_last_x = 0
 
+        self.axis = None
+        self.spinBox_axis.valueChanged.connect(self.setAxis)
+
         # Chart setup
         self.chart = PyQt6.QtCharts.QChart()
         self.chart.setBackgroundRoundness(5)
@@ -112,6 +115,18 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # Setup the timer to get data
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer)  # pylint: disable=no-value-for-parameter
+    
+    def reset(self):
+        # Clear
+        self.start_time = PyQt6.QtCore.QTime.currentTime()
+        self.chart_last_x = 0
+        for i in range(12):
+            self.lines[i].clear()
+
+    def setAxis(self,axis):
+        # Reset
+        self.reset()
+        self.axis = axis
 
     def setEnabled(self, a0: bool) -> None:
         if not a0 and self.isVisible() and self.timer.isActive : 
@@ -133,7 +148,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def update_timer(self):
         """Call the board to get instant data."""
-        self.get_value_async("fx", "effectsForces", self.display_data)
+        self.get_value_async("fx", "effectsForces", self.display_data,adr=self.axis)
 
     def display_data(self, data):
         """Decode the data received."""
@@ -145,13 +160,16 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.update_current(forces)
             self.update_effect_stats(effects)
 
+    def cmdflags(self,flags):
+        if flags & base_ui.CommunicationHandler.CMDFLAG_GETADR:
+            # enable axis selection
+            self.spinBox_axis.setEnabled(True)
+
     def init_ui(self):
         """Init the ui by clear all data in series."""
         # clear graph
-        self.start_time = PyQt6.QtCore.QTime.currentTime()
-        self.chart_last_x = 0
-        for i in range(12):
-            self.lines[i].clear()
+        self.reset()
+        self.get_value_async("fx", "cmdinfo", self.cmdflags,adr=17,conversion=int)
 
     def update_effect_stats(self,dat):
         self.spinBox_1.setValue(dat[0])
@@ -204,6 +222,9 @@ class EffectsGraphDialog(PyQt6.QtWidgets.QDialog):
         self.layout.addWidget(self.graph_ui)
         self.setLayout(self.layout)
         self.setWindowTitle("Effects graphics")
+    
+    def set_max_axes(self,axes):
+        self.graph_ui.spinBox_axis.setMaximum(axes)
 
     def setEnabled(self, a0: bool) -> None:  # pylint: disable=invalid-name
         """Enable the UI, or disable it depends on message."""

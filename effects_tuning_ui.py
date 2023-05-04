@@ -180,15 +180,12 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                                 "spring","damper","friction","inertia",
                                 "filterProfile_id","damper_f","damper_q","friction_f","friction_q","inertia_f","inertia_q"],0)
 
-        self.get_value_async("main","id",self.get_main_id,0,int)
-    
-    def get_main_id(self, id):
-        """Setup axis number from main class and start polling metrics on the axis."""
-        if id == 1:
-            self.spinBox_axis.setMaximum(0)
-        elif id == 2:
-            self.spinBox_axis.setMaximum(1)
+        # self.get_value_async("main","id",self.get_main_id,0,int)
         self.timer.start(100)
+    
+    def set_max_axes(self, axes):
+        """Setup axis number for selection"""
+        self.spinBox_axis.setMaximum(axes)
   
     def restore_default(self):
         self.horizontalSlider_spring_gain.setValue(64)
@@ -522,3 +519,7 @@ class AdvancedFFBTuneDialog(PyQt6.QtWidgets.QDialog):
         self.show()
         self.raise_()
         self.activateWindow()
+    
+    def set_max_axes(self, axes):
+        """Setup axis number for selection"""
+        self.advanced_tweak_ui.set_max_axes(axes)
