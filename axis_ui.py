@@ -148,7 +148,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
             current = (val * self.adc_to_amps)
             text += " ("+str(round(current,1)) + "A)"
 
-        text += "\n({:.0%})".format((val / self.max_power))
+        if(self.max_power > 0):
+            text += "\n({:.0%})".format((val / self.max_power))
 
         self.label_power.setText(text)
 
