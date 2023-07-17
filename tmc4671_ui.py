@@ -160,6 +160,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.register_callback("tmc","abnpol",self.checkBox_abnpol.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","svpwm",self.checkBox_svpwm.setChecked,self.axis,int,typechar='?')
 
         self.filter_type_to_index = {}
         self.register_callback("tmc","trqbq_mode",self.filtersCb,self.axis,str,typechar='!')
@@ -194,8 +195,15 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         data = self.comboBox_mtype.currentData()
         if(data == 2 or data == 3): # stepper or bldc
             self.spinBox_poles.setEnabled(True)
+            self.doubleSpinBox_fluxoffset.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
+            self.doubleSpinBox_fluxoffset.setEnabled(False)
+
+        if(data == 3):
+            self.checkBox_svpwm.setEnabled(True)
+        else:
+            self.checkBox_svpwm.setEnabled(False)
 
     def extEncoderChanged(self,val):
         self.checkBox_invertForce.setEnabled(val)
@@ -358,6 +366,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         prec = self.checkBox_I_Precision.isChecked() | (self.checkBox_P_Precision.isChecked() << 1)
         self.send_value("tmc","pidPrec",val=prec,instance=self.axis)
+        self.send_value("tmc","svpwm",val=1 if self.checkBox_svpwm.isChecked() else 0,instance=self.axis)
         
     def changePrecision(self,button,checked):
         rescale = (16 if checked else 1/16)
@@ -505,7 +514,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 
     def getPids(self):
-        commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","seqpi"]
+        commands = ["pidPrec","torqueP","torqueI","fluxP","fluxI","seqpi","svpwm"]
         self.send_commands("tmc",commands,self.axis)
 
         
