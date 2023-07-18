@@ -127,6 +127,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.checkBox_abnpol.stateChanged.connect(self.abnpolClicked)
 
         self.pushButton_calibrate.clicked.connect(lambda : self.send_command("tmc","calibrate",self.axis))
+        self.checkBox_fluxdissipate.stateChanged.connect(lambda x : self.send_value("tmc","fluxbrake",val=1 if x else 0,instance=self.axis))
 
         # Callbacks
         self.register_callback("tmc","temp",self.updateTemp,self.axis,int)
@@ -161,6 +162,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.register_callback("tmc","combineEncoder",self.checkBox_combineEncoders.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","invertForce",self.checkBox_invertForce.setChecked,self.axis,int,typechar='?')
         self.register_callback("tmc","svpwm",self.checkBox_svpwm.setChecked,self.axis,int,typechar='?')
+        self.register_callback("tmc","fluxbrake",self.checkBox_fluxdissipate.setChecked,self.axis,int,typechar='?')
 
         self.filter_type_to_index = {}
         self.register_callback("tmc","trqbq_mode",self.filtersCb,self.axis,str,typechar='!')
@@ -196,9 +198,11 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if(data == 2 or data == 3): # stepper or bldc
             self.spinBox_poles.setEnabled(True)
             self.doubleSpinBox_fluxoffset.setEnabled(True)
+            self.checkBox_fluxdissipate.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
             self.doubleSpinBox_fluxoffset.setEnabled(False)
+            self.checkBox_fluxdissipate.setEnabled(False)
 
         if(data == 3):
             self.checkBox_svpwm.setEnabled(True)
@@ -509,7 +513,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce"]
+        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce","fluxbrake"]
         self.send_commands("tmc",commands,self.axis)
 
 
