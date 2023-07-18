@@ -50,6 +50,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.pushButton_center.clicked.connect(lambda : self.send_command("axis","zeroenc",instance=self.axis))
         
         #self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
+        self.checkBox_speedlimit.stateChanged.connect(self.setSpeedLimitEnabled)
+        self.spinBox_speedlimit.valueChanged.connect(lambda val : self.send_value("axis","maxspeed",val,instance=self.axis))
 
         self.spinBox_reduction_numerator.valueChanged.connect(self.updateReductionText)
         self.spinBox_reduction_denominator.valueChanged.connect(self.updateReductionText)
@@ -76,8 +78,35 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("axis","cmdinfo",self.reductionAvailable,self.axis,int,adr = 17)
 
+        self.register_callback("axis","maxspeed",self.speedLimitCb,self.axis,int)
+
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
     
+    def setSpeedLimit(self,val):
+        if self.checkBox_speedlimit.isChecked():
+            self.send_value("axis","maxspeed",self.spinBox_speedlimit.value(),instance=self.axis)
+        else:
+            self.send_value("axis","maxspeed",0,instance=self.axis)
+        
+
+    def speedLimitCb(self,val):
+        qtBlockAndCall(self.spinBox_speedlimit,self.spinBox_speedlimit.setValue,val)
+        if not val:
+            self.spinBox_speedlimit.setEnabled(False)
+            self.checkBox_speedlimit.setChecked(False)
+        else:
+            self.checkBox_speedlimit.setChecked(True)
+            self.spinBox_speedlimit.setEnabled(True)
+        
+
+    def setSpeedLimitEnabled(self,val):
+        self.spinBox_speedlimit.setEnabled(val)
+        if self.checkBox_speedlimit.isChecked():
+            self.send_value("axis","maxspeed",self.spinBox_speedlimit.value(),instance=self.axis)
+        else:
+            self.send_value("axis","maxspeed",0,instance=self.axis)
+        
+
     def updateReduction(self,val):
         numerator,denominator = val
         self.spinBox_reduction_numerator.setValue(numerator)
@@ -229,7 +258,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.max_power = 0x7fff
             self.horizontalSlider_power.setMaximum(self.max_power)
 
-        commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper"] # requests updates
+        commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed"] # requests updates
         self.send_commands("axis",commands,self.axis)
 
         self.updatePowerLabel(self.horizontalSlider_power.value())
