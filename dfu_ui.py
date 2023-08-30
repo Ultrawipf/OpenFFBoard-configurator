@@ -20,6 +20,8 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     mainUI : the main class with the serial init.
     """
 
+    STM_DEVID_ADR = 0x40024000
+
     def __init__(self, parentWidget, mainUI):
         """Init the UI element and super class with parent."""
         base_ui.WidgetUI.__init__(self, parentWidget, "dfu.ui")
@@ -45,11 +47,18 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         self.checkBox_massErase.setEnabled(False)  # TODO disable checkbox for now
 
+        self.devinfo = {"devid":0,"revid":0,"uid":0,"signature":0}
+
     def hideEvent(self, a0) -> None:  # pylint: disable=invalid-name
         """Close the dfu mode in pydfu lib and call the UI close event."""
         if self.dfu_device and not self.uploading:
             pydfu.exit_dfu()
         return super().hideEvent(a0)
+
+    def getInfo(self):
+        #self.devinfo["devid"] = pydfu.read_memory(self.STM_DEVID_ADR,32)
+        print(self.devinfo)
+
 
     def init_ui(self):
         """Set the component status and display log message."""
@@ -85,6 +94,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 return
             self.log("\nFound DFU device. Please select an option\n")
             self.dfu_device = dfu_devices[0]
+            self.getInfo()
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
