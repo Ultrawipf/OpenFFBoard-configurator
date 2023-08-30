@@ -50,11 +50,11 @@ import updater
 import simplemotion_ui
 
 # This GUIs version
-VERSION = "1.14.0"
+VERSION = "1.14.1"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.14.0"
+MIN_FW = "1.14.2"
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
