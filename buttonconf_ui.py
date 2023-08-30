@@ -39,10 +39,11 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         OptionsDialogGroupBox.__init__(self,name,main)
         CommunicationHandler.__init__(self)
         self.buttonBox = QGroupBox("Pins")
-        self.buttonBoxLayout = QVBoxLayout()
+        self.buttonBoxLayout = QGridLayout()
         self.buttonBox.setLayout(self.buttonBoxLayout)
 
         self.btn_mask=0
+        self.momentary_mask=0
         self.prefix=0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
@@ -53,6 +54,8 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         vbox.addWidget(self.polBox)
         self.buttongroup = QButtonGroup()
         self.buttongroup.setExclusive(False)
+        self.buttongroup_momentary = QButtonGroup()
+        self.buttongroup_momentary.setExclusive(False)
         vbox.addWidget(self.buttonBox)
         
         self.setLayout(vbox)
@@ -100,18 +103,34 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         for b in self.buttongroup.buttons():
             self.buttongroup.removeButton(b)
 
+        for b in self.buttongroup_momentary.buttons():
+            self.buttongroup_momentary.removeButton(b)
+        
         self.buttonBox.update()
-
+        self.buttonBoxLayout.addWidget(QLabel("Pins"),0,0)
+        self.buttonBoxLayout.addWidget(QLabel("Pulse mode"),0,1)
         for i in range(self.num):
             cb = QCheckBox(str(i+1))
             self.buttongroup.addButton(cb,i)
-            self.buttonBoxLayout.addWidget(cb)
+
+            cb_mom = QCheckBox(str(i+1))
+            self.buttongroup_momentary.addButton(cb_mom,i)
+
+            self.buttonBoxLayout.addWidget(cb,i+1,0)
+            self.buttonBoxLayout.addWidget(cb_mom,i+1,1)
 
         def localcb(mask):
             self.btn_mask = mask
             for i in range(self.num):
                 self.buttongroup.button(i).setChecked(mask & (1 << i))
+                
+        def localpulsemaskcb(mask):
+            self.btn_mask = mask
+            for i in range(self.num):
+                self.buttongroup_momentary.button(i).setChecked(mask & (1 << i))
+
         self.get_value_async("dpin","mask",localcb,0,conversion=int)
+        self.get_value_async("dpin","pulse",localpulsemaskcb,0,conversion=int)
         
  
     def apply(self):
@@ -119,7 +138,11 @@ class LocalButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         for i in range(self.num):
             if(self.buttongroup.button(i).isChecked()):
                 self.btn_mask |= 1 << i
+            if(self.buttongroup_momentary.button(i).isChecked()):
+                self.momentary_mask |= 1 << i
+
         self.send_value("dpin","mask",self.btn_mask)
+        self.send_value("dpin","pulse",self.momentary_mask)
         self.send_value("dpin","polarity",(1 if self.polBox.isChecked() else 0))
     
     def readValues(self):
