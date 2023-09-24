@@ -93,7 +93,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Emit for all the UI the [connected] event.
         """
         if self._serial.isOpen():
-            self.pushButton_connect.setText("Disconnect")
+            self.pushButton_connect.setText(self.tr("Disconnect"))
             self.comboBox_port.setEnabled(False)
             self.pushButton_refresh.setEnabled(False)
             self.pushButton_send.setEnabled(True)
@@ -101,7 +101,7 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.connected.emit(True)
             self.get_main_classes()
         else:
-            self.pushButton_connect.setText("Connect")
+            self.pushButton_connect.setText(self.tr("Connect"))
             self.comboBox_port.setEnabled(True)
             self.pushButton_refresh.setEnabled(True)
             self.pushButton_send.setEnabled(False)

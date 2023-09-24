@@ -100,7 +100,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
-        self.tabWidget_main.addTab(self.serialchooser, "Serial")
+        self.tabWidget_main.addTab(self.serialchooser, self.tr("Serial"))
 
         # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
         self.tabsinitialized.connect(self.errors_dlg.connected_cb)
@@ -196,7 +196,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def open_dfu_dialog(self):
         """Open the dfu dialog and start managing."""
         msg = PyQt6.QtWidgets.QDialog()
-        msg.setWindowTitle("Firmware")
+        msg.setWindowTitle(self.tr("Firmware"))
         dfu = dfu_ui.DFUModeUI(parentWidget=msg, mainUI=self)
         layout = PyQt6.QtWidgets.QVBoxLayout()
         layout.addWidget(dfu)
@@ -261,15 +261,15 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             # Message
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
-                "Restore flash dump",
-                "Uploaded flash dump.\nPlease reboot.",
+                self.tr("Restore flash dump"),
+                self.tr("Uploaded flash dump.\nPlease reboot."),
             )
         else:
             # Message
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Warning,
-                "Can't restore flash dump",
-                "Please connect board first.",
+                self.tr("Can't restore flash dump"),
+                self.tr("Please connect board first."),
             )
 
 
@@ -503,23 +503,23 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if gui_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
-                "Incompatible GUI",
-                "The GUI you are using ("
+                self.tr("Incompatible GUI"),
+                self.tr("The GUI you are using (")
                 + VERSION
-                + ") may be too old for this firmware.\nPlease make sure both "
-                "firmware and GUI are up to date if you encounter errors."
+                + self.tr(") may be too old for this firmware.\nPlease make sure both "
+                "firmware and GUI are up to date if you encounter errors.")
             )
             msg.exec()
         elif fw_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
-                "Incompatible firmware",
-                "The firmware you are using ("
+                self.tr("Incompatible firmware"),
+                self.tr("The firmware you are using (")
                 + self.fw_version_str
-                + ") is too old for this GUI.\n("
+                + self.tr(") is too old for this GUI.\n(")
                 + MIN_FW
-                + " required)\nPlease make sure both firmware "
-                "and GUI are up to date if you encounter errors."
+                + self.tr(" required)\nPlease make sure both firmware "
+                "and GUI are up to date if you encounter errors.")
             )
             msg.exec()
         # Check github
@@ -529,7 +529,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
             if not donotnotify:
                 # New release available for firmware
-                msg =  "New firmware available"
+                msg = self.tr( "New firmware available")
                 notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
                 notification.exec()
    
@@ -574,7 +574,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Prompt a confirmation to the user when he click on reset factory."""
         msg = PyQt6.QtWidgets.QMessageBox()
         msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
-        msg.setText("Format flash and reset?")
+        msg.setText(self.tr("Format flash and reset?"))
         msg.setStandardButtons(
             PyQt6.QtWidgets.QMessageBox.StandardButton.Ok
             | PyQt6.QtWidgets.QMessageBox.StandardButton.Cancel
@@ -612,24 +612,24 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
         tray.setIcon(icon)
         tray.setVisible(True)
         tray.activated.connect(self.on_tray_icon_activated) # pylint: disable=no-value-for-parameter
-        tray.setToolTip("Open FFBoard Configurator")
+        tray.setToolTip(self.tr("Open FFBoard Configurator"))
 
         # Creating the options
         menu = PyQt6.QtWidgets.QMenu(main)
-        option1 = PyQt6.QtGui.QAction("Open console", menu)
+        option1 = PyQt6.QtGui.QAction(self.tr("Open console"), menu)
         option1.triggered.connect(self.open_main_ui_signal) # pylint: disable=no-value-for-parameter
         menu.addAction(option1)
         menu.addSeparator()
 
         # profiles selection
-        submenu = PyQt6.QtWidgets.QMenu("Profiles", main)
+        submenu = PyQt6.QtWidgets.QMenu(self.tr("Profiles"), main)
         menu.addMenu(submenu)
         self._submenu_profiles = submenu
 
         menu.addSeparator()
 
         # To quit the app
-        quit_action = menu.addAction("Quit")
+        quit_action = menu.addAction(self.tr("Quit"))
         quit_action.triggered.connect(app.quit)
 
         # Adding options to the System Tray
@@ -755,7 +755,7 @@ class WrapperStatusBar(base_ui.WidgetUI):
         else:
             self.label_cnx.setPixmap(self.icon_ko)
             self.update_ffb_block_display(False)
-            self.label_board.setText("disconnected")
+            self.label_board.setText(self.tr("disconnected"))
 
     def append_log(self, message):
         """Display the last log message in the status bar."""
@@ -807,6 +807,14 @@ if __name__ == "__main__":
     logging.config.fileConfig('res/logger.conf')
 
     app = PyQt6.QtWidgets.QApplication(sys.argv)
+
+    translator = PyQt6.QtCore.QTranslator()
+    user_language = PyQt6.QtCore.QLocale.system().name()
+    # print(f"translations/{user_language}.qm") # debug, find your system language name
+    # try to load the user's language file
+    if translator.load(f"translations/{user_language}.qm"):
+        app.installTranslator(translator)
+
     window = MainUi()
     if (sys.platform == "win32" or "Windows" in sys.platform):
         # only on windows, for macOS and linux use system palette.
@@ -823,7 +831,7 @@ if __name__ == "__main__":
             app.setPalette(dark_palette.PALETTE_DARK)
             window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
 
-    window.setWindowTitle("Open FFBoard Configurator")
+    window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
     window.setWindowIcon(PyQt6.QtGui.QIcon('res/app.ico'))
     window.show()
     window.check_configurator_update() # Check for updates after window is shown
