@@ -1,5 +1,13 @@
-pylupdate6 -ts ./translations/zh_CN.ts .
+# SUMMARY
 
+1. `pylupdate6 -ts ./translations/zh_CN.ts .` : py&ui to ts
+2. modify ts file with Qt Linguist or convert into ods for google sheets(`tool_ts_to_ods.py`)
+3. `lrelease ./translations/zh_CN.ts` : ts to qm
+4. python will load qm file automatically at startup or manually with `QTranslator.load()`.
+
+---
+
+## PyQt6 Internationalization
 
 In PyQt6, internationalization (i18n) typically involves translating the text of your application into different languages so that users can choose their preferred language to use the application. Here are the general steps to correctly internationalize a PyQt6 application:
 
