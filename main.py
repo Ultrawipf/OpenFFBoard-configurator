@@ -17,6 +17,8 @@ import functools
 import logging
 import logging.config
 from typing import List
+import glob
+import os
 
 import PyQt6.QtWidgets
 import PyQt6.QtCore
@@ -24,8 +26,11 @@ import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
 from PyQt6.QtCore import QEventLoop
+from PyQt6.QtGui import QAction,QActionGroup
+
 import config
 import helper
+
 
 # UIs
 import base_ui
@@ -56,6 +61,8 @@ VERSION = "1.14.1"
 # Major version of firmware must match firmware. Minor versions must be higher or equal
 MIN_FW = "1.14.2"
 
+DEFAULTLANG = "en_US"
+
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
     tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
@@ -75,9 +82,20 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serial_timer = None
 
         self.systray : SystrayWrapper = None
-        
+
+        self.lang_actions = {}
+        self.translator = PyQt6.QtCore.QTranslator(self)
+        self.language_action_group = QActionGroup(self)
+        self.language_action_group.setExclusive(True)        
 
         self.tab_connections = [] # Signals to disconnect on reset
+
+        # Systray
+        self.systray = SystrayWrapper(self)
+        # Profile
+        self.profile_ui = profile_ui.ProfileUI(main=self)
+
+        self.make_lang_selector() # Languages must be created as early as possible
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -99,17 +117,16 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
-        self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
-        self.tabWidget_main.addTab(self.serialchooser, self.tr("Serial"))
-
-        # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
+                # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
         self.tabsinitialized.connect(self.errors_dlg.connected_cb)
 
-        # Systray
-        self.systray = SystrayWrapper(self)
         self.systray.open_main_ui_signal.connect(self.display_ui)
         self.systray.change_profile_signal.connect(self.change_profile)
+        
+        self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
+        self.tabWidget_main.addTab(self.serialchooser, self.tr("Serial"))
         self.serialchooser.connected.connect(self.systray.set_connected)
+        self.serialchooser.connected.connect(self.profile_ui.setEnabled)
 
         # Status Bar
         self.wrapper_status_bar = WrapperStatusBar(self.statusBar())
@@ -124,8 +141,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.actionDebug_mode.triggered.connect(self.toggle_debug)
 
         self.timer.start(5000)
-        self.profile_ui = profile_ui.ProfileUI(main=self)
-        self.serialchooser.connected.connect(self.profile_ui.setEnabled)
+        
 
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
         self.effects_monitor_dlg.setEnabled(False)
@@ -171,6 +187,57 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # after UI load get serial port and if only one : autoconnect
         nb_device_compat = self.serialchooser.get_ports()
         self.serialchooser.auto_connect(nb_device_compat)
+
+    # def refresh_widgets(self):
+    #     for w in app.allWidgets(): # Does not actually update the translation
+    #         w.update()
+    #         w.repaint()
+    #         # print(w)
+
+    def change_language(self,enabled):
+        if(not enabled):
+            return
+        langfile,user_language = self.language_action_group.checkedAction().data()
+
+        # try to load the user's language file
+        curlang = self.translator.language()
+        if self.translator.isEmpty():
+            curlang = DEFAULTLANG
+        if(curlang == user_language):
+            return
+            
+        app.removeTranslator(self.translator)
+        if self.translator.load(langfile):
+            app.installTranslator(self.translator)
+        self.profile_ui.set_global_setting("language",user_language) #store language
+
+        #self.refresh_widgets()
+ 
+    def make_lang_selector(self):
+        
+        languages = [("",DEFAULTLANG)]
+        languages.extend([(f,os.path.splitext(os.path.basename(f))[0]) for f in glob.glob("translations/*.qm")])
+        
+        for langfile,langid in languages:
+            action = QAction(langid)
+            action.setData([langfile,langid])
+            action.setCheckable(True)
+            self.language_action_group.addAction(action)
+            self.lang_actions[langid] = action
+            self.menuLanguage.addAction(action)
+            action.toggled.connect(self.change_language)
+
+        user_language = self.profile_ui.get_global_setting("language",None)
+ 
+        if not user_language:
+            user_language = PyQt6.QtCore.QLocale.system().name()
+
+        if user_language in self.lang_actions:
+            self.lang_actions.get(user_language).setChecked(True)
+        else:
+            self.lang_actions.get(DEFAULTLANG).setChecked(True)
+
+        
 
     def reboot(self):
         """Send the reboot message to the board."""
@@ -807,15 +874,7 @@ if __name__ == "__main__":
     logging.config.fileConfig('res/logger.conf')
 
     app = PyQt6.QtWidgets.QApplication(sys.argv)
-
-    translator = PyQt6.QtCore.QTranslator()
-    user_language = PyQt6.QtCore.QLocale.system().name()
-    # print(f"translations/{user_language}.qm") # debug, find your system language name
-    # try to load the user's language file
-    if translator.load(f"translations/{user_language}.qm"):
-        app.installTranslator(translator)
-
-    window = MainUi()
+    window = MainUi()  
     if (sys.platform == "win32" or "Windows" in sys.platform):
         # only on windows, for macOS and linux use system palette.
         # windows server is not called win32
@@ -833,6 +892,7 @@ if __name__ == "__main__":
 
     window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
     window.setWindowIcon(PyQt6.QtGui.QIcon('res/app.ico'))
+    print("Show")
     window.show()
     window.check_configurator_update() # Check for updates after window is shown
 
