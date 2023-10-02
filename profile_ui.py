@@ -14,6 +14,7 @@ import PyQt6.QtCore
 import PyQt6.QtWidgets
 import PyQt6.QtGui
 import base_ui
+import helper
 
 
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
@@ -21,7 +22,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     __RELEASE = 2
     __PROFILES_FILENAME = "profiles.json"
-    __PROFILESSETUP_FILENAME = "res/profile.cfg"
+    __PROFILESSETUP_FILENAME = helper.res_path("profile.cfg")
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
         "global":{},
