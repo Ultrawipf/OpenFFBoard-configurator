@@ -804,7 +804,7 @@ def process_events():
 
 
 if __name__ == "__main__":
-    logging.config.fileConfig('res/logger.conf')
+    logging.config.fileConfig(helper.res_path('logger.conf'))
 
     app = PyQt6.QtWidgets.QApplication(sys.argv)
     window = MainUi()
@@ -824,7 +824,7 @@ if __name__ == "__main__":
             window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
 
     window.setWindowTitle("Open FFBoard Configurator")
-    window.setWindowIcon(PyQt6.QtGui.QIcon('res/app.ico'))
+    window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
     window.show()
     window.check_configurator_update() # Check for updates after window is shown
 
