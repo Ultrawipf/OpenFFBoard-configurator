@@ -1,5 +1,5 @@
 ### Changes this version:
-- Added local button pulse mode mask
+- Added basic translation function
 
 ### Changes in 1.14.x:
 - Added TMC space vector PWM checkbox
