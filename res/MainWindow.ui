@@ -71,10 +71,17 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <widget class="QMenu" name="menuLanguage">
+     <property name="title">
+      <string>Language</string>
+     </property>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
     <addaction name="actionDebug_mode"/>
     <addaction name="actionUpdates"/>
+    <addaction name="menuLanguage"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
@@ -216,6 +223,11 @@
    </property>
    <property name="text">
     <string>Debug mode</string>
+   </property>
+  </action>
+  <action name="actionDefault">
+   <property name="text">
+    <string>Default</string>
    </property>
   </action>
  </widget>
