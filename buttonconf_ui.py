@@ -189,7 +189,7 @@ class SPIButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
         self.send_value("spibtn","mode",self.modeBox.currentData(),instance=self.id)
         self.send_value("spibtn","btnnum",self.numBtnBox.value(),instance=self.id)
         self.send_value("spibtn","btnpol",1 if self.polBox.isChecked() else 0,instance=self.id)
-        self.send_value("spibtn","btn_cs",self.csBox.value(),instance=self.id)
+        self.send_value("spibtn","cs",self.csBox.value(),instance=self.id)
         self.send_value("spibtn","spispeed",self.speedBox.currentData(),instance=self.id)
 
     def onclose(self):

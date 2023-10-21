@@ -1,5 +1,6 @@
 ### Changes this version:
 - Added basic translation function
+- Fixed CS selection in SPI buttons
 
 ### Changes in 1.14.x:
 - Added TMC space vector PWM checkbox
