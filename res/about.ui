@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Source: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Made with &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt5&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Source: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Made with &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
