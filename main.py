@@ -216,7 +216,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def make_lang_selector(self):
         
         languages = [("",DEFAULTLANG)]
-        languages.extend([(f,os.path.splitext(os.path.basename(f))[0]) for f in glob.glob("translations/*.qm")])
+        languages.extend([(f,os.path.splitext(os.path.basename(f))[0]) for f in glob.glob(helper.res_path("*.qm","translations"))])
         
         for langfile,langid in languages:
             action = QAction(langid)

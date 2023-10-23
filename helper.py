@@ -7,10 +7,10 @@ from PyQt6.QtCore import QObject,QTimer
 
 RESPATH = "res"
 
-def res_path(file):
+def res_path(file,respath=RESPATH):
     if getattr(sys, 'frozen',False) and hasattr(sys, '_MEIPASS'):
-        return path.join(sys._MEIPASS,RESPATH,file)
-    return path.join(RESPATH,file)
+        return path.join(sys._MEIPASS,respath,file)
+    return path.join(respath,file)
 
 # Parses a classchooser reply into a list of classes and a dict to translate the class ID to (list index,name)
 def classlistToIds(dat):
