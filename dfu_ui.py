@@ -57,7 +57,8 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def getInfo(self):
         #self.devinfo["devid"] = pydfu.read_memory(self.STM_DEVID_ADR,32)
-        print(self.devinfo)
+        #print(self.devinfo)
+        pass
 
 
     def init_ui(self):
@@ -94,7 +95,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 return
             self.log("\nFound DFU device. Please select an option\n")
             self.dfu_device = dfu_devices[0]
-            self.getInfo()
+            #self.getInfo()
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
