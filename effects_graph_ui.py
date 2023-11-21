@@ -27,7 +27,10 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.start_time = 0
         self.chart_last_x = 0
 
-        self.axis = None
+        self.axistorque_enabled = False
+        self.totaltorqe_line = None
+
+        self.axis = 0
         self.spinBox_axis.valueChanged.connect(self.setAxis)
 
         # Chart setup
@@ -61,6 +64,11 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.chart.addAxis(
             self.chart_yaxis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft
         )
+
+        # Output axis
+        self.chart_yaxis_output = PyQt6.QtCharts.QValueAxis()
+        self.chart_yaxis_output.setMin(-10)
+        self.chart_yaxis_output.setMax(10)
 
         self.chart.legend().setLabelBrush(
             PyQt6.QtWidgets.QApplication.instance().palette().text()
@@ -100,7 +108,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             PyQt6.QtGui.QColorConstants.Red,
             PyQt6.QtGui.QColorConstants.Green,
             PyQt6.QtGui.QColorConstants.Yellow,
-            PyQt6.QtGui.QColorConstants.Black,
+            PyQt6.QtGui.QColorConstants.Gray,
         ]
         self.lines = []
         for i in range(12):
@@ -116,12 +124,39 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer)  # pylint: disable=no-value-for-parameter
     
+    def set_total_output_display(self,enable: bool):
+        """Enable or disable the axis torque line"""
+        if enable and self.totaltorqe_line == None:
+            self.axistorque_enabled = enable
+            self.chart.addAxis(
+            self.chart_yaxis_output, PyQt6.QtCore.Qt.AlignmentFlag.AlignRight
+            )
+            q_line = PyQt6.QtCharts.QLineSeries()
+            q_line.setColor(PyQt6.QtGui.QColorConstants.Svg.coral)
+            q_line.setName("Output torque (Y2)")
+            self.totaltorqe_line = q_line
+            self.chart.addSeries(q_line)
+            q_line.attachAxis(self.chart_yaxis_output)
+            q_line.attachAxis(self.chart_xaxis)
+        elif not enable and self.totaltorqe_line != None:
+            self.chart.removeSeries(self.totaltorqe_line)
+            self.chart.removeAxis(self.chart_yaxis_output)
+            del self.totaltorqe_line
+            self.totaltorqe_line = None
+
+    def set_output_axis_range(self,val: int):
+        """Changes the right Y axis scaling"""
+        self.chart_yaxis_output.setMin(-val)
+        self.chart_yaxis_output.setMax(val)
+
     def reset(self):
         # Clear
         self.start_time = PyQt6.QtCore.QTime.currentTime()
         self.chart_last_x = 0
         for i in range(12):
             self.lines[i].clear()
+        if self.totaltorqe_line != None:
+            self.totaltorqe_line.clear()
 
     def setAxis(self,axis):
         # Reset
@@ -149,6 +184,16 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def update_timer(self):
         """Call the board to get instant data."""
         self.get_value_async("fx", "effectsForces", self.display_data,adr=self.axis)
+        if self.totaltorqe_line != None:
+            self.get_value_async("axis","curtorque",callback=self.axistorque_cb,instance=self.axis,conversion=int)
+
+    def axistorque_cb(self,val):
+        if not self.totaltorqe_line != None:
+            return
+        self.add_data_to_series(self.totaltorqe_line,val)
+        maxval = abs(max(list(self.totaltorqe_line.points()),key=lambda v:abs(v.y())).y())
+        self.set_output_axis_range(max(10,maxval)) # Autorange
+
 
     def display_data(self, data):
         """Decode the data received."""
@@ -185,6 +230,11 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.spinBox_11.setValue(dat[10])
         self.spinBox_12.setValue(dat[11])
 
+    def add_data_to_series(self,line,val):
+        line.append(self.chart_last_x, val)
+        if line.count() > self.max_datapoints:
+            line.remove(0)
+
     def update_current(self, forces):
         """Display on graph the response of the board."""
         try:
@@ -193,9 +243,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             )
             index = 0
             for i in forces:
-                self.lines[index].append(self.chart_last_x, forces[index])
-                if self.lines[index].count() > self.max_datapoints:
-                    self.lines[index].remove(0)
+                self.add_data_to_series(self.lines[index],forces[index])
                 index += 1
 
             self.chart_xaxis.setMax(self.chart_last_x)
@@ -238,3 +286,6 @@ class EffectsGraphDialog(PyQt6.QtWidgets.QDialog):
         self.show()
         self.raise_()
         self.activateWindow()
+
+    def set_total_output_display(self,enabled: bool):
+        self.graph_ui.set_total_output_display(enabled)

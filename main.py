@@ -403,6 +403,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.effects_monitor_dlg.setEnabled(False)
         self.effects_graph_dlg.setEnabled(False)
+        self.effects_graph_dlg.set_total_output_display(False)
         self.actionEffectsMonitor.setEnabled(False)
         self.actionEffects_forces.setEnabled(False)
         self.axes = 0
@@ -465,6 +466,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.profile_ui.set_save_btn(True)
                     self.axes = max(self.axes,classe.axis)
                     self.maxaxischanged.emit(self.axes)
+                    self.effects_graph_dlg.set_total_output_display(True)
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
