@@ -67,11 +67,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     """Display and manage the main UI."""
     tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
     maxaxischanged = PyQt6.QtCore.pyqtSignal(int)
+    languagechanged = PyQt6.QtCore.pyqtSignal()
     def __init__(self):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
         base_ui.CommunicationHandler.__init__(self)
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
+
+        self.restart_app_flag = False
 
         self.serial = PyQt6.QtSerialPort.QSerialPort()
         base_ui.CommunicationHandler.comms = serial_comms.SerialComms(self, self.serial)
@@ -114,6 +117,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
         self.axes = 0
+
+        self.languagechanged.connect(self.restart_app)
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
@@ -212,6 +217,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.profile_ui.set_global_setting("language",user_language) #store language
 
         #self.refresh_widgets()
+        self.languagechanged.emit()
+
+    def restart_app(self):
+        self.restart_app_flag = True
+        self.reset_port()
+        base_ui.CommunicationHandler.comms.removeAllCallbacks()
+        app.quit()
  
     def make_lang_selector(self):
         
@@ -379,7 +391,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
         base_ui.CommunicationHandler.remove_callbacks(widget)
         widget.deleteLater()
-        del widget
+        #del widget
 
     def select_tab(self, idx):
         """Select a specific tab from the idx parameter."""
@@ -872,31 +884,41 @@ def process_events():
     app.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents,50)
 
 
+
+    
+
 if __name__ == "__main__":
     logging.config.fileConfig(helper.res_path('logger.conf'))
-
+    restart = True
+    exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
-    window = MainUi()  
-    if (sys.platform == "win32" or "Windows" in sys.platform):
-        # only on windows, for macOS and linux use system palette.
-        # windows server is not called win32
-        # pylint: disable=import-error
-        from winreg import (
-            HKEY_CURRENT_USER as hkey,
-            QueryValueEx as getSubkeyValue,
-            OpenKey as getKey,
-        )
+    while(restart):
+        restart = False
+        window = MainUi()
+        if (sys.platform == "win32" or "Windows" in sys.platform):
+            # only on windows, for macOS and linux use system palette.
+            # windows server is not called win32
+            # pylint: disable=import-error
+            from winreg import (
+                HKEY_CURRENT_USER as hkey,
+                QueryValueEx as getSubkeyValue,
+                OpenKey as getKey,
+            )
 
-        if windows_theme_is_light() == 0:
-            app.setStyle("Fusion")
-            app.setPalette(dark_palette.PALETTE_DARK)
-            window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
+            if windows_theme_is_light() == 0:
+                app.setStyle("Fusion")
+                app.setPalette(dark_palette.PALETTE_DARK)
+                window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
 
-    window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
-    window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
-    window.show()
-    window.check_configurator_update() # Check for updates after window is shown
+        window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
+        window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
+        window.show()
+        window.check_configurator_update() # Check for updates after window is shown
 
-    # exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-    # sys.exit(exit_code)
-    sys.exit(app.exec())
+        exit_code = app.exec()
+        # Check if we need to restart
+        restart = window.restart_app_flag
+        window.deleteLater()
+        #del app
+
+    sys.exit(exit_code)
