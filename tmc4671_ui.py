@@ -199,10 +199,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.spinBox_poles.setEnabled(True)
             self.doubleSpinBox_fluxoffset.setEnabled(True)
             self.checkBox_fluxdissipate.setEnabled(True)
+            self.pushButton_autotunepid.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
             self.doubleSpinBox_fluxoffset.setEnabled(False)
             self.checkBox_fluxdissipate.setEnabled(False)
+            self.pushButton_autotunepid.setEnabled(False)
 
         if(data == 3):
             self.checkBox_svpwm.setEnabled(True)

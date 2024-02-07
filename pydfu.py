@@ -69,7 +69,7 @@ _DFU_DESCRIPTOR_TYPE                 = 0x21
 # USB device handle
 __dev = None
 
-__verbose = None
+__verbose = True
 
 __chunksize = 512
 
@@ -478,6 +478,8 @@ def get_memory_layout(device):
         result.append(named((addr, last_addr, size, num_pages, page_size),
                       "addr last_addr size num_pages page_size"))
         addr += size
+    if __verbose:
+        print("Mem layout:",result)
     return result
 
 
@@ -498,7 +500,7 @@ def list_dfu_devices(*args, **kwargs):
                   .format(entry['addr'], entry['num_pages'],
                           entry['page_size'] // 1024))
 
-
+# TODO page erase and write does not always seem to succeed and may skip data?
 def write_elements(elements, mass_erase_used, progress=None):
     """Writes the indicated elements into the target memory,
     erasing as needed.
