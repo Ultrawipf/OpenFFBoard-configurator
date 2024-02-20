@@ -537,9 +537,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
-    def __init__(self,name,main,instance):
-        self.main = main
-        OptionsDialogGroupBox.__init__(self,name,main)
+    def __init__(self,name,parent : TMC4671Ui,instance):
+        self.parent = parent
+        OptionsDialogGroupBox.__init__(self,name,parent)
         CommunicationHandler.__init__(self)
         self.typeBox = QGroupBox("Hardware Version")
         self.typeBoxLayout = QVBoxLayout()
@@ -559,9 +559,8 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
 
     def apply(self):
-        self.send_value("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
-        # change scaler
-        self.send_command("tmc","iScale",self.axis) # request scale update
+        self.send_value("tmc","tmcHwType",self.combobox.currentData(),instance=self.axis) # current data
+        self.parent.init_ui() # Update TMC UI in case capabilities have changed
     
     def typeCb(self,entries):
         #print("Reply",entries)
@@ -569,7 +568,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
         entriesList = [m.split(":") for m in entriesList if m]
         for m in entriesList:
             self.combobox.addItem(m[1],m[0])
-        self.get_value_async("tmc","tmcHwType",self.combobox.setCurrentIndex,self.axis,int)
+        self.get_value_async("tmc","tmcHwType",lambda val : self.combobox.setCurrentIndex(self.combobox.findData(val)),self.axis,int)
 
     def readValues(self):
         self.get_value_async("tmc","tmcHwType",self.typeCb,self.axis,str,typechar='!')
