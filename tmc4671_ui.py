@@ -378,12 +378,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         rescale = (16 if checked else 1/16)
         if(button == self.checkBox_I_Precision):
             if(self.lastPrecI != checked):
-                self.spinBox_ti.setValue(self.spinBox_ti.value() * rescale)
-                self.spinBox_fi.setValue(self.spinBox_fi.value() * rescale)
+                self.spinBox_ti.setValue(int(self.spinBox_ti.value() * rescale))
+                self.spinBox_fi.setValue(int(self.spinBox_fi.value() * rescale))
         if(button == self.checkBox_P_Precision):
             if(self.lastPrecP != checked):
-                self.spinBox_tp.setValue(self.spinBox_tp.value() * rescale)
-                self.spinBox_fp.setValue(self.spinBox_fp.value() * rescale)
+                self.spinBox_tp.setValue(int(self.spinBox_tp.value() * rescale))
+                self.spinBox_fp.setValue(int(self.spinBox_fp.value() * rescale))
 
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
         self.lastPrecI = self.checkBox_I_Precision.isChecked()
