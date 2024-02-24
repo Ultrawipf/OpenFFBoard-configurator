@@ -20,7 +20,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     mainUI : the main class with the serial init.
     """
 
-    STM_DEVID_ADR = 0x40024000
+    STM_DEVID_ADR_F4 = 0x40024000
 
     def __init__(self, parentWidget, mainUI):
         """Init the UI element and super class with parent."""
@@ -45,9 +45,12 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.timer.timeout.connect(self.init_ui)  # pylint: disable=no-value-for-parameter
         self.timer.start(1000)
 
+        if self.main.connected:
+            self.getInfoSerial()
+
         self.checkBox_massErase.setEnabled(False)  # TODO disable checkbox for now
 
-        self.devinfo = {"devid":0,"revid":0,"uid":0,"signature":0}
+        self.devinfo = {"devid":0,"revid":0,"uid":0,"signature":0,"CUR_HW_TYPE":None}
 
     def hideEvent(self, a0) -> None:  # pylint: disable=invalid-name
         """Close the dfu mode in pydfu lib and call the UI close event."""
@@ -55,11 +58,13 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             pydfu.exit_dfu()
         return super().hideEvent(a0)
 
-    def getInfo(self):
-        #self.devinfo["devid"] = pydfu.read_memory(self.STM_DEVID_ADR,32)
+    def getInfoDfu(self):
+        #self.devinfo["devid"] = pydfu.read_memory(self.STM_DEVID_ADR_F4,32)
         #print(self.devinfo)
         pass
 
+    def getInfoSerial(self):
+        pass
 
     def init_ui(self):
         """Set the component status and display log message."""
@@ -95,7 +100,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 return
             self.log("\nFound DFU device. Please select an option\n")
             self.dfu_device = dfu_devices[0]
-            #self.getInfo()
+            self.getInfoDfu()
             self.groupbox_controls.setEnabled(True)
             self.pushButton_filechooser.setEnabled(True)
             self.pushButton_fullerase.setEnabled(True)
@@ -103,6 +108,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def dfu(self):
         """Send the dfu command to the board, log message, and close serial."""
+        #
         self.send_command("sys", "dfu")
         self.log("\nEntering DFU...\n")
         self.main.reset_port()
@@ -132,7 +138,9 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if self.selected_file.endswith("dfu"):
             elements = pydfu.read_dfu_file(self.selected_file)
         elif self.selected_file.endswith("hex"):
-            elements = pydfu.read_hex_file(self.selected_file)
+            elements,metadata = pydfu.read_hex_file(self.selected_file,"#")
+            if(metadata):
+                self.check_metadata(metadata)
         else:
             self.log("Not a known firmware file\n")
             return
@@ -141,7 +149,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("Error parsing file\n")
             return
         size = sum([e["size"] for e in elements])
-        self.log(F"Loaded {len(elements)} segments with {size} bytes\n")
+        self.log(F"Loaded {len(elements)} segments with {round(size/1024,2)}kB\n")
         self.elements = elements
 
     def upload_clicked(self):
@@ -158,7 +166,7 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             "close this window or disconnect until done!\n"
         )
         try:
-            pydfu.write_elements(elements, mass_erase, progress=self.progress)
+            pydfu.write_elements(elements, mass_erase, progress=self.progress,logfunc=self.log)
             self.log("Uploaded!\n")
         except pydfu.DFUException as exception:
             self.log(str(exception))
@@ -217,3 +225,21 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.progressBar.setValue(int(offset * 100 / size))
         self.update()
         PyQt6.QtWidgets.QApplication.processEvents()
+
+    def check_metadata(self,metadata):
+        # Split all comment lines into a dict of definename:value or None
+        metadatadict = {line[0]:line[1] if len(line)>1 else None for line in [l.split(" ",1) for l in metadata]} 
+        # print(metadatadict)
+        warnmsg = ""
+        if "HW_TYPE" in metadatadict and self.devinfo["CUR_HW_TYPE"]: # hw name definition of new firmware should match current one
+            if self.devinfo["CUR_HW_TYPE"] != metadatadict["HW_TYPE"]:
+                # Warn hwtype
+                warnmsg += f"Warning: Current firmware type {self.devinfo['CUR_HW_TYPE']} does not match new firmware type {metadatadict['HW_TYPE']}\n"
+        if warnmsg:
+            self.log(warnmsg + "\n")
+            msg = PyQt6.QtWidgets.QMessageBox()
+            msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
+            msg.setWindowTitle("WARNING")
+            msg.setText("Firmware mismatch detected!")
+            msg.setInformativeText(warnmsg)
+            ret = msg.exec()
