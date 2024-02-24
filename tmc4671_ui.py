@@ -7,7 +7,7 @@ import main
 from base_ui import WidgetUI
 from optionsdialog import OptionsDialog,OptionsDialogGroupBox
 
-from PyQt6.QtCharts import QChart,QChartView,QLineSeries,QValueAxis
+from PyQt6.QtCharts import QChart,QChartView,QSplineSeries,QValueAxis
 from base_ui import CommunicationHandler
 
 ext_notice = """External encoder forwards the encoder
@@ -74,7 +74,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         
-        self.lines_Amps = QLineSeries()
+        self.lines_Amps = QSplineSeries()
         self.lines_Amps.setName("Torque A")
 
         self.chart.addSeries(self.lines_Amps)
@@ -82,7 +82,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Amps.attachAxis(self.chartYaxis_Amps)
         self.lines_Amps.attachAxis(self.chartXaxis)
         
-        self.lines_Flux = QLineSeries()
+        self.lines_Flux = QSplineSeries()
         self.lines_Flux.setName("Flux A")
         self.lines_Flux.setOpacity(0.5)
         
@@ -92,7 +92,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Flux.attachAxis(self.chartYaxis_Amps)
         self.lines_Flux.attachAxis(self.chartXaxis)
         
-        self.lines_Temps = QLineSeries()
+        self.lines_Temps = QSplineSeries()
         self.lines_Temps.setName("Temp °C")
         self.lines_Temps.setColor(QColor("orange"))
         self.lines_Temps.setOpacity(0.5)
