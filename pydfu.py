@@ -517,18 +517,22 @@ def list_dfu_devices(*args, **kwargs):
                           entry['page_size'] // 1024))
 
 # TODO page erase and write does not always seem to succeed and may skip data?
-def write_elements(elements, mass_erase_used, progress=None):
+def write_elements(elements, mass_erase_used, progress=None,logfunc=None):
     """Writes the indicated elements into the target memory,
     erasing as needed.
     """
     erased = []
     mem_layout = get_memory_layout(__dev)
+    # last_addr = 0
+    # last_page = 0
     for elem in elements:
         addr = elem['addr']
         size = elem['size']
         data = elem['data']
         elem_size = size
         elem_addr = addr
+        if logfunc:
+            logfunc(f"Writing {round(size/1024,2)}kB at {hex(addr)}\n")
         if progress:
             progress(elem_addr, 0, elem_size)
         while size > 0:
@@ -539,10 +543,13 @@ def write_elements(elements, mass_erase_used, progress=None):
                         page_size = segment['page_size']
                         page_addr = addr & ~(page_size - 1)
                         if addr >= page_addr and addr <= segment['last_addr']:
+                            #last_page = page_addr
                             # We found the page containing the address we want to
                             # write, erase it if not already erased by a different element
                             # Save if page was erased
                             if (page_addr not in erased):
+                                if logfunc:
+                                    logfunc(f"Erasing page... {hex(page_addr)}\n")
                                 page_erase(page_addr)
                                 erased.append(page_addr)
                             #break
@@ -551,12 +558,13 @@ def write_elements(elements, mass_erase_used, progress=None):
                                 write_size = page_addr + page_size - addr
                                 #print("Newwritesize",write_size)
                                 break
-
+            # Pad memory if in same page
             write_memory(addr, data[:write_size], progress,
                          elem_addr, elem_size)
             data = data[write_size:]
             addr += write_size
             size -= write_size
+            #last_addr = addr
             if progress:
                 progress(elem_addr, addr - elem_addr, elem_size)
 
