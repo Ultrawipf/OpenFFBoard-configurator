@@ -2,6 +2,19 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_CN" sourcelanguage="en_US">
 <context>
+    <name>AdvancedFFBTuneUI</name>
+    <message>
+        <location filename="../effects_tuning_ui.py" line="144"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location filename="../effects_tuning_ui.py" line="145"/>
+        <source>Don&apos;t forget to save in flash.</source>
+        <translation>不要忘了保存进闪存。</translation>
+    </message>
+</context>
+<context>
     <name>DFUControl</name>
     <message>
         <location filename="../res/dfu.ui" line="0"/>
@@ -65,6 +78,46 @@
     </message>
 </context>
 <context>
+    <name>DFUModeUI</name>
+    <message>
+        <location filename="../dfu_ui.py" line="70"/>
+        <source>Searching devices...
+</source>
+        <translation>搜索设备中……
+</translation>
+    </message>
+    <message>
+        <location filename="../dfu_ui.py" line="71"/>
+        <source>Make sure the bootloader is detected and drivers installed. Short boot0 to force the bootloader when connecting.
+</source>
+        <translation>请确保检测到bootloader并安装了驱动程序。将boot0引脚短接 再连接USB 来强制进入Bootloader。
+</translation>
+    </message>
+    <message>
+        <location filename="../dfu_ui.py" line="75"/>
+        <source>No DFU device found.
+Retrying..</source>
+        <translation>未找到DFU设备。
+正在重试..</translation>
+    </message>
+    <message>
+        <location filename="../dfu_ui.py" line="86"/>
+        <source>Please disconnect other DFU devices to avoid mistakes
+</source>
+        <translation>请断开其他DFU设备，以避免错误
+</translation>
+    </message>
+    <message>
+        <location filename="../dfu_ui.py" line="96"/>
+        <source>
+Found DFU device. Please select an option
+</source>
+        <translation>
+找到DFU设备，请选择一个选项
+</translation>
+    </message>
+</context>
+<context>
     <name>Dialog</name>
     <message>
         <location filename="../res/about.ui" line="0"/>
@@ -73,13 +126,17 @@
     </message>
     <message>
         <location filename="../res/about.ui" line="0"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Source: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Made with &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt5&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;源代码: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;使用 &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt5&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Source: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Made with &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard 配置器&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;源代码: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;使用 &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt 授权为 GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../res/about.ui" line="0"/>
         <source>Version</source>
         <translation>版本</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Source: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;Made with &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt5&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="vanished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:16pt;&quot;&gt;OpenFFBoard configurator&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;源代码: &lt;a href=&quot;https://github.com/Ultrawipf/OpenFFBoard-configurator&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Github&lt;/span&gt;&lt;/a&gt; (Ultrawipf/OpenFFBoard-configurator)&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;使用 &lt;a href=&quot;https://www.qt.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Qt5&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;Qt licensed as GPLv3&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -266,7 +323,7 @@
     <message>
         <location filename="../res/encoder_tune.ui" line="0"/>
         <source>Encoder settings for graph sim.</source>
-        <translation>用于图形显示的编码器设置</translation>
+        <translation>用于图形模拟显示的编码器设置</translation>
     </message>
     <message>
         <location filename="../res/encoder_tune.ui" line="0"/>
@@ -1451,12 +1508,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../res/tmc4671_ui.ui" line="0"/>
         <source>P Precision (1/16)</source>
-        <translation>P精度（1/16）</translation>
+        <translation>P 精度（1/16）</translation>
     </message>
     <message>
         <location filename="../res/tmc4671_ui.ui" line="0"/>
         <source>I Precision (1/16)</source>
-        <translation>I精确（1/16）</translation>
+        <translation>I 精度（1/16）</translation>
     </message>
     <message>
         <location filename="../res/tmc4671_ui.ui" line="0"/>
@@ -1854,7 +1911,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;Copyright:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Vesc is an OpenSource project from Vedder in GNU GPL 3 available here : www.vesc-project.com&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;No Vesc source code is used in this projects firmware.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished">&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;
 &lt;head&gt;
 &lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;
@@ -1913,90 +1970,90 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>MainUi</name>
     <message>
-        <location filename="../main.py" line="127"/>
+        <location filename="../main.py" line="132"/>
         <source>Serial</source>
         <translation>串口</translation>
     </message>
     <message>
-        <location filename="../main.py" line="266"/>
+        <location filename="../main.py" line="278"/>
         <source>Firmware</source>
         <translation>固件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="331"/>
+        <location filename="../main.py" line="343"/>
         <source>Restore flash dump</source>
         <translation>从文件恢复</translation>
     </message>
     <message>
-        <location filename="../main.py" line="332"/>
+        <location filename="../main.py" line="344"/>
         <source>Uploaded flash dump.
 Please reboot.</source>
         <translation>文件已上传，
 请重启。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="338"/>
+        <location filename="../main.py" line="350"/>
         <source>Can&apos;t restore flash dump</source>
         <translation>无法从文件恢复</translation>
     </message>
     <message>
-        <location filename="../main.py" line="339"/>
+        <location filename="../main.py" line="351"/>
         <source>Please connect board first.</source>
         <translation>请先连接设备。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="573"/>
+        <location filename="../main.py" line="587"/>
         <source>Incompatible GUI</source>
         <translation>不兼容的软件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="574"/>
+        <location filename="../main.py" line="588"/>
         <source>The GUI you are using (</source>
         <translation>你在使用版本(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="576"/>
+        <location filename="../main.py" line="590"/>
         <source>) may be too old for this firmware.
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation>)可能对这个固件来说过低。
 如果遇到问题，请确保固件和软件都是最新的。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="583"/>
+        <location filename="../main.py" line="597"/>
         <source>Incompatible firmware</source>
         <translation>不兼容的固件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="584"/>
+        <location filename="../main.py" line="598"/>
         <source>The firmware you are using (</source>
         <translation>你使用的固件版本(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="586"/>
+        <location filename="../main.py" line="600"/>
         <source>) is too old for this GUI.
 (</source>
         <translation>)对这个软件来说太老了。
 最低需要(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="588"/>
+        <location filename="../main.py" line="602"/>
         <source> required)
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation> )
 如果遇到问题，请确保固件和软件都是最新的。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="599"/>
+        <location filename="../main.py" line="613"/>
         <source>New firmware available</source>
         <translation>有固件更新</translation>
     </message>
     <message>
-        <location filename="../main.py" line="644"/>
+        <location filename="../main.py" line="658"/>
         <source>Format flash and reset?</source>
         <translation>确定格式化固件并重启？</translation>
     </message>
     <message>
-        <location filename="../main.py" line="893"/>
+        <location filename="../main.py" line="913"/>
         <source>Open FFBoard Configurator</source>
         <translation>Open FFBoard调试软件</translation>
     </message>
@@ -2127,6 +2184,14 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
     </message>
 </context>
 <context>
+    <name>ProfilesDialog</name>
+    <message>
+        <location filename="../profile_ui.py" line="534"/>
+        <source>Profiles manager</source>
+        <translation>配置管理器</translation>
+    </message>
+</context>
+<context>
     <name>SerialChooser</name>
     <message>
         <location filename="../serial_ui.py" line="96"/>
@@ -2142,30 +2207,69 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
 <context>
     <name>SystrayWrapper</name>
     <message>
-        <location filename="../main.py" line="682"/>
+        <location filename="../main.py" line="696"/>
         <source>Open FFBoard Configurator</source>
         <translation>Open FFBoard调试软件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="686"/>
+        <location filename="../main.py" line="700"/>
         <source>Open console</source>
         <translation>打开命令行窗口</translation>
     </message>
     <message>
-        <location filename="../main.py" line="692"/>
+        <location filename="../main.py" line="706"/>
         <source>Profiles</source>
         <translation>配置文件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="699"/>
+        <location filename="../main.py" line="713"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
 </context>
 <context>
+    <name>TMC4671Ui</name>
+    <message>
+        <location filename="../tmc4671_ui.py" line="403"/>
+        <source>TMC Version</source>
+        <translation>TMC驱动板 版本</translation>
+    </message>
+    <message>
+        <location filename="../tmc4671_ui.py" line="471"/>
+        <source>Calibration required</source>
+        <translation>需要校准</translation>
+    </message>
+    <message>
+        <location filename="../tmc4671_ui.py" line="472"/>
+        <source>A calibration of ADC offsets and encoder settings is required.</source>
+        <translation>ADC偏移和编码器设置需要进行一次校准。</translation>
+    </message>
+    <message>
+        <location filename="../tmc4671_ui.py" line="473"/>
+        <source>Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.
+
+Certain ADC and encoder settings are stored in flash to accelerate the startup.
+If a new board is used a new calibration must be done.</source>
+        <translation>请正确设置编码器和电机参数，然后打开电源，点击“确定”或“取消”开始一次完整校准，一切设置完成后稍后可手动再启动校准。
+
+某些ADC和编码器设置存储在闪存中，以加快启动速度。
+如果使用新板，必须重新校准。</translation>
+    </message>
+</context>
+<context>
+    <name>TMC_HW_Version_Selector</name>
+    <message>
+        <location filename="../tmc4671_ui.py" line="549"/>
+        <source>Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.
+Several calibration constants and safety features depend on the correct selection.</source>
+        <translation>警告：选择错误的硬件版本可能会导致硬件损坏或人身受伤。
+选择不正确会影响多个校准常数和安全功能。</translation>
+    </message>
+</context>
+<context>
     <name>WrapperStatusBar</name>
     <message>
-        <location filename="../main.py" line="825"/>
+        <location filename="../main.py" line="839"/>
         <source>disconnected</source>
         <translation>已断开</translation>
     </message>
