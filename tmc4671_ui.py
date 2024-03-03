@@ -400,7 +400,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.checkBox_I_Precision.setChecked(False)
    
     def showVersionSelectorPopup(self):
-        selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self,self.axis),self.main)
+        selectorPopup = OptionsDialog(TMC_HW_Version_Selector(self.tr("TMC Version"),self,self.axis),self.main)
         selectorPopup.exec()
         self.send_command("tmc","tmcHwType",self.axis,'!')
         self.send_command("tmc","tmcHwType",self.axis,'?')
@@ -468,9 +468,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if not v and self.isEnabled():
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setWindowTitle("Calibration required")
-            msg.setText("A calibration of ADC offsets and encoder settings is required.")
-            msg.setInformativeText("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done.")
+            msg.setWindowTitle(self.tr("Calibration required"))
+            msg.setText(self.tr("A calibration of ADC offsets and encoder settings is required."))
+            msg.setInformativeText(self.tr("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done."))
             msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
             ret = msg.exec()
             # Warning displayed
@@ -546,7 +546,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
     def initUI(self):
         vbox = QVBoxLayout()
-        self.infolabel = QLabel("Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.\nSeveral calibration constants and safety features depend on the correct selection.")
+        self.infolabel = QLabel(self.tr("Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.\nSeveral calibration constants and safety features depend on the correct selection."))
         vbox.addWidget(self.infolabel)
         self.combobox = QComboBox()
         vbox.addWidget(self.combobox)

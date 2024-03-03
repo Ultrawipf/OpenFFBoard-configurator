@@ -531,7 +531,7 @@ class ProfilesDialog(PyQt6.QtWidgets.QDialog):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(self.profile_manager_ui)
         self.setLayout(self.layout)
-        self.setWindowTitle("Profiles manager")
+        self.setWindowTitle(self.tr("Profiles manager"))
         self.setModal(True)
 
     def set_profiles(self, profiles):

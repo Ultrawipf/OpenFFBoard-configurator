@@ -67,12 +67,12 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if not dfu_devices:
             # No devices found
             if self.first_fail:
-                self.log("Searching devices...\n")
-                self.log(
+                self.log(self.tr("Searching devices...\n"))
+                self.log(self.tr(
                     "Make sure the bootloader is detected and drivers installed. Short boot0 to "
                     "force the bootloader when connecting.\n"
-                )
-                self.log("No DFU device found.\nRetrying..")
+                ))
+                self.log(self.tr("No DFU device found.\nRetrying.."))
                 self.first_fail = False
             else:
                 self.log(".")
@@ -82,18 +82,18 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             else:
                 self.pushButton_DFU.setEnabled(False)
         elif len(dfu_devices) > 1:
-            self.log("Found multiple DFU devices:" + str(dfu_devices) + "\n")
-            self.log("Please disconnect other DFU devices to avoid mistakes\n")
+            self.log(self.tr("Found multiple DFU devices:" + str(dfu_devices) + "\n"))
+            self.log(self.tr("Please disconnect other DFU devices to avoid mistakes\n"))
 
         else:
             self.timer.stop()
             try:
                 pydfu.init()
             except ValueError as e:
-                self.log("\nFound DFU device but could not connect: " + str(e.args[1]) + "\n")
+                self.log(self.tr("\nFound DFU device but could not connect: " + str(e.args[1]) + "\n"))
                 self.timer.start()
                 return
-            self.log("\nFound DFU device. Please select an option\n")
+            self.log(self.tr("\nFound DFU device. Please select an option\n"))
             self.dfu_device = dfu_devices[0]
             #self.getInfo()
             self.groupbox_controls.setEnabled(True)
