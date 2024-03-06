@@ -79,6 +79,7 @@
     </widget>
     <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
+    <addaction name="actionActive_threads"/>
     <addaction name="actionDebug_mode"/>
     <addaction name="actionUpdates"/>
     <addaction name="menuLanguage"/>
@@ -228,6 +229,14 @@
   <action name="actionDefault">
    <property name="text">
     <string>Default</string>
+   </property>
+  </action>
+  <action name="actionActive_threads">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Active threads</string>
    </property>
   </action>
  </widget>

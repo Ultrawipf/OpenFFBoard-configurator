@@ -53,9 +53,10 @@ import effects_monitor
 import effects_graph_ui
 import updater
 import simplemotion_ui
+import activetasks
 
 # This GUIs version
-VERSION = "1.14.2"
+VERSION = "1.14.3"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -109,6 +110,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
         self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
         self.active_class_dlg = activelist.ActiveClassDialog(self)
+        self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
 
@@ -164,6 +166,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         )  # Open active classes list
         self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
         self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
+
+        self.actionActive_threads.triggered.connect(self.active_threads_dlg.show)
 
         self.actionRestore_chip_config.triggered.connect(self.load_flashdump_from_file)
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
@@ -416,6 +420,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.effects_monitor_dlg.setEnabled(False)
         self.effects_graph_dlg.setEnabled(False)
         self.effects_graph_dlg.set_total_output_display(False)
+        self.actionActive_threads.setEnabled(False)
         self.actionEffectsMonitor.setEnabled(False)
         self.actionEffects_forces.setEnabled(False)
         self.axes = 0
@@ -531,6 +536,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.get_value_async(
             "sys", "heapfree", self.wrapper_status_bar.update_ram_used, delete=True
         )
+        def cmdinfo18_cb(x):
+            self.actionActive_threads.setEnabled(x==1)
+            self.active_threads_dlg.set_taskstats_enabled(x==1) 
+        self.get_value_async("sys","cmdinfo",adr=18,conversion=int,callback=cmdinfo18_cb) # Check taskstats
+        self.get_value_async("sys","cmdinfo",adr=23,conversion=int,callback=lambda x:self.active_threads_dlg.set_tasklist_enabled(x==1) ) # Check taskstats
 
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
