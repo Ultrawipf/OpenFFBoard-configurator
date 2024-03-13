@@ -49,7 +49,7 @@
        <widget class="QGroupBox" name="groupBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-          <horstretch>0</horstretch>
+          <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -72,12 +72,18 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Gamepad update rate</string>
+            <string>Rate</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QComboBox" name="comboBox_reportrate">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Changes the speed at which reports are sent. Slower values skip more packets if the system can't keep up.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
