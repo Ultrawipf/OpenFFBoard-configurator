@@ -3,7 +3,7 @@ Signature="$Windows NT$"
 Class=Ports
 ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider=%PRVDR%
-CatalogFile=stmcdc.cat
+;CatalogFile=stmcdc.cat ; No signed cat available for our PID
 DriverVer=04/27/2020,1.0
 
 [SourceDisksNames]
