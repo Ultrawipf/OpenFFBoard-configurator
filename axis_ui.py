@@ -6,8 +6,6 @@ from PyQt6 import uic
 from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall,throttle
 from PyQt6.QtCore import QTimer,QEvent
 import main
-import buttonconf_ui
-import analogconf_ui
 from base_ui import WidgetUI,CommunicationHandler
 from encoderconf_ui import EncoderOptions
 import encoder_tuning_ui
@@ -22,6 +20,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.main = main
         self.adc_to_amps = 0.0
         self.max_power = 0
+        self.cpr = 0
 
         self.driver_classes = {}
         self.driver_ids = []
@@ -36,6 +35,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.axis = unique
 
         self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timer_cb)
         self.encoder_tuning_dlg = encoder_tuning_ui.AdvancedTuningDialog(self, self.axis)
 
         self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
@@ -79,6 +79,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","cmdinfo",self.reductionAvailable,self.axis,int,adr = 17)
 
         self.register_callback("axis","maxspeed",self.speedLimitCb,self.axis,int)
+
+        self.register_callback("axis","pos",self.enc_pos_cb,self.axis,int)
+        self.register_callback("axis","cpr",self.cpr_cb,self.axis,int)
 
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
     
@@ -147,7 +150,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getMotorDriver()
             self.getEncoder()
             #self.updateSliders()
-            self.send_command("axis","invert",self.axis)
+            self.send_commands("axis",["invert","cpr"],self.axis)
             self.send_command("axis","cmdinfo",self.axis,adr=17)
        
         except:
@@ -158,12 +161,24 @@ class AxisUI(WidgetUI,CommunicationHandler):
     # Tab is currently shown
     def showEvent(self,event):
         self.init_ui() # update everything
-        self.timer.start(500)
+        self.timer.start(100)
 
     # Tab is hidden
     def hideEvent(self,event):
         self.encoder_tuning_dlg.close()
         self.timer.stop()
+
+    # Timer interval reached
+    def timer_cb(self):
+        if self.cpr > 0:
+            self.send_command("axis","pos",self.axis)
+        else:
+            # cpr invalid. Request cpr
+            if(self.driver_id == 1 or self.driver_id == 2):
+                self.cpr=0xffff # TODO remove if axis reports right cpr
+            else:
+                self.send_command("axis","cpr",typechar='?')
+        
     
     def setCurrentScaler(self,x):
         if(x):
@@ -238,6 +253,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getMotorDriver()
             self.getEncoder()
             self.main.update_tabs()
+            self.cpr = 0 # Reset cpr
             
     def encoderChanged(self,idx):
         if idx == -1:
@@ -248,6 +264,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getEncoder()
             self.main.update_tabs()
             #self.encoderIndexChanged(id)
+            self.cpr = 0 # Reset cpr
     
     def updateSliders(self):
         if(self.driver_id == 1 or self.driver_id == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
@@ -260,7 +277,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed"] # requests updates
         self.send_commands("axis",commands,self.axis)
-
+        self.cpr = 0 # Reset cpr
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def drvtypecb(self,i):
@@ -322,3 +339,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.comboBox_encoder.setCurrentIndex(idx)
             self.encoderIndexChanged(idx)
         self.get_value_async("axis","enctype",encid_f,self.axis,int,typechar='?')
+
+    def cpr_cb(self,val : int):
+        if val > 0:
+            self.cpr = val
+
+    def enc_pos_cb(self,val : int):
+        if self.cpr > 0:
+            rots = val / self.cpr
+            degs = rots * 360
+            self.doubleSpinBox_curdeg.setValue(degs)
+            self.spinBox_curpos.setValue(int(val))
