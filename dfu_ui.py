@@ -234,12 +234,12 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if "HW_TYPE" in metadatadict and self.devinfo["CUR_HW_TYPE"]: # hw name definition of new firmware should match current one
             if self.devinfo["CUR_HW_TYPE"] != metadatadict["HW_TYPE"]:
                 # Warn hwtype
-                warnmsg += f"Warning: Current firmware type {self.devinfo['CUR_HW_TYPE']} does not match new firmware type {metadatadict['HW_TYPE']}\n"
+                warnmsg += self.tr(f"Warning: Current firmware type {self.devinfo['CUR_HW_TYPE']} does not match new firmware type {metadatadict['HW_TYPE']}\n")
         if warnmsg:
             self.log(warnmsg + "\n")
             msg = PyQt6.QtWidgets.QMessageBox()
             msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
             msg.setWindowTitle("WARNING")
-            msg.setText("Firmware mismatch detected!")
+            msg.setText(self.tr("Firmware mismatch detected!"))
             msg.setInformativeText(warnmsg)
             ret = msg.exec()
