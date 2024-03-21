@@ -117,6 +117,11 @@ Found DFU device. Please select an option
 Знайдено пристрій в режимі DFU. Будь ласка, оберіть опцію
 </translation>
     </message>
+    <message>
+        <location filename="../dfu_ui.py" line="243"/>
+        <source>Firmware mismatch detected!</source>
+        <translation>Виявлено невідповідність прошивки!</translation>
+    </message>
 </context>
 <context>
     <name>Dialog</name>
@@ -578,6 +583,7 @@ p, li { white-space: pre-wrap; }
         <location filename="../res/vesc.ui" line="0"/>
         <location filename="../res/updatebrowser.ui" line="0"/>
         <location filename="../res/tmcdebug.ui" line="0"/>
+        <location filename="../res/axis_ui.ui" line="0"/>
         <location filename="../res/simplemotion.ui" line="0"/>
         <location filename="../res/odrive.ui" line="0"/>
         <source>Info</source>
@@ -1237,6 +1243,22 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../res/axis_ui.ui" line="0"/>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>°</source>
+        <translation>°</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>Pos</source>
+        <translation>Позиц.</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>Raw</source>
+        <translation>Необр.</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
         <source>Mechanical settings (Game independent)</source>
         <translation>Механічні налаштування (не залежать від гри)</translation>
     </message>
@@ -1264,11 +1286,6 @@ p, li { white-space: pre-wrap; }
         <location filename="../res/axis_ui.ui" line="0"/>
         <source>Desktop spring (No FFB)</source>
         <translation>Центрування (не в грі)</translation>
-    </message>
-    <message>
-        <location filename="../res/axis_ui.ui" line="0"/>
-        <source>°</source>
-        <translation>°</translation>
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
@@ -1416,8 +1433,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
-        <source>Gamepad update rate</source>
-        <translation>Част. оновлення геймпаду</translation>
+        <source>Rate</source>
+        <translation>Част.</translation>
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
@@ -1860,94 +1877,98 @@ p, li { white-space: pre-wrap; }
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This only works with the TMC4671. &lt;/p&gt;&lt;p&gt;Set it up first and make sure it initialized.&lt;/p&gt;&lt;p&gt;When a note is played on the first channel it will strongly hold the motor&lt;/p&gt;&lt;p&gt;and modulate the electrical angle in a sine wave.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Працює тільки з TMC4671. &lt;/p&gt;&lt;p&gt;Спочатку налаштуйте і перевірте, чи прошла ініціалізація.&lt;/p&gt;&lt;p&gt;Коли ноти програються на першому каналі -- вони сильно втримують мотор&lt;/p&gt;&lt;p&gt;та модулють електричний кут синусоїдою.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
+    <message>
+        <source>Gamepad update rate</source>
+        <translation type="vanished">Част. оновлення геймпаду</translation>
+    </message>
 </context>
 <context>
     <name>MainUi</name>
     <message>
-        <location filename="../main.py" line="132"/>
+        <location filename="../main.py" line="134"/>
         <source>Serial</source>
         <translation>Серійний</translation>
     </message>
     <message>
-        <location filename="../main.py" line="278"/>
+        <location filename="../main.py" line="282"/>
         <source>Firmware</source>
         <translation>Прошивка</translation>
     </message>
     <message>
-        <location filename="../main.py" line="343"/>
+        <location filename="../main.py" line="347"/>
         <source>Restore flash dump</source>
         <translation>Відновити дамп прошивки</translation>
     </message>
     <message>
-        <location filename="../main.py" line="344"/>
+        <location filename="../main.py" line="348"/>
         <source>Uploaded flash dump.
 Please reboot.</source>
         <translation>Загружено дамп прошивки.
 Будь ласка перезагрузіть.</translation>
     </message>
     <message>
-        <location filename="../main.py" line="350"/>
+        <location filename="../main.py" line="354"/>
         <source>Can&apos;t restore flash dump</source>
         <translation>Неможливо відновити дамп прошивки</translation>
     </message>
     <message>
-        <location filename="../main.py" line="351"/>
+        <location filename="../main.py" line="355"/>
         <source>Please connect board first.</source>
         <translation>Спочатку під&apos;єднайте плату.</translation>
     </message>
     <message>
-        <location filename="../main.py" line="587"/>
+        <location filename="../main.py" line="597"/>
         <source>Incompatible GUI</source>
         <translation>Несумісний конфігуратор</translation>
     </message>
     <message>
-        <location filename="../main.py" line="588"/>
+        <location filename="../main.py" line="598"/>
         <source>The GUI you are using (</source>
         <translation>Версія програми (</translation>
     </message>
     <message>
-        <location filename="../main.py" line="590"/>
+        <location filename="../main.py" line="600"/>
         <source>) may be too old for this firmware.
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation>) може будти надто стара для цієї прошивки.
 Будь ласка, обновіть прошивку та конфігуратор, якщо у вас з&apos;являються помилки.</translation>
     </message>
     <message>
-        <location filename="../main.py" line="597"/>
+        <location filename="../main.py" line="607"/>
         <source>Incompatible firmware</source>
         <translation>Несумісна прошивка</translation>
     </message>
     <message>
-        <location filename="../main.py" line="598"/>
+        <location filename="../main.py" line="608"/>
         <source>The firmware you are using (</source>
         <translation>Ви використовуєте прошивку (</translation>
     </message>
     <message>
-        <location filename="../main.py" line="600"/>
+        <location filename="../main.py" line="610"/>
         <source>) is too old for this GUI.
 (</source>
         <translation>) яка занадто стара для цієї програми.
 (</translation>
     </message>
     <message>
-        <location filename="../main.py" line="602"/>
+        <location filename="../main.py" line="612"/>
         <source> required)
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation> потрібна)
 Будь ласка, обновіть прошивку та конфігуратор, якщо у вас з&apos;являються помилки.</translation>
     </message>
     <message>
-        <location filename="../main.py" line="613"/>
+        <location filename="../main.py" line="623"/>
         <source>New firmware available</source>
         <translation>Доступна нова прошивка</translation>
     </message>
     <message>
-        <location filename="../main.py" line="658"/>
+        <location filename="../main.py" line="668"/>
         <source>Format flash and reset?</source>
         <translation>Відформатувати флеш і скинути?</translation>
     </message>
     <message>
-        <location filename="../main.py" line="913"/>
+        <location filename="../main.py" line="923"/>
         <source>Open FFBoard Configurator</source>
         <translation>Конфігуратор Open FFBoard</translation>
     </message>
@@ -2070,6 +2091,11 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
         <source>Default</source>
         <translation>За замовчуванням</translation>
     </message>
+    <message>
+        <location filename="../res/MainWindow.ui" line="0"/>
+        <source>Active threads</source>
+        <translation>Активні потоки</translation>
+    </message>
 </context>
 <context>
     <name>ProfilesDialog</name>
@@ -2095,22 +2121,22 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
 <context>
     <name>SystrayWrapper</name>
     <message>
-        <location filename="../main.py" line="696"/>
+        <location filename="../main.py" line="706"/>
         <source>Open FFBoard Configurator</source>
         <translation>Open FFBoard конфігуратор</translation>
     </message>
     <message>
-        <location filename="../main.py" line="700"/>
+        <location filename="../main.py" line="710"/>
         <source>Open console</source>
         <translation>Відкрити консоль</translation>
     </message>
     <message>
-        <location filename="../main.py" line="706"/>
+        <location filename="../main.py" line="716"/>
         <source>Profiles</source>
         <translation>Профілі</translation>
     </message>
     <message>
-        <location filename="../main.py" line="713"/>
+        <location filename="../main.py" line="723"/>
         <source>Quit</source>
         <translation>Вийти</translation>
     </message>
@@ -2157,7 +2183,7 @@ Several calibration constants and safety features depend on the correct selectio
 <context>
     <name>WrapperStatusBar</name>
     <message>
-        <location filename="../main.py" line="839"/>
+        <location filename="../main.py" line="849"/>
         <source>disconnected</source>
         <translation>відключений</translation>
     </message>
