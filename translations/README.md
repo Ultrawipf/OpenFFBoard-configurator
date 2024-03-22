@@ -1,8 +1,15 @@
 # SUMMARY
 
-1. `pylupdate6 -ts ./translations/zh_CN.ts .` : py&ui to ts
-2. modify ts file with Qt Linguist or convert into ods for google sheets(`tool_ts_to_ods.py`)
-3. `lrelease ./translations/zh_CN.ts` : ts to qm
+1. `pylupdate6 -ts ./translations/zh_CN.ts .` : update py&ui string into ts file.
+2. there is 2 ways to translation ts file:
+
+   a. with Qt Linguist(recommend for now if you are familiar with github and installed pyqt stuff): run `linguist` and open the ts file, you will get a nice UI for translation and preview.
+
+   or 
+
+   b. convert into ods for google sheets, run`./translations/tool_ts_to_ods.py`(you need modify the filename inside py script) for later translation in google sheets, after translated in google sheets, run `./translations/tool_ods_to_ts.py`(you need modify the filename inside py script) to convert back.
+
+3. After ts file is translated, run `lrelease ./translations/zh_CN.ts` : ts to qm
 4. python will load qm file automatically at startup or manually with `QTranslator.load()`.
 
 ---
