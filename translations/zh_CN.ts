@@ -80,41 +80,46 @@
 <context>
     <name>DFUModeUI</name>
     <message>
-        <location filename="../dfu_ui.py" line="70"/>
+        <location filename="../dfu_ui.py" line="75"/>
         <source>Searching devices...
 </source>
         <translation>搜索设备中……
 </translation>
     </message>
     <message>
-        <location filename="../dfu_ui.py" line="71"/>
+        <location filename="../dfu_ui.py" line="76"/>
         <source>Make sure the bootloader is detected and drivers installed. Short boot0 to force the bootloader when connecting.
 </source>
         <translation>请确保检测到bootloader并安装了驱动程序。将boot0引脚短接 再连接USB 来强制进入Bootloader。
 </translation>
     </message>
     <message>
-        <location filename="../dfu_ui.py" line="75"/>
+        <location filename="../dfu_ui.py" line="80"/>
         <source>No DFU device found.
 Retrying..</source>
         <translation>未找到DFU设备。
 正在重试..</translation>
     </message>
     <message>
-        <location filename="../dfu_ui.py" line="86"/>
+        <location filename="../dfu_ui.py" line="91"/>
         <source>Please disconnect other DFU devices to avoid mistakes
 </source>
         <translation>请断开其他DFU设备，以避免错误
 </translation>
     </message>
     <message>
-        <location filename="../dfu_ui.py" line="96"/>
+        <location filename="../dfu_ui.py" line="101"/>
         <source>
 Found DFU device. Please select an option
 </source>
         <translation>
 找到DFU设备，请选择一个选项
 </translation>
+    </message>
+    <message>
+        <location filename="../dfu_ui.py" line="243"/>
+        <source>Firmware mismatch detected!</source>
+        <translation>检测到固件版本不匹配！</translation>
     </message>
 </context>
 <context>
@@ -562,6 +567,33 @@ p, li { white-space: pre-wrap; }
         <translation>速度限制</translation>
     </message>
     <message>
+        <location filename="../res/vesc.ui" line="0"/>
+        <location filename="../res/updatebrowser.ui" line="0"/>
+        <location filename="../res/tmcdebug.ui" line="0"/>
+        <location filename="../res/simplemotion.ui" line="0"/>
+        <location filename="../res/odrive.ui" line="0"/>
+        <location filename="../res/midi.ui" line="0"/>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>Info</source>
+        <translation>信息</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>°</source>
+        <translation>°</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>Pos</source>
+        <translation>位置</translation>
+    </message>
+    <message>
+        <location filename="../res/axis_ui.ui" line="0"/>
+        <source>Raw</source>
+        <translation>原始值</translation>
+    </message>
+    <message>
         <location filename="../res/axis_ui.ui" line="0"/>
         <source>Mechanical settings (Game independent)</source>
         <translation>机械设定（与游戏无关）</translation>
@@ -590,11 +622,6 @@ p, li { white-space: pre-wrap; }
         <location filename="../res/axis_ui.ui" line="0"/>
         <source>Desktop spring (No FFB)</source>
         <translation>桌面回中力（非游戏内）</translation>
-    </message>
-    <message>
-        <location filename="../res/axis_ui.ui" line="0"/>
-        <source>°</source>
-        <translation>°</translation>
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
@@ -874,8 +901,8 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
-        <source>Gamepad update rate</source>
-        <translation>按钮和轴的更新速度</translation>
+        <source>Rate</source>
+        <translation>频率</translation>
     </message>
     <message>
         <location filename="../res/ffbclass.ui" line="0"/>
@@ -1039,16 +1066,6 @@ p, li { white-space: pre-wrap; }
         <location filename="../res/midi.ui" line="0"/>
         <source>Amplitude</source>
         <translation>振幅</translation>
-    </message>
-    <message>
-        <location filename="../res/vesc.ui" line="0"/>
-        <location filename="../res/updatebrowser.ui" line="0"/>
-        <location filename="../res/tmcdebug.ui" line="0"/>
-        <location filename="../res/simplemotion.ui" line="0"/>
-        <location filename="../res/odrive.ui" line="0"/>
-        <location filename="../res/midi.ui" line="0"/>
-        <source>Info</source>
-        <translation>信息</translation>
     </message>
     <message>
         <location filename="../res/midi.ui" line="0"/>
@@ -1963,6 +1980,10 @@ p, li { white-space: pre-wrap; }
 &lt;/html&gt;</translation>
     </message>
     <message>
+        <source>Gamepad update rate</source>
+        <translation type="vanished">按钮和轴的更新速度</translation>
+    </message>
+    <message>
         <source>Hz</source>
         <translation type="vanished">Hz</translation>
     </message>
@@ -1970,90 +1991,90 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>MainUi</name>
     <message>
-        <location filename="../main.py" line="132"/>
+        <location filename="../main.py" line="134"/>
         <source>Serial</source>
         <translation>串口</translation>
     </message>
     <message>
-        <location filename="../main.py" line="278"/>
+        <location filename="../main.py" line="282"/>
         <source>Firmware</source>
         <translation>固件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="343"/>
+        <location filename="../main.py" line="347"/>
         <source>Restore flash dump</source>
         <translation>从文件恢复</translation>
     </message>
     <message>
-        <location filename="../main.py" line="344"/>
+        <location filename="../main.py" line="348"/>
         <source>Uploaded flash dump.
 Please reboot.</source>
         <translation>文件已上传，
 请重启。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="350"/>
+        <location filename="../main.py" line="354"/>
         <source>Can&apos;t restore flash dump</source>
         <translation>无法从文件恢复</translation>
     </message>
     <message>
-        <location filename="../main.py" line="351"/>
+        <location filename="../main.py" line="355"/>
         <source>Please connect board first.</source>
         <translation>请先连接设备。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="587"/>
+        <location filename="../main.py" line="597"/>
         <source>Incompatible GUI</source>
         <translation>不兼容的软件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="588"/>
+        <location filename="../main.py" line="598"/>
         <source>The GUI you are using (</source>
         <translation>你在使用版本(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="590"/>
+        <location filename="../main.py" line="600"/>
         <source>) may be too old for this firmware.
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation>)可能对这个固件来说过低。
 如果遇到问题，请确保固件和软件都是最新的。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="597"/>
+        <location filename="../main.py" line="607"/>
         <source>Incompatible firmware</source>
         <translation>不兼容的固件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="598"/>
+        <location filename="../main.py" line="608"/>
         <source>The firmware you are using (</source>
         <translation>你使用的固件版本(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="600"/>
+        <location filename="../main.py" line="610"/>
         <source>) is too old for this GUI.
 (</source>
         <translation>)对这个软件来说太老了。
 最低需要(</translation>
     </message>
     <message>
-        <location filename="../main.py" line="602"/>
+        <location filename="../main.py" line="612"/>
         <source> required)
 Please make sure both firmware and GUI are up to date if you encounter errors.</source>
         <translation> )
 如果遇到问题，请确保固件和软件都是最新的。</translation>
     </message>
     <message>
-        <location filename="../main.py" line="613"/>
+        <location filename="../main.py" line="623"/>
         <source>New firmware available</source>
         <translation>有固件更新</translation>
     </message>
     <message>
-        <location filename="../main.py" line="658"/>
+        <location filename="../main.py" line="668"/>
         <source>Format flash and reset?</source>
         <translation>确定格式化固件并重启？</translation>
     </message>
     <message>
-        <location filename="../main.py" line="913"/>
+        <location filename="../main.py" line="923"/>
         <source>Open FFBoard Configurator</source>
         <translation>Open FFBoard调试软件</translation>
     </message>
@@ -2182,6 +2203,11 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
         <source>Default</source>
         <translation>默认</translation>
     </message>
+    <message>
+        <location filename="../res/MainWindow.ui" line="0"/>
+        <source>Active threads</source>
+        <translation>活跃线程</translation>
+    </message>
 </context>
 <context>
     <name>ProfilesDialog</name>
@@ -2207,22 +2233,22 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
 <context>
     <name>SystrayWrapper</name>
     <message>
-        <location filename="../main.py" line="696"/>
+        <location filename="../main.py" line="706"/>
         <source>Open FFBoard Configurator</source>
         <translation>Open FFBoard调试软件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="700"/>
+        <location filename="../main.py" line="710"/>
         <source>Open console</source>
         <translation>打开命令行窗口</translation>
     </message>
     <message>
-        <location filename="../main.py" line="706"/>
+        <location filename="../main.py" line="716"/>
         <source>Profiles</source>
         <translation>配置文件</translation>
     </message>
     <message>
-        <location filename="../main.py" line="713"/>
+        <location filename="../main.py" line="723"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
@@ -2230,22 +2256,22 @@ Please make sure both firmware and GUI are up to date if you encounter errors.</
 <context>
     <name>TMC4671Ui</name>
     <message>
-        <location filename="../tmc4671_ui.py" line="403"/>
+        <location filename="../tmc4671_ui.py" line="408"/>
         <source>TMC Version</source>
         <translation>TMC驱动板 版本</translation>
     </message>
     <message>
-        <location filename="../tmc4671_ui.py" line="471"/>
+        <location filename="../tmc4671_ui.py" line="476"/>
         <source>Calibration required</source>
         <translation>需要校准</translation>
     </message>
     <message>
-        <location filename="../tmc4671_ui.py" line="472"/>
+        <location filename="../tmc4671_ui.py" line="477"/>
         <source>A calibration of ADC offsets and encoder settings is required.</source>
         <translation>ADC偏移和编码器设置需要进行一次校准。</translation>
     </message>
     <message>
-        <location filename="../tmc4671_ui.py" line="473"/>
+        <location filename="../tmc4671_ui.py" line="478"/>
         <source>Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.
 
 Certain ADC and encoder settings are stored in flash to accelerate the startup.
@@ -2259,7 +2285,7 @@ If a new board is used a new calibration must be done.</source>
 <context>
     <name>TMC_HW_Version_Selector</name>
     <message>
-        <location filename="../tmc4671_ui.py" line="549"/>
+        <location filename="../tmc4671_ui.py" line="554"/>
         <source>Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.
 Several calibration constants and safety features depend on the correct selection.</source>
         <translation>警告：选择错误的硬件版本可能会导致硬件损坏或人身受伤。
@@ -2269,7 +2295,7 @@ Several calibration constants and safety features depend on the correct selectio
 <context>
     <name>WrapperStatusBar</name>
     <message>
-        <location filename="../main.py" line="839"/>
+        <location filename="../main.py" line="849"/>
         <source>disconnected</source>
         <translation>已断开</translation>
     </message>
