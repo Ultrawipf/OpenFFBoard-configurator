@@ -112,7 +112,8 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         ]
         self.lines = []
         for i in range(12):
-            q_line = PyQt6.QtCharts.QSplineSeries()
+            q_line = PyQt6.QtCharts.QLineSeries()
+            q_line.setUseOpenGL(True)
             q_line.setColor(effect_color[i])
             q_line.setName(effect_name[i])
             self.lines.append(q_line)
@@ -131,7 +132,8 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.chart.addAxis(
             self.chart_yaxis_output, PyQt6.QtCore.Qt.AlignmentFlag.AlignRight
             )
-            q_line = PyQt6.QtCharts.QSplineSeries()
+            q_line = PyQt6.QtCharts.QLineSeries()
+            q_line.setUseOpenGL(True)
             q_line.setColor(PyQt6.QtGui.QColorConstants.Svg.coral)
             q_line.setName("Output torque (Y2)")
             self.totaltorqe_line = q_line
