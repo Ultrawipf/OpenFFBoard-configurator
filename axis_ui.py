@@ -174,10 +174,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.send_command("axis","pos",self.axis)
         else:
             # cpr invalid. Request cpr
-            if(self.driver_id == 1 or self.driver_id == 2):
-                self.cpr=0xffff # TODO remove if axis reports right cpr
-            else:
-                self.send_command("axis","cpr",typechar='?')
+            self.send_command("axis","cpr",typechar='?')
         
     
     def setCurrentScaler(self,x):
