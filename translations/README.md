@@ -7,7 +7,7 @@
 
    or 
 
-   b. convert into ods for google sheets, run`./translations/tool_ts_to_ods.py`(you need modify the filename inside py script) for later translation in google sheets, after translated in google sheets, run `./translations/tool_ods_to_ts.py`(you need modify the filename inside py script) to convert back.
+   b. convert into ods for google sheets, run`./translations/tool_ts_to_ods.py zh_CN.ts`(you need to provide the filename as a command line argument) for later translation in google sheets. After translating in google sheets, run `./translations/tool_ods_to_ts.py zh_CN.ods`(you need to provide the filename as a command line argument) to convert back. You will need pyexcel_ods installed (run `pip install pyexcel_ods`)
 
 3. After ts file is translated, run `lrelease ./translations/zh_CN.ts` : ts to qm
 4. python will load qm file automatically at startup or manually with `QTranslator.load()`.
