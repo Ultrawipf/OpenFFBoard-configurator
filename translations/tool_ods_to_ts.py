@@ -1,9 +1,25 @@
+'''
+Please install:
+pip install pyexcel_ods
+and provide file path as a command line argument of the ts file you want to convert.
+Filename should be <locale>.ods (example 'zh_CN.ods')
+'''
+
 import xml.etree.ElementTree as ET
 import pyexcel_ods
 from io import BytesIO
+import sys
 
-# Specify the path to your ODS file
-ods_file = "zh_CN.ods"
+#Check if argument is provided and take is as a file name or throw an error and exit
+if len(sys.argv) > 1:
+    ods_file = sys.argv[1]
+    print(f"Converting {ods_file}")
+else:
+    print('Error: No file name provided. Please provide a file as a command line argument.')
+    exit(1)
+
+#Set language to file name
+lang = ods_file[-9:-4]
 
 # Load the ODS file using pyexcel-ods
 ods_data = pyexcel_ods.get_data(ods_file)
@@ -12,7 +28,7 @@ data = ods_data["Sheet 1"]
 # Create an ElementTree for the .ts structure
 root = ET.Element("TS")
 root.set("version", "2.1")
-root.set("language", "zh_CN")
+root.set("language", lang)
 root.set("sourcelanguage", "en_US")
 
 current_context = None

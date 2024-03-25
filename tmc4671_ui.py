@@ -76,6 +76,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.lines_Amps = QLineSeries()
         self.lines_Amps.setName("Torque A")
+        self.lines_Amps.setUseOpenGL(True)
 
         self.chart.addSeries(self.lines_Amps)
         self.lines_Amps.setColor(QColor("cornflowerblue"))
@@ -85,6 +86,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Flux = QLineSeries()
         self.lines_Flux.setName("Flux A")
         self.lines_Flux.setOpacity(0.5)
+        self.lines_Flux.setUseOpenGL(True)
         
         self.chart.addSeries(self.lines_Flux)
         self.lines_Flux.setColor(QColor("limegreen"))
@@ -96,6 +98,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Temps.setName("Temp °C")
         self.lines_Temps.setColor(QColor("orange"))
         self.lines_Temps.setOpacity(0.5)
+        self.lines_Temps.setUseOpenGL(True)
         self.chart.addAxis(self.chartYaxis_Temps,Qt.AlignmentFlag.AlignRight)
         self.chart.addSeries(self.lines_Temps)
         self.lines_Temps.attachAxis(self.chartYaxis_Temps)
@@ -199,10 +202,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.spinBox_poles.setEnabled(True)
             self.doubleSpinBox_fluxoffset.setEnabled(True)
             self.checkBox_fluxdissipate.setEnabled(True)
+            self.pushButton_autotunepid.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
             self.doubleSpinBox_fluxoffset.setEnabled(False)
             self.checkBox_fluxdissipate.setEnabled(False)
+            self.pushButton_autotunepid.setEnabled(False)
 
         if(data == 3):
             self.checkBox_svpwm.setEnabled(True)
@@ -376,12 +381,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         rescale = (16 if checked else 1/16)
         if(button == self.checkBox_I_Precision):
             if(self.lastPrecI != checked):
-                self.spinBox_ti.setValue(self.spinBox_ti.value() * rescale)
-                self.spinBox_fi.setValue(self.spinBox_fi.value() * rescale)
+                self.spinBox_ti.setValue(int(self.spinBox_ti.value() * rescale))
+                self.spinBox_fi.setValue(int(self.spinBox_fi.value() * rescale))
         if(button == self.checkBox_P_Precision):
             if(self.lastPrecP != checked):
-                self.spinBox_tp.setValue(self.spinBox_tp.value() * rescale)
-                self.spinBox_fp.setValue(self.spinBox_fp.value() * rescale)
+                self.spinBox_tp.setValue(int(self.spinBox_tp.value() * rescale))
+                self.spinBox_fp.setValue(int(self.spinBox_fp.value() * rescale))
 
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
         self.lastPrecI = self.checkBox_I_Precision.isChecked()
@@ -400,7 +405,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.checkBox_I_Precision.setChecked(False)
    
     def showVersionSelectorPopup(self):
-        selectorPopup = OptionsDialog(TMC_HW_Version_Selector("TMC Version",self,self.axis),self.main)
+        selectorPopup = OptionsDialog(TMC_HW_Version_Selector(self.tr("TMC Version"),self,self.axis),self.main)
         selectorPopup.exec()
         self.send_command("tmc","tmcHwType",self.axis,'!')
         self.send_command("tmc","tmcHwType",self.axis,'?')
@@ -468,9 +473,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         if not v and self.isEnabled():
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setWindowTitle("Calibration required")
-            msg.setText("A calibration of ADC offsets and encoder settings is required.")
-            msg.setInformativeText("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done.")
+            msg.setWindowTitle(self.tr("Calibration required"))
+            msg.setText(self.tr("A calibration of ADC offsets and encoder settings is required."))
+            msg.setInformativeText(self.tr("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done."))
             msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
             ret = msg.exec()
             # Warning displayed
@@ -535,9 +540,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
 class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
-    def __init__(self,name,main,instance):
-        self.main = main
-        OptionsDialogGroupBox.__init__(self,name,main)
+    def __init__(self,name,parent : TMC4671Ui,instance):
+        self.parent = parent
+        OptionsDialogGroupBox.__init__(self,name,parent)
         CommunicationHandler.__init__(self)
         self.typeBox = QGroupBox("Hardware Version")
         self.typeBoxLayout = QVBoxLayout()
@@ -546,7 +551,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
     def initUI(self):
         vbox = QVBoxLayout()
-        self.infolabel = QLabel("Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.\nSeveral calibration constants and safety features depend on the correct selection.")
+        self.infolabel = QLabel(self.tr("Warning: Selecting the incorrect hardware version can lead to damage to the hardware or injury.\nSeveral calibration constants and safety features depend on the correct selection."))
         vbox.addWidget(self.infolabel)
         self.combobox = QComboBox()
         vbox.addWidget(self.combobox)
@@ -557,9 +562,8 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
 
 
     def apply(self):
-        self.send_value("tmc","tmcHwType",self.combobox.currentIndex(),instance=self.axis)
-        # change scaler
-        self.send_command("tmc","iScale",self.axis) # request scale update
+        self.send_value("tmc","tmcHwType",self.combobox.currentData(),instance=self.axis) # current data
+        self.parent.init_ui() # Update TMC UI in case capabilities have changed
     
     def typeCb(self,entries):
         #print("Reply",entries)
@@ -567,7 +571,7 @@ class TMC_HW_Version_Selector(OptionsDialogGroupBox,CommunicationHandler):
         entriesList = [m.split(":") for m in entriesList if m]
         for m in entriesList:
             self.combobox.addItem(m[1],m[0])
-        self.get_value_async("tmc","tmcHwType",self.combobox.setCurrentIndex,self.axis,int)
+        self.get_value_async("tmc","tmcHwType",lambda val : self.combobox.setCurrentIndex(self.combobox.findData(val)),self.axis,int)
 
     def readValues(self):
         self.get_value_async("tmc","tmcHwType",self.typeCb,self.axis,str,typechar='!')

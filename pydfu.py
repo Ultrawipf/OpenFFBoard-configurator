@@ -19,7 +19,7 @@ import usb.util
 import zlib
 import os
 import time
-from intelhex import IntelHex # for hex support
+from intelhex import IntelHex,_EndOfFile # for hex support
 
 # VID/PID
 __VID = 0x0483
@@ -69,9 +69,9 @@ _DFU_DESCRIPTOR_TYPE                 = 0x21
 # USB device handle
 __dev = None
 
-__verbose = None
+__verbose = False
 
-__chunksize = 512
+__chunksize = 1024
 
 # USB DFU interface
 __DFU_INTERFACE = 0
@@ -132,7 +132,7 @@ def clr_status():
 def get_status():
     """Get the status of the last operation."""
     stat = __dev.ctrl_transfer(0xA1, __DFU_GETSTATUS, 0, __DFU_INTERFACE, 6, 20000)
-    #print ("DFU Status: ", __DFU_STATUS[stat[4]])
+    # print ("DFU Status: ", __DFU_STATUS[stat[4]])
     return stat[4]
 
 
@@ -174,6 +174,7 @@ def set_address(addr):
     # Send DNLOAD with first byte=0x21 and page address
     buf = struct.pack("<BI", 0x21, addr)
     __dev.ctrl_transfer(0x21, __DFU_DNLOAD, 0, __DFU_INTERFACE, buf, __TIMEOUT)
+    #print("Setting addr",hex(addr))
 
     # Execute last command
     if get_status() != __DFU_STATE_DFU_DOWNLOAD_BUSY:
@@ -216,11 +217,11 @@ def write_memory(addr, buf, progress=None, progress_addr=0, progress_size=0):
     xfer_base = addr
 
     while xfer_bytes < xfer_total:
-        if __verbose and xfer_count % 512 == 0:
+        if __verbose:
             print ("Addr 0x%x %dKBs/%dKBs..." % (xfer_base + xfer_bytes,
                                                  xfer_bytes // 1024,
                                                  xfer_total // 1024))
-        if progress and xfer_count % 32 == 0:
+        if progress:
             progress(progress_addr, xfer_base + xfer_bytes - progress_addr,
                      progress_size)
 
@@ -229,6 +230,7 @@ def write_memory(addr, buf, progress=None, progress_addr=0, progress_size=0):
 
         # Send DNLOAD with fw data (1024,64?)
         chunk = min(__chunksize, xfer_total-xfer_bytes)
+        # print("Chunksize",chunk)
         __dev.ctrl_transfer(0x21, __DFU_DNLOAD, 2, __DFU_INTERFACE,
                             buf[xfer_bytes:xfer_bytes + chunk], __TIMEOUT)
 
@@ -407,14 +409,25 @@ def read_dfu_file(filename):
 
     return elements
 
-def read_hex_file(filename):
+def read_hex_file(filename,return_metadata_marker=None):
     """
     -Richter 2021
     Reads a hex file and generates flashable elements like with a dfu file
     """
     #print("Loading hex file: {}".format(filename))
     ih = IntelHex()
-    ih.loadhex(filename)
+    otherlines = []
+    with open(filename,"r") as f:
+        eof = False
+        for line in f.readlines():
+            if line.startswith(":") and not eof: # Intelhex only accepts valid lines starting with : so skip lines that start differently
+                try:
+                    ih._decode_record(line)
+                except _EndOfFile:
+                    eof = True
+            elif line.startswith(return_metadata_marker):
+                otherlines.append(line.strip(f" {return_metadata_marker}\n\r\t"))
+    #ih.loadhex(filename)
     segments = ih.segments()
     #print("Segments:",segments)
     elements = []
@@ -423,7 +436,10 @@ def read_hex_file(filename):
         dat = [ih[i] for i in range(segment[0],segment[1])]
         elem = {"addr":segment[0],"size":size,"num":segId,"data":dat}
         elements.append(elem)
-    return elements
+    if return_metadata_marker:
+        return elements,otherlines
+    else:
+        return elements
 
 class FilterDFU(object):
     """Class for filtering USB devices to identify devices which are in DFU
@@ -478,6 +494,8 @@ def get_memory_layout(device):
         result.append(named((addr, last_addr, size, num_pages, page_size),
                       "addr last_addr size num_pages page_size"))
         addr += size
+    if __verbose:
+        print("Mem layout:",result)
     return result
 
 
@@ -498,41 +516,55 @@ def list_dfu_devices(*args, **kwargs):
                   .format(entry['addr'], entry['num_pages'],
                           entry['page_size'] // 1024))
 
-
-def write_elements(elements, mass_erase_used, progress=None):
+# TODO page erase and write does not always seem to succeed and may skip data?
+def write_elements(elements, mass_erase_used, progress=None,logfunc=None):
     """Writes the indicated elements into the target memory,
     erasing as needed.
     """
     erased = []
     mem_layout = get_memory_layout(__dev)
+    # last_addr = 0
+    # last_page = 0
     for elem in elements:
         addr = elem['addr']
         size = elem['size']
         data = elem['data']
         elem_size = size
         elem_addr = addr
+        if logfunc:
+            logfunc(f"Writing {round(size/1024,2)}kB at {hex(addr)}\n")
         if progress:
             progress(elem_addr, 0, elem_size)
         while size > 0:
             write_size = size
             if not mass_erase_used:
                 for segment in mem_layout:
-                    page_size = segment['page_size']
-                    page_addr = addr & ~(page_size - 1)
-                    if addr >= segment['addr'] and addr <= segment['last_addr'] and (page_addr not in erased):
-                        # We found the page containing the address we want to
-                        # write, erase it if not already erased by a different element
-                        # Save if page was erased
-                        if addr + write_size > page_addr + page_size:
-                            write_size = page_addr + page_size - addr
-                        page_erase(page_addr)
-                        erased.append(page_addr)
-                        break
+                    for page_addr in [segment['addr'] + (segment['page_size']*p) for p in range(segment["num_pages"])]:# segments. actually erase all used pages in a segment!
+                        page_size = segment['page_size']
+                        page_addr = addr & ~(page_size - 1)
+                        if addr >= page_addr and addr <= segment['last_addr']:
+                            #last_page = page_addr
+                            # We found the page containing the address we want to
+                            # write, erase it if not already erased by a different element
+                            # Save if page was erased
+                            if (page_addr not in erased):
+                                if logfunc:
+                                    logfunc(f"Erasing page... {hex(page_addr)}\n")
+                                page_erase(page_addr)
+                                erased.append(page_addr)
+                            #break
+                            #print(f"Addr {addr}, Writesize {write_size}, page_addr {page_addr},page_size {page_size} ")
+                            if addr + write_size > page_addr + page_size:
+                                write_size = page_addr + page_size - addr
+                                #print("Newwritesize",write_size)
+                                break
+            # Pad memory if in same page
             write_memory(addr, data[:write_size], progress,
                          elem_addr, elem_size)
             data = data[write_size:]
             addr += write_size
             size -= write_size
+            #last_addr = addr
             if progress:
                 progress(elem_addr, addr - elem_addr, elem_size)
 

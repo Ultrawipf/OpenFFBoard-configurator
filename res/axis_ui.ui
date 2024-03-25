@@ -424,6 +424,88 @@
         </layout>
        </widget>
       </item>
+      <item row="1" column="4">
+       <widget class="QGroupBox" name="groupBox_6">
+        <property name="title">
+         <string>Info</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_8">
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_curdeg">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
+           <property name="prefix">
+            <string/>
+           </property>
+           <property name="suffix">
+            <string>°</string>
+           </property>
+           <property name="minimum">
+            <double>-9223372036854775808.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>9223372036854775808.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Pos</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinBox_curpos">
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="keyboardTracking">
+            <bool>false</bool>
+           </property>
+           <property name="minimum">
+            <number>-1999999999</number>
+           </property>
+           <property name="maximum">
+            <number>1999999999</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Raw</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

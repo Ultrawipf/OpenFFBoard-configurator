@@ -1,13 +1,21 @@
 '''
 Please install:
 pip install pyexcel_ods
-and change the ts_file variable to the path of the ts file you want to convert.
+and provide file path as a command line argument of the ts file you want to convert.
 '''
-ts_file = "zh_CN.ts"
 
 import xml.etree.ElementTree as ET
 import pyexcel_ods
 from io import BytesIO
+import sys
+
+#Check if argument is provided and take is as a file name or throw an error and exit
+if len(sys.argv) > 1:
+    ts_file = sys.argv[1]
+    print(f"Converting {ts_file}")
+else:
+    print('Error: No file name provided. Please provide a file as a command line argument.')
+    exit(1)
 
 # Load the .ts file using ElementTree
 tree = ET.parse(ts_file)
