@@ -214,7 +214,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         else:
             self.checkBox_svpwm.setEnabled(False)
 
-    def extEncoderChanged(self,val):
+    def extEncoderChanged(self,idx):
+        val = self.comboBox_mtype.currentData()
         self.checkBox_invertForce.setEnabled(val)
         if not val:
             self.checkBox_invertForce.setChecked(False)
@@ -339,7 +340,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.send_commands("sys",["vint","vext"])
 
     def submitMotor(self):
-        mtype = self.comboBox_mtype.currentIndex()
+        mtype = self.comboBox_mtype.currentData()
         self.send_value("tmc","mtype",val=mtype,instance=self.axis)
 
         poles = self.spinBox_poles.value()
@@ -347,7 +348,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.send_value("tmc","cpr",val=self.spinBox_cpr.value(),instance=self.axis)
 
-        enc = self.comboBox_enc.currentIndex()
+        enc = self.comboBox_enc.currentData()
         self.send_value("tmc","encsrc",val=enc,instance=self.axis)
 
         self.send_value("tmc","abnindex",val = 1 if self.checkBox_abnIndex.isChecked() else 0,instance=self.axis)
