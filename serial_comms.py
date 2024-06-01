@@ -122,7 +122,7 @@ class SerialComms(QObject):
 
         ## send buffer commands to the board if the port is opened
         cmd_not_sent = []
-        self.logger.debug(F"Send %d lines to uart, commm is %d", len(self.send_buffer), self.serial.isOpen())
+        self.logger.debug(F"Send %d lines to uart, commm is %d %s", len(self.send_buffer), self.serial.isOpen(),self.send_buffer)
         for cmdraw in self.send_buffer:
             if self.serial.isOpen():
                 # if command can't be send, we reput them in the buffer for a retry
