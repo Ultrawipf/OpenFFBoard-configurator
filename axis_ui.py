@@ -174,7 +174,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.send_command("axis","pos",self.axis)
         else:
             # cpr invalid. Request cpr
-            self.send_command("axis","cpr",typechar='?')
+            self.send_command("axis","cpr",typechar='?',instance=self.axis)
         
     
     def setCurrentScaler(self,x):
