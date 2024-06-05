@@ -20,7 +20,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.main = main
         self.adc_to_amps = 0.0
         self.max_power = 0
-        self.cpr = 0
+        self.cpr = -1
 
         self.driver_classes = {}
         self.driver_ids = []
@@ -170,9 +170,10 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     # Timer interval reached
     def timer_cb(self):
+
         if self.cpr > 0:
             self.send_command("axis","pos",self.axis)
-        else:
+        elif self.cpr == -1:
             # cpr invalid. Request cpr
             self.send_command("axis","cpr",typechar='?',instance=self.axis)
         
@@ -250,7 +251,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getMotorDriver()
             self.getEncoder()
             self.main.update_tabs()
-            self.cpr = 0 # Reset cpr
+            self.cpr = -1 # Reset cpr
             
     def encoderChanged(self,idx):
         if idx == -1:
@@ -261,7 +262,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getEncoder()
             self.main.update_tabs()
             #self.encoderIndexChanged(id)
-            self.cpr = 0 # Reset cpr
+            self.cpr = -1 # Reset cpr
     
     def updateSliders(self):
         if(self.driver_id == 1 or self.driver_id == 2): # Reduce max range for TMC (ADC saturation margin. Recommended to keep <25000)
@@ -274,7 +275,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed"] # requests updates
         self.send_commands("axis",commands,self.axis)
-        self.cpr = 0 # Reset cpr
+        self.cpr = -1 # Reset cpr
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
     def drvtypecb(self,i):
