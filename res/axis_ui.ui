@@ -306,6 +306,12 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="minimum">
                <number>1</number>
               </property>
@@ -334,6 +340,12 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
               </property>
               <property name="minimum">
                <number>1</number>
@@ -556,6 +568,12 @@
       </item>
       <item row="0" column="2">
        <widget class="QSpinBox" name="spinBox_range">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -575,6 +593,12 @@
       </item>
       <item row="2" column="2">
        <widget class="QSpinBox" name="spinBox_damper">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -585,6 +609,12 @@
       </item>
       <item row="1" column="2">
        <widget class="QSpinBox" name="spinBox_idlespring">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -725,6 +755,12 @@
       </item>
       <item row="2" column="2">
        <widget class="QSpinBox" name="spinBox_esgain">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
