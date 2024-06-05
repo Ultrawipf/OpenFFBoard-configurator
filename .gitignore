@@ -2,3 +2,4 @@ __pycache__/*
 .vscode/*
 .qt_for_python/*
 profiles.json*
+/.venv
