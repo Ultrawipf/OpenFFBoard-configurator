@@ -38,6 +38,7 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         self.register_callback("odrv","vbus",self.voltageCb,self.prefix,int)
         self.register_callback("odrv","errors",lambda v : self.showErrors(v),self.prefix,int)
         self.register_callback("odrv","state",lambda v : self.stateCb(v),self.prefix,int)
+        self.register_callback("odrv","storepos",lambda v : self.checkBox_storeencoffset.setChecked(v != 0),self.prefix,int)
 
         self.init_ui()
         
@@ -51,7 +52,7 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         self.timer.stop()
 
     def init_ui(self):
-        commands = ["canid","canspd","maxtorque"]
+        commands = ["canid","canspd","maxtorque","storepos"]
         self.send_commands("odrv",commands,self.prefix)
 
        
@@ -109,7 +110,8 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         #self.send_value("odrv","canspd",spdPreset,instance=self.prefix)
         self.send_value("odrv","canid",canId,instance=self.prefix)
         self.send_value("odrv","maxtorque",torqueScaler,instance=self.prefix)
-
+        self.send_value("odrv","storepos",1 if self.checkBox_storeencoffset.isChecked() else 0,instance=self.prefix)
+        
 
         self.init_ui() # Update UI
 
