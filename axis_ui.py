@@ -47,6 +47,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_fxratio.valueChanged.connect(self.fxratio_changed)
         self.horizontalSlider_idle.valueChanged.connect(lambda val : self.send_value("axis","idlespring",(val),instance=self.axis))
         self.horizontalSlider_damper.valueChanged.connect(lambda val : self.send_value("axis","axisdamper",val,instance=self.axis))
+        self.horizontalSlider_friction.valueChanged.connect(lambda val : self.send_value("axis","axisfriction",val,instance=self.axis))
+        self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.send_value("axis","axisinertia",val,instance=self.axis))
         self.pushButton_center.clicked.connect(lambda : self.send_command("axis","zeroenc",instance=self.axis))
         
         #self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
@@ -82,6 +84,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("axis","pos",self.enc_pos_cb,self.axis,int)
         self.register_callback("axis","cpr",self.cpr_cb,self.axis,int)
+
+        self.register_callback("axis","axisfriction",lambda val : self.updateFriction(val),self.axis,int)
+        self.register_callback("axis","axisinertia",lambda val : self.updateInertia(val),self.axis,int)
 
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
     
@@ -144,6 +149,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def updateRange(self,val):
         qtBlockAndCall(self.spinBox_range,self.spinBox_range.setValue,val)
         qtBlockAndCall(self.horizontalSlider_degrees,self.horizontalSlider_degrees.setValue,val)
+
+    def updateFriction(self,val):
+        qtBlockAndCall(self.spinBox_friction,self.spinBox_friction.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_friction,self.horizontalSlider_friction.setValue,val)
+
+    def updateInertia(self,val):
+        qtBlockAndCall(self.spinBox_inertia,self.spinBox_inertia.setValue,val)
+        qtBlockAndCall(self.horizontalSlider_inertia,self.horizontalSlider_inertia.setValue,val)
 
     def init_ui(self):
         try:
@@ -273,7 +286,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.max_power = 0x7fff
             self.horizontalSlider_power.setMaximum(self.max_power)
 
-        commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed"] # requests updates
+        commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed","axisfriction","axisinertia"] # requests updates
         self.send_commands("axis",commands,self.axis)
         self.cpr = -1 # Reset cpr
         self.updatePowerLabel(self.horizontalSlider_power.value())
