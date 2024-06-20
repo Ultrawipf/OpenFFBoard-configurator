@@ -56,11 +56,11 @@ import simplemotion_ui
 import activetasks
 
 # This GUIs version
-VERSION = "1.14.4"
+VERSION = "1.15.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.14.2"
+MIN_FW = "1.15.0"
 
 DEFAULTLANG = "en_US"
 
