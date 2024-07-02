@@ -56,11 +56,11 @@ import simplemotion_ui
 import activetasks
 
 # This GUIs version
-VERSION = "1.14.4"
+VERSION = "1.15.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.14.2"
+MIN_FW = "1.15.0"
 
 DEFAULTLANG = "en_US"
 
@@ -395,7 +395,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
         base_ui.CommunicationHandler.remove_callbacks(widget)
         widget.deleteLater()
-        #del widget
+        del widget
 
     def select_tab(self, idx):
         """Select a specific tab from the idx parameter."""
@@ -453,7 +453,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 for name, classe in self.active_classes.items()
                 if name not in new_active_classes
             ]
-            # print(newActiveClasses)
+            #print(new_active_classes)
 
             for classe, name in delete_classes:
                 self.del_tab(classe)

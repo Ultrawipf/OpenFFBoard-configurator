@@ -194,10 +194,17 @@ class SerialComms(QObject):
                     continue
 
                 if reply == "NOT_FOUND":
+                    self.logger.error(f"Unknown command {cmd}")
                     #print(f"Cmd {cmd} not found. check syntax")
                     continue
+                if reply == "ERR":
+                    self.logger.error(f"Error executing command {cmd}")
+                    continue
                 if(callbackObject["convert"]):
-                    reply = callbackObject["convert"](reply)
+                    try:
+                        reply = callbackObject["convert"](reply)
+                    except ValueError as e:
+                        self.logger.error("Error converting object: " + str(e))
                 try:
                     callbackObject["callback"](reply)
                     

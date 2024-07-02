@@ -229,6 +229,16 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="checkBox_storeencoffset">
+        <property name="toolTip">
+         <string>Stores and reloads absolute encoder offset at startup for centering</string>
+        </property>
+        <property name="text">
+         <string>Store encoder offset</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

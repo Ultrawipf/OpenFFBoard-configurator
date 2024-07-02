@@ -215,6 +215,12 @@
       </item>
       <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_friction">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -290,6 +296,12 @@
       </item>
       <item row="4" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_inertia">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -303,6 +315,12 @@
       </item>
       <item row="1" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_spring">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -400,6 +418,12 @@
       </item>
       <item row="2" column="2">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_damper">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
@@ -476,6 +500,12 @@
       </item>
       <item row="1" column="4">
        <widget class="QDoubleSpinBox" name="doubleSpinBox_CFq">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="keyboardTracking">
          <bool>false</bool>
         </property>
