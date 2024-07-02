@@ -259,11 +259,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         for b in self.buttonconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            del b
+            b.deleteLater()
+            #del b
         self.buttonconfbuttons.clear() # Clear buttons
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
-            del b
+            #del b
+            b.deleteLater()
         #add buttons
         row = 0
         for c in self.btnClasses:
@@ -306,11 +308,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         for b in self.axisconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            del b
+            #del b
+            b.deleteLater()
         self.axisconfbuttons.clear()
         for b in self.axisbtns.buttons():
             self.axisbtns.removeButton(b)
-            del b
+            #del b
+            b.deleteLater()
         #add buttons
         row = 0
         for c in self.axisClasses:

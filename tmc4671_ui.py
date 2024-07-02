@@ -25,10 +25,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     STATES = ["uninitialized","waitPower","Shutdown","Running","EncoderInit","EncoderFinished","HardError","OverTemp","IndexSearch","FullCalibration","ExternalEncoderInit","PI Autotune"]
 
     def __init__(self, main=None, unique=0):
-        self.axis = 0
-        self.init_done = False
         WidgetUI.__init__(self, main,'tmc4671_ui.ui')
         CommunicationHandler.__init__(self)
+        self.axis = 0
+        self.init_done = False
         self.main = main #type: main.MainUi
 
         self.axis = unique
@@ -58,15 +58,15 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chart = QChart()
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
-        self.chartXaxis = QValueAxis()
+        self.chartXaxis = QValueAxis(self.chart)
         # use Application.instance().palette().dark().color() but with 50% opacity
         self.chartXaxis.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),128))
         
 
         self.chart.addAxis(self.chartXaxis,Qt.AlignmentFlag.AlignBottom)
 
-        self.chartYaxis_Amps = QValueAxis()
-        self.chartYaxis_Temps = QValueAxis()
+        self.chartYaxis_Amps = QValueAxis(self.chart)
+        self.chartYaxis_Temps = QValueAxis(self.chart)
         # use Application.instance().palette().dark().color() but with 25% opacity
         self.chartYaxis_Amps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
         self.chartYaxis_Temps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
@@ -74,7 +74,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         
-        self.lines_Amps = QLineSeries()
+        self.lines_Amps = QLineSeries(self.chart)
         self.lines_Amps.setName("Torque A")
         self.lines_Amps.setUseOpenGL(True)
 
@@ -83,7 +83,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Amps.attachAxis(self.chartYaxis_Amps)
         self.lines_Amps.attachAxis(self.chartXaxis)
         
-        self.lines_Flux = QLineSeries()
+        self.lines_Flux = QLineSeries(self.chart)
         self.lines_Flux.setName("Flux A")
         self.lines_Flux.setOpacity(0.5)
         self.lines_Flux.setUseOpenGL(True)
@@ -94,7 +94,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Flux.attachAxis(self.chartYaxis_Amps)
         self.lines_Flux.attachAxis(self.chartXaxis)
         
-        self.lines_Temps = QLineSeries()
+        self.lines_Temps = QLineSeries(self.chart)
         self.lines_Temps.setName("Temp °C")
         self.lines_Temps.setColor(QColor("orange"))
         self.lines_Temps.setOpacity(0.5)
@@ -406,7 +406,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.checkBox_I_Precision.setChecked(False)
    
     def showVersionSelectorPopup(self):
-        selectorPopup = OptionsDialog(TMC_HW_Version_Selector(self.tr("TMC Version"),self,self.axis),self.main)
+        selectorPopup = OptionsDialog(TMC_HW_Version_Selector(self.tr("TMC Version"),self,self.axis),self)
         selectorPopup.exec()
         self.send_command("tmc","tmcHwType",self.axis,'!')
         self.send_command("tmc","tmcHwType",self.axis,'?')
