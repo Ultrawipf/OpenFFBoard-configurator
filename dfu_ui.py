@@ -173,9 +173,11 @@ class DFUModeUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("\nUSB Exception during flashing... Please reflash firmware!\n")
         self.uploading = False
         pydfu.exit_dfu()
-        self.log("Done. Please reset\n")
+        self.log(self.tr("Done. Please reset\n"))
         self.groupbox_controls.setEnabled(True)
         self.dfu_device = None
+        if self.checkBox_multipleDevices.isChecked():
+            self.timer.start()
 
     def full_erase_clicked(self):
         """Ask an confirmation on erase click button event."""
