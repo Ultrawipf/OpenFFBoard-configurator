@@ -104,7 +104,7 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
     def apply(self):
         val = self.spinBox_cpr.value()
         self.send_value("localenc","cpr",val=val)
-        self.send_value("localenc","index",val = 1 if self.checkBox_index.checkState() else 0)
+        self.send_value("localenc","index",val = 1 if self.checkBox_index.isChecked() else 0)
 
 
 class MtEncoderConf(EncoderOption,CommunicationHandler):
@@ -144,20 +144,22 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
         layout = QFormLayout()
         layout.setContentsMargins(0,0,0,0)
 
-        self.spinBox_cs = QSpinBox()
-        self.spinBox_cs.setRange(1,3)
+        self.checkBox_direction = QCheckBox("Reverse direction (default)")
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
         layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("Bits"),self.spinBox_bits)
+        layout.addWidget(self.checkBox_direction)
         layout.addWidget(QLabel("Port is used exclusively!"))
         self.setLayout(layout)
 
     def onshown(self):
         self.get_value_async("bissenc","bits",self.spinBox_bits.setValue,0,int)
+        self.get_value_async("bissenc","dir",self.checkBox_direction.setChecked,0,int)
 
     def apply(self):
         self.send_value("bissenc","bits",val=self.spinBox_bits.value())
+        self.send_value("bissenc","dir",val= 1 if self.checkBox_direction.isChecked() else 0)
 
 class SsiEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
