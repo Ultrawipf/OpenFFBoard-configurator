@@ -73,6 +73,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
         base_ui.CommunicationHandler.__init__(self)
+        
+        self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
+        self.translator = PyQt6.QtCore.QTranslator(self) # Languages must be created before UI loaded
+        self.load_language()    # load manually
+
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
 
         self.restart_app_flag = False
@@ -97,9 +102,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Systray
         self.systray = SystrayWrapper(self)
         # Profile
-        self.profile_ui = profile_ui.ProfileUI(main=self)
-
-        self.make_lang_selector() # Languages must be created as early as possible
+        self.profile_ui.initialize_ui() # Profile UI
+        self.make_lang_selector() 
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -197,13 +201,23 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         nb_device_compat = self.serialchooser.get_ports()
         self.serialchooser.auto_connect(nb_device_compat)
 
-    # def refresh_widgets(self):
-    #     for w in app.allWidgets(): # Does not actually update the translation
-    #         w.update()
-    #         w.repaint()
-    #         # print(w)
+    def load_language(self):
+        """load language file in profile befor creating UI"""
+        app.removeTranslator(self.translator)
+
+        langid = self.profile_ui.get_global_setting("language",DEFAULTLANG)
+        # print(f"Loading langid: {langid}")
+        if langid == DEFAULTLANG:
+            langfile = ''
+        else:
+            langfile = helper.res_path(f"{langid}.qm","translations")
+            # print(f"Loading language file: {langfile}")
+            if self.translator.load(langfile):
+                app.installTranslator(self.translator)
+                # print(f"Language file loaded: {langfile}")
 
     def change_language(self,enabled):
+        """Change language of the UI, this will run too when initializing the UI"""
         if(not enabled):
             return
         langfile,user_language = self.language_action_group.checkedAction().data()
@@ -218,6 +232,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         app.removeTranslator(self.translator)
         if self.translator.load(langfile):
             app.installTranslator(self.translator)
+            # print(f"Language file loaded: {langfile}")
         self.profile_ui.set_global_setting("language",user_language) #store language
 
         #self.refresh_widgets()
@@ -914,8 +929,8 @@ if __name__ == "__main__":
                 QueryValueEx as getSubkeyValue,
                 OpenKey as getKey,
             )
-
-            if windows_theme_is_light() == 0:
+            # Check if is not using windows 11 style(windows 11 style is dark mode compatible)
+            if windows_theme_is_light() == 0 and app.style().objectName() != "windows11":
                 app.setStyle("Fusion")
                 app.setPalette(dark_palette.PALETTE_DARK)
                 window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
