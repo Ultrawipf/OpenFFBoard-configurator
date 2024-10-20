@@ -48,7 +48,7 @@ class GithubRelease():
         """Returns the latest release for repo or empty dict on error"""
         url = f"https://api.github.com/repos/{repo}/releases/latest"
         try:
-            response = requests.get(url)
+            response = requests.get(url,timeout=3) # timeout to avoid blocking when board connecting
         except requests.ConnectionError:
             return {}
         if not response:
