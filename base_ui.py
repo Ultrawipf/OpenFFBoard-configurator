@@ -47,6 +47,7 @@ class WidgetUI(PyQt6.QtWidgets.QWidget):
         self.tech_log = logging.getLogger(ui_form)
         if ui_form:
             PyQt6.uic.loadUi(helper.res_path(ui_form), self)
+            # print(f"UI file loaded : {ui_form}")
 
     def init_ui(self):
         """Prototype of init_ui to manage this status in subclass."""

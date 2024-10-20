@@ -35,10 +35,30 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     profile_selected_event = PyQt6.QtCore.pyqtSignal(str)
 
     def __init__(self, main=None):
-        """Init the UI and link the event."""
-        base_ui.WidgetUI.__init__(self, main, "profile.ui")
-        base_ui.CommunicationHandler.__init__(self)
+        """Initialize profile without UI."""
         self.main = main
+        self.profiles_dlg = None  # ProfilesDialog is not initialized yet
+        self.profile_setup = {}
+        self.profiles = {}
+
+        self._current_class = -1
+        self._current_command = -1
+        self._current_instance = -1
+        self._map_class_running = []
+        self._running_profile = []
+        self._profilename_tosave: str = None
+
+        self.ui_initialized = False
+
+        # 加载配置文件和资料
+        self.load_profile_settings()
+        self.load_profiles()
+
+    def initialize_ui(self):
+        """Init the UI and link the event."""
+        base_ui.WidgetUI.__init__(self, self.main, "profile.ui")
+        base_ui.CommunicationHandler.__init__(self)
+        
         self.profiles_dlg = ProfilesDialog(self)
         self.profiles_dlg.closeSignal.connect(self.close_profile_manager)
 
@@ -63,19 +83,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.main.systray.refresh_profile_action_status
         )
 
-        self.profile_setup = {}
-        self.profiles = {}
-
-        self._current_class = -1
-        self._current_command = -1
-        self._current_instance = -1
-        self._map_class_running = []
-        self._running_profile = []
-        self._profilename_tosave: str = None
-
         self.setEnabled(False)
-        self.load_profile_settings()
-        self.load_profiles()
 
     def save_clicked(self):
         """Save current seeting in Flash and replace the 'Flash profile' settings by the new one."""
@@ -141,7 +149,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("Profile: profiles are not compatible, need to redo them")
         else:
             self.log("Profile: profiles loaded")
-        self.refresh_combox_list()
+        
+        if self.ui_initialized:
+            self.refresh_combox_list()
 
     def create_or_update_profile_file(self, create: bool = False):
         """Create a profile file if not exist, else update the existing one."""
