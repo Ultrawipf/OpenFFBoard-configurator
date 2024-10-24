@@ -75,8 +75,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         base_ui.CommunicationHandler.__init__(self)
         
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
-        self.translator = PyQt6.QtCore.QTranslator(self) # Languages must be created before UI loaded
-        self.load_language()    # load manually
+        #self.translator = PyQt6.QtCore.QTranslator(self) # Languages must be created before UI loaded
+        #self.load_language()    # load manually
 
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
 
@@ -95,7 +95,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.lang_actions = {}
         self.translator = PyQt6.QtCore.QTranslator(self)
         self.language_action_group = QActionGroup(self)
-        self.language_action_group.setExclusive(True)        
+        self.language_action_group.setExclusive(True)
 
         self.tab_connections = [] # Signals to disconnect on reset
 
@@ -103,7 +103,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.systray = SystrayWrapper(self)
         # Profile
         self.profile_ui.initialize_ui() # Profile UI
-        self.make_lang_selector() 
+        self.make_lang_selector()
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -201,6 +201,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         nb_device_compat = self.serialchooser.get_ports()
         self.serialchooser.auto_connect(nb_device_compat)
 
+    # TODO this function is likely not required. Remove if language changing is fixed
     def load_language(self):
         """load language file in profile befor creating UI"""
         app.removeTranslator(self.translator)
@@ -235,7 +236,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             # print(f"Language file loaded: {langfile}")
         self.profile_ui.set_global_setting("language",user_language) #store language
 
-        #self.refresh_widgets()
         self.languagechanged.emit()
 
     def restart_app(self):
