@@ -50,7 +50,6 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         self.ui_initialized = False
 
-        # 加载配置文件和资料
         self.load_profile_settings()
         self.load_profiles()
 
