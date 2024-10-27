@@ -75,8 +75,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         base_ui.CommunicationHandler.__init__(self)
         
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
-        #self.translator = PyQt6.QtCore.QTranslator(self) # Languages must be created before UI loaded
-        #self.load_language()    # load manually
+        self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
 
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
 
@@ -201,42 +200,24 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         nb_device_compat = self.serialchooser.get_ports()
         self.serialchooser.auto_connect(nb_device_compat)
 
-    # TODO this function is likely not required. Remove if language changing is fixed
-    def load_language(self):
-        """load language file in profile befor creating UI"""
-        app.removeTranslator(self.translator)
-
-        langid = self.profile_ui.get_global_setting("language",DEFAULTLANG)
-        # print(f"Loading langid: {langid}")
-        if langid == DEFAULTLANG:
-            langfile = ''
-        else:
+    def load_language_id(self, langid:str):
+        """load language file"""
+        if langid != DEFAULTLANG:
             langfile = helper.res_path(f"{langid}.qm","translations")
-            # print(f"Loading language file: {langfile}")
-            if self.translator.load(langfile):
-                app.installTranslator(self.translator)
-                # print(f"Language file loaded: {langfile}")
+            if translator.load(langfile):
+                app.installTranslator(translator)
 
-    def change_language(self,enabled):
+    def change_lang_callback(self, enabled:bool):
         """Change language of the UI, this will run too when initializing the UI"""
-        if(not enabled):
+        if(not enabled):  # Language not selected
             return
-        langfile,user_language = self.language_action_group.checkedAction().data()
+        
+        app.removeTranslator(translator)
+    
+        user_lang_id = self.language_action_group.checkedAction().data()
+        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
 
-        # try to load the user's language file
-        curlang = self.translator.language()
-        if self.translator.isEmpty():
-            curlang = DEFAULTLANG
-        if(curlang == user_language):
-            return
-            
-        app.removeTranslator(self.translator)
-        if self.translator.load(langfile):
-            app.installTranslator(self.translator)
-            # print(f"Language file loaded: {langfile}")
-        self.profile_ui.set_global_setting("language",user_language) #store language
-
-        self.languagechanged.emit()
+        self.languagechanged.emit() # loading in next start
 
     def restart_app(self):
         self.restart_app_flag = True
@@ -245,30 +226,19 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         app.quit()
  
     def make_lang_selector(self):
+        '''Create the language selector menu, and connect the callback to change language.'''
+        languages = [DEFAULTLANG]
+        languages.extend([os.path.splitext(os.path.basename(f))[0] for f in glob.glob(helper.res_path("*.qm","translations"))])
         
-        languages = [("",DEFAULTLANG)]
-        languages.extend([(f,os.path.splitext(os.path.basename(f))[0]) for f in glob.glob(helper.res_path("*.qm","translations"))])
-        
-        for langfile,langid in languages:
+        for langid in languages:
             action = QAction(langid)
-            action.setData([langfile,langid])
+            action.setData(langid)
             action.setCheckable(True)
             self.language_action_group.addAction(action)
             self.lang_actions[langid] = action
             self.menuLanguage.addAction(action)
-            action.toggled.connect(self.change_language)
+            action.toggled.connect(self.change_lang_callback)
 
-        user_language = self.profile_ui.get_global_setting("language",None)
- 
-        if not user_language:
-            user_language = PyQt6.QtCore.QLocale.system().name()
-
-        if user_language in self.lang_actions:
-            self.lang_actions.get(user_language).setChecked(True)
-        else:
-            self.lang_actions.get(DEFAULTLANG).setChecked(True)
-
-        
 
     def reboot(self):
         """Send the reboot message to the board."""
@@ -919,6 +889,7 @@ if __name__ == "__main__":
     app = PyQt6.QtWidgets.QApplication(sys.argv)
     while(restart):
         restart = False
+        translator = PyQt6.QtCore.QTranslator() # Languages must be created before UI loaded
         window = MainUi()
         if (sys.platform == "win32" or "Windows" in sys.platform):
             # only on windows, for macOS and linux use system palette.
