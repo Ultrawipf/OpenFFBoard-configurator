@@ -92,7 +92,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.systray : SystrayWrapper = None
 
         self.lang_actions = {}
-        self.translator = PyQt6.QtCore.QTranslator(self)
         self.language_action_group = QActionGroup(self)
         self.language_action_group.setExclusive(True)
 
@@ -887,9 +886,9 @@ if __name__ == "__main__":
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
+    translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
-        translator = PyQt6.QtCore.QTranslator() # Languages must be created before UI loaded
         window = MainUi()
         if (sys.platform == "win32" or "Windows" in sys.platform):
             # only on windows, for macOS and linux use system palette.
