@@ -116,13 +116,16 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.active_classes = {}
         self.fw_version_str = None
 
-        self.setup()
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
         self.axes = 0
 
+        self.setup()
         self.languagechanged.connect(self.restart_app)
+        
+        # start the auto disconnect timer (call the board)
+        self.timer.start(5000)
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
@@ -148,9 +151,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.actionUpdates.triggered.connect(self.open_updater)
 
         self.actionDebug_mode.triggered.connect(self.toggle_debug)
-
-        self.timer.start(5000)
-        
 
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
         self.effects_monitor_dlg.setEnabled(False)
@@ -194,7 +194,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.profile_ui)
         self.groupBox_main.setLayout(layout)
-
+        
+        
+    def autoconnect(self) :
         # after UI load get serial port and if only one : autoconnect
         nb_device_compat = self.serialchooser.get_ports()
         self.serialchooser.auto_connect(nb_device_compat)
@@ -612,8 +614,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def serial_connected(self, connected):
         """Check the release when a board is connected."""
-        self.serial_timer = PyQt6.QtCore.QTimer()
-
+        
         def timer_cb():
             if not self.connected:
                 self.log("Can't detect board")
@@ -621,16 +622,19 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         def id_cb(identifier):
             if identifier:
-                self.connected = True
                 self.serial_timer.stop()
+                self.connected = True
 
         if connected:
-            self.serial_timer.singleShot(500, timer_cb)
             self.get_value_async("main", "id", id_cb, 0)
             self.errors_dlg.registerCallbacks()
             self.get_value_async("sys", "swver", self.version_check)
             self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
             self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
+            
+            if (self.serial_timer is None) :
+                self.serial_timer = PyQt6.QtCore.QTimer(singleShot=True, timeout=timer_cb)
+            self.serial_timer.start(500)
 
         else:
             self.connected = False
@@ -909,6 +913,7 @@ if __name__ == "__main__":
         window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
         window.show()
         window.check_configurator_update() # Check for updates after window is shown
+        window.autoconnect()
 
         exit_code = app.exec()
         # Check if we need to restart
