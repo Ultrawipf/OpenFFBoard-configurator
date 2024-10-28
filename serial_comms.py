@@ -214,7 +214,12 @@ class SerialComms(QObject):
 
                 if callbackObject["delete"]: # delete if flag is set
                     #print("Deleting",callbackObject)
-                    SerialComms.callbackDict[cls].remove(callbackObject)
+                    if (SerialComms.callbackDict[cls] is not None) \
+                        and (callbackObject in SerialComms.callbackDict[cls]) :
+                        SerialComms.callbackDict[cls].remove(callbackObject)
+                    else :
+                        #self.logger.error(f"Not found callback {callbackObject} for {cls}")
+                        pass
                     deleted = True
           
         return deleted
