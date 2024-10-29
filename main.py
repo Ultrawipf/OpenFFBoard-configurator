@@ -54,6 +54,7 @@ import effects_graph_ui
 import updater
 import simplemotion_ui
 import activetasks
+import wheel
 
 # This GUIs version
 VERSION = "1.15.2"
@@ -75,10 +76,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         base_ui.CommunicationHandler.__init__(self)
         
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
-        self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
+        self.load_language_id(self.profile_ui.get_global_setting(profile_ui.ConfigKey.language,DEFAULTLANG)) # load language file
 
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
-
         self.restart_app_flag = False
 
         self.serial = PyQt6.QtSerialPort.QSerialPort()
@@ -88,6 +88,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.connected = False
         self.not_minimize_and_close = True
         self.serial_timer = None
+        self.summary_tab = True
 
         self.systray : SystrayWrapper = None
 
@@ -99,9 +100,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         # Systray
         self.systray = SystrayWrapper(self)
+        
         # Profile
+        self.summary_tab = self.profile_ui.get_global_setting(profile_ui.ConfigKey.display_summary_tabs, True)
         self.profile_ui.initialize_ui() # Profile UI
         self.make_lang_selector()
+        self.setup_summary_tab()
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -149,8 +153,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.serial_connected)
 
         self.actionUpdates.triggered.connect(self.open_updater)
-
         self.actionDebug_mode.triggered.connect(self.toggle_debug)
+        self.actionDisplayed_summary.triggered.connect(self.toggle_summary)
 
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
         self.effects_monitor_dlg.setEnabled(False)
@@ -168,6 +172,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         )  # Open active classes list
         self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
         self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
+        self.serialchooser.connected.connect(self.actionDisplayed_summary.setEnabled)
 
         self.actionActive_threads.triggered.connect(self.active_threads_dlg.show)
 
@@ -216,16 +221,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         app.removeTranslator(translator)
     
         user_lang_id = self.language_action_group.checkedAction().data()
-        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
+        self.profile_ui.set_global_setting(profile_ui.ConfigKey.language,user_lang_id) # store language setting
 
         self.languagechanged.emit() # loading in next start
 
-    def restart_app(self):
-        self.restart_app_flag = True
-        self.reset_port()
-        base_ui.CommunicationHandler.comms.removeAllCallbacks()
-        app.quit()
- 
     def make_lang_selector(self):
         '''Create the language selector menu, and connect the callback to change language.'''
         languages = [DEFAULTLANG]
@@ -239,6 +238,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.lang_actions[langid] = action
             self.menuLanguage.addAction(action)
             action.toggled.connect(self.change_lang_callback)
+            
+    def restart_app(self):
+        self.restart_app_flag = True
+        self.reset_port()
+        base_ui.CommunicationHandler.comms.removeAllCallbacks()
+        app.quit()
+ 
 
 
     def reboot(self):
@@ -248,7 +254,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
-        donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
+        donotnotify = self.profile_ui.get_global_setting(profile_ui.ConfigKey.donotnotify_updates, False)
         if donotnotify:
             return
 
@@ -259,7 +265,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if updater.UpdateChecker.compare_versions(VERSION,releaseversion):
             # New release available for firmware
             msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
-            notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
+            notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting=profile_ui.ConfigKey.donotnotify_updates)
             notification.exec()
 
     def open_dfu_dialog(self):
@@ -285,6 +291,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             if dialog and dialog.isVisible():
                 dialog.move(dialog.pos() + diff)
                 dialog.update()
+                
+    def setup_summary_tab(self) :
+        self.actionDisplayed_summary.setChecked(self.summary_tab)
 
     def open_logs_errors_dialog(self):
         """Display the log file on the right if it fill in the screen."""
@@ -313,6 +322,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Reload mainclasses
         self.serialchooser.get_main_classes() # TODO better move somewhere else
 
+    def toggle_summary(self,enabled):
+        self.summary_tab = enabled
+        self.profile_ui.set_global_setting(profile_ui.ConfigKey.display_summary_tabs,enabled) # store language setting
+        self.serialchooser.get_main_classes() # TODO better move somewhere else
 
     def save_flashdump_to_file(self):
         """Send a async message to get the flashdump from board."""
@@ -418,6 +431,27 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def update_tabs(self):
         """Get the active classes from the board, and add tab when not exist."""
+        def update_classes_with_plugin(actual_new_active_classes : dict) -> dict:
+            #if plugin/summary class are allowed in the help menu, we add new ui class
+            if (self.summary_tab) :
+                summary_class = {}
+                for name, classe_active in actual_new_active_classes.items() :
+                    if (classe_active["id"] == 1) and self.summary_tab :
+                        wheel_summary_class_key = "wheelsummary:0" 
+                        wheel_summary_class_value = {
+                            "name": "Wheel Summary",
+                            "clsname": "ui_wheelsummary",
+                            "id": 0xFFFF01,
+                            "unique": 0,
+                            "ui": None,
+                            "cmdaddr": [4],
+                        }
+                        summary_class[wheel_summary_class_key] = wheel_summary_class_value
+                for elt, class_elt in summary_class.items() :
+                    actual_new_active_classes[elt] = class_elt
+            return actual_new_active_classes
+            
+        
         def update_tabs_cb(active):
             """Process the name received by callback : split string and add tabs."""
             lines = [l.split(":") for l in active.split("\n") if l]
@@ -434,6 +468,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 }
                 for i in lines
             }
+            new_active_classes = update_classes_with_plugin(new_active_classes)
+                    
             delete_classes = [
                 (classe, name)
                 for name, classe in self.active_classes.items()
@@ -444,11 +480,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             for classe, name in delete_classes:
                 self.del_tab(classe)
                 del self.active_classes[name]
+                
             for name, classe_active in new_active_classes.items():
                 if name in self.active_classes:
                     continue
-                classname = classe_active["name"]
-                if classe_active["id"] == 1 or classe_active["id"] == 2 or classe_active["id"] == 3:
+                if classe_active["id"] == 1 or classe_active["id"] == 2 or classe_active["id"] == 3:                        
+                    classname = classe_active["name"]
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
@@ -513,8 +550,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.effects_graph_dlg.setEnabled(True)
                     self.actionEffectsMonitor.setEnabled(True)
                     self.actionEffects_forces.setEnabled(True)
-
-
+                    
+                #Logical tab, for summary for exemple
+                elif  classe_active["id"] == 0xFFFF01:
+                    """If FFB is select, there is 1 FFB Class, and one Axis, display the wheel tab only in the case where id=1 (1 axis)"""
+                    classe = wheel.WheelUI (main=self)
+                    self.active_classes[name] = classe
+                    position = self.tabWidget_main.insertTab(1, classe, "SimWheel Summary")
+                    self.select_tab(position)
 
             self.tabsinitialized.emit(True)
 
@@ -603,7 +646,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
         if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
-            donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
+            donotnotify = self.profile_ui.get_global_setting(profile_ui.ConfigKey.donotnotify_updates, False)
             if not donotnotify:
                 # New release available for firmware
                 msg = self.tr( "New firmware available")

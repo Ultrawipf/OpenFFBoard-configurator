@@ -9,6 +9,7 @@ Authors : vincent
 import os
 import json
 import copy
+from enum import Enum
 
 import PyQt6.QtCore
 import PyQt6.QtWidgets
@@ -16,6 +17,10 @@ import PyQt6.QtGui
 import base_ui
 import helper
 
+class ConfigKey(Enum):
+    donotnotify_updates = "donotnotify_updates"
+    language = "language"
+    display_summary_tabs = "display_summary"
 
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the Profile selector and the board communication about them."""
@@ -168,17 +173,17 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         return True
 
-    def get_global_setting(self,key : str, default = None):
+    def get_global_setting(self,key : ConfigKey, default = None):
         """Returns an entry of the global section or saves a default if set and not found"""
         if "global" in self.profiles:
-            if (key not in self.profiles['global']) and default != None:
+            if (key.name not in self.profiles['global']) and default != None:
                 self.set_global_setting(key,default)
-            return self.profiles['global'].get(key,None)
+            return self.profiles['global'].get(key.name,None)
         return None
 
-    def set_global_setting(self,key : str, entry, save : bool = True):
+    def set_global_setting(self,key : ConfigKey, entry, save : bool = True):
         """Adds an item to the global section of the profile file. Set save true to write file immediately"""
-        self.profiles['global'][key] = entry
+        self.profiles['global'][key.name] = entry
         if save:
             self.create_or_update_profile_file()
 
