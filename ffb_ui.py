@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
-from helper import res_path,classlistToIds,splitListReply,throttle
+from helper import res_path,classlistToIds,splitListReply,throttle,qtBlockAndCall
 from PyQt6.QtCore import QTimer,QEvent, pyqtSignal
 import main
 import buttonconf_ui
@@ -177,9 +177,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def sliderChangedUpdateSpinbox(self,val,spinbox,factor,command=None):
         newVal = val * factor
         if(spinbox.value != newVal):
-            spinbox.blockSignals(True)
-            spinbox.setValue(newVal)
-            spinbox.blockSignals(False)
+            qtBlockAndCall(spinbox, spinbox.setValue,newVal)
         if(command):
             self.send_value("fx",command,val)
 
@@ -204,10 +202,9 @@ class FfbUI(WidgetUI,CommunicationHandler):
         max_accel = 32767 / inertia_accel
         self.label_accel.setText(f"{max_accel:.0f}")
 
-    def updateSpinboxAndSlider(self,val,spinbox : QSlider,slider,factor):
-        slider.setValue(val)
+    def updateSpinboxAndSlider(self,val,spinbox,slider : QSlider,factor):
+        qtBlockAndCall(slider, slider.setValue, val)
         self.sliderChangedUpdateSpinbox(val,spinbox,factor)
-
 
     def hidreportrate_cb(self,modes):
         self.comboBox_reportrate.blockSignals(True)
