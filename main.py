@@ -436,7 +436,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             if (self.summary_tab) :
                 summary_class = {}
                 for name, classe_active in actual_new_active_classes.items() :
-                    if (classe_active["id"] == 1) and self.summary_tab :
+                    if (classe_active["id"] == 1) :
                         wheel_summary_class_key = "wheelsummary:0" 
                         wheel_summary_class_value = {
                             "name": "Wheel Summary",

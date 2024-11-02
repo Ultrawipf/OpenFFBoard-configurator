@@ -245,7 +245,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Displayed Summary tabs</string>
+    <string>Display Summary tabs</string>
    </property>
   </action>
  </widget>
