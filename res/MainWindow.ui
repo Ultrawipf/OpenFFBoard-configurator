@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>644</width>
-    <height>489</height>
+    <width>932</width>
+    <height>742</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,7 +63,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>644</width>
+     <width>932</width>
      <height>21</height>
     </rect>
    </property>
@@ -77,6 +77,7 @@
      </property>
      <addaction name="separator"/>
     </widget>
+    <addaction name="actionDisplayed_summary"/>
     <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
     <addaction name="actionActive_threads"/>
@@ -99,7 +100,7 @@
    </widget>
    <widget class="QMenu" name="menuMonitoring">
     <property name="title">
-     <string>Monitoring</string>
+     <string>Effects</string>
     </property>
     <addaction name="actionEffectsMonitor"/>
     <addaction name="actionEffects_forces"/>
@@ -237,6 +238,14 @@
    </property>
    <property name="text">
     <string>Active threads</string>
+   </property>
+  </action>
+  <action name="actionDisplayed_summary">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Display Summary tabs</string>
    </property>
   </action>
  </widget>

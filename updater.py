@@ -16,7 +16,7 @@ from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
 from datetime import datetime
 from optionsdialog import OptionsDialogGroupBox
-from profile_ui import ProfileUI
+from profile_ui import ProfileUI, ConfigKey
 
 MAINREPO = "Ultrawipf/OpenFFBoard"
 GUIREPO = "Ultrawipf/OpenFFBoard-Configurator"
@@ -124,13 +124,13 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
         self.settingsmanager = settingsmanager
 
         if settingsmanager:
-            self.checkBox_notify.setChecked(not self.settingsmanager.get_global_setting("donotnotify_updates",False))
+            self.checkBox_notify.setChecked(not self.settingsmanager.get_global_setting(ConfigKey.donotnotify_updates,False))
             self.checkBox_notify.toggled.connect(self.notify_checkbox_toggled)
         else:
             self.checkBox_notify.setVisible(False)
 
     def notify_checkbox_toggled(self,status):
-        self.settingsmanager.set_global_setting("donotnotify_updates",not status)
+        self.settingsmanager.set_global_setting(ConfigKey.donotnotify_updates,not status)
 
 
     def fill_releases(self,releases : dict):
@@ -199,7 +199,7 @@ class UpdateBrowser(PyQt6.QtWidgets.QDialog):
 
 class UpdateNotification(QDialog):
     """Shows a dialog with release information"""
-    def __init__(self,release,main,desc,curver,donotnotifysetting = None):
+    def __init__(self,release,main,desc,curver,donotnotifysetting : ConfigKey = None):
         self.main = main
         QDialog.__init__(self, main)
         self.setWindowTitle("Update available")

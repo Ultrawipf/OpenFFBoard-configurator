@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
-from helper import res_path,classlistToIds,splitListReply,throttle
+from helper import res_path,classlistToIds,splitListReply,throttle,qtBlockAndCall
 from PyQt6.QtCore import QTimer,QEvent, pyqtSignal
 import main
 import buttonconf_ui
@@ -130,9 +130,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
 
             self.send_command("main","lsain",0,'?') # get analog types
             self.send_command("main","aintypes",0,'?') # get active analog
-
-
-            self.updateSliders()
+            
             self.send_command("main","hidsendspd",0,'!') # get speed
             
         except:
@@ -141,12 +139,12 @@ class FfbUI(WidgetUI,CommunicationHandler):
         return True
 
     # Tab is currently shown
-    # def showEvent(self,event):
-    #     self.timer.start(500)
+    def showEvent(self,event):
+        self.updateSliders()
 
-    # # Tab is hidden
-    # def hideEvent(self,event):
-    #     self.timer.stop()
+    # Tab is hidden
+    def hideEvent(self,event):
+        pass
 
     def startTimer(self):
         self.timer.start(500)
@@ -177,11 +175,17 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def sliderChangedUpdateSpinbox(self,val,spinbox,factor,command=None):
         newVal = val * factor
         if(spinbox.value != newVal):
-            spinbox.blockSignals(True)
-            spinbox.setValue(newVal)
-            spinbox.blockSignals(False)
+            qtBlockAndCall(spinbox, spinbox.setValue,newVal)
         if(command):
             self.send_value("fx",command,val)
+            
+    def refresh_limit(self, slider : QSlider) :
+        if slider == self.horizontalSlider_damper :
+            self.display_speed_cutoff_damper(slider.value())
+        elif slider == self.horizontalSlider_friction :
+            self.display_speed_cutoff_friction(slider.value())
+        elif slider == self.horizontalSlider_inertia :
+            self.display_accel_cutoff_inertia(slider.value())
 
     def display_speed_cutoff_damper(self, gain):
         """Update the max rpm speed cutoff"""
@@ -204,10 +208,10 @@ class FfbUI(WidgetUI,CommunicationHandler):
         max_accel = 32767 / inertia_accel
         self.label_accel.setText(f"{max_accel:.0f}")
 
-    def updateSpinboxAndSlider(self,val,spinbox : QSlider,slider,factor):
-        slider.setValue(val)
+    def updateSpinboxAndSlider(self,val,spinbox,slider : QSlider,factor):
+        qtBlockAndCall(slider, slider.setValue, val)
         self.sliderChangedUpdateSpinbox(val,spinbox,factor)
-
+        self.refresh_limit(slider)
 
     def hidreportrate_cb(self,modes):
         self.comboBox_reportrate.blockSignals(True)
@@ -357,12 +361,6 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_CFq.setEnabled(qOn)
         self.doubleSpinBox_CFq.setEnabled(qOn)
         self.label_cffilter.setText(lbl)
-
-    def extract_scaler(self, gain_default, repl) :
-        infos = {key:value for (key,value) in [entry.split(":") for entry in repl.split(",")]}
-        if "scale" in infos:
-            gain_default = float(infos["scale"]) if float(infos["scale"]) > 0 else gain_default
-        return gain_default
 
     def updateGainScaler(self,slider : QSlider,spinbox : QSpinBox, gain):
         spinbox.setMaximum(gain)
