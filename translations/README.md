@@ -23,7 +23,7 @@ In PyQt6, internationalization (i18n) typically involves translating the text of
    - Use Linguist to create a translation file (.ts file). This file will contain all the text in your application that needs to be translated.
 
 2. Use Translation Files in the Application:
-   - In your PyQt6 application, use `QtCore.QLocale` to determine the user's preferred language.
+   - In your PyQt6 application, use `PyQt6.QtCore.QLocale.system().name()` to determine the user's preferred language.
    - Use `QtCore.QTranslator` to load the appropriate translation file based on the user's preferred language setting.
 
 3. Mark Text for Translation in the User Interface:
