@@ -213,11 +213,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if(not enabled):  # Language not selected
             return
         
-        app.removeTranslator(translator)
-    
         user_lang_id = self.language_action_group.checkedAction().data()
-        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
 
+        if user_lang_id == self.profile_ui.get_global_setting("language",DEFAULTLANG): # If user selected language same as current language
+            return 
+        
+        app.removeTranslator(translator)
+        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
         self.languagechanged.emit() # loading in next start
 
     def restart_app(self):

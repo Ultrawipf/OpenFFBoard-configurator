@@ -152,21 +152,36 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if self.ui_initialized:
             self.refresh_combox_list()
 
-    def create_or_update_profile_file(self, create: bool = False):
-        """Create a profile file if not exist, else update the existing one."""
+    def create_or_update_profile_file(self, create: bool = False) -> bool:
+        """Create a new profile file or update existing one
+        
+        Args:
+            create: Whether to create a new file
+            
+        Returns:
+            bool: Whether operation succeeded
+        """
         if create:
             self.profiles = self.__PROFILES_TEMPLATE
+            os_lang = PyQt6.QtCore.QLocale.system().name() # get system language, such as zh_CN
+            lang_file = os.path.join("translations", f"{os_lang}.qm")
+            
+            # Use system language if translation exists, otherwise use English
+            if os.path.exists(lang_file):
+                default_lang = os_lang
+            else:
+                default_lang = "en_US"
+                
+            self.profiles['global']['language'] = default_lang
+            self.log(f"Profile: use {default_lang} as default language")
             self.log("Profile: profile file created")
 
         try:
-            file = open(self.__PROFILES_FILENAME, "w", encoding="utf_8")
+            with open(self.__PROFILES_FILENAME, "w", encoding="utf_8") as f:
+                json.dump(self.profiles, f)
+            return True
         except OSError:
             return False
-
-        with file as profile_file:
-            json.dump(self.profiles, profile_file)
-
-        return True
 
     def get_global_setting(self,key : str, default = None):
         """Returns an entry of the global section or saves a default if set and not found"""
