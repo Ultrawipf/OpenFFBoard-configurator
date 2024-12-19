@@ -54,6 +54,7 @@ import effects_graph_ui
 import updater
 import simplemotion_ui
 import activetasks
+import rmd_ui
 
 # This GUIs version
 VERSION = "1.15.2"
@@ -365,9 +366,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 self.timeouting = True
                 self.process_events_timer.start(100)
                 self.get_value_async("main", "id", self.timeout_check_cb, conversion=int)
-                self.get_value_async(
-                    "sys", "heapfree", self.wrapper_status_bar.update_ram_used
-                )
+                self.get_value_async("sys", "heapfree", self.wrapper_status_bar.update_ram_used)
+                self.get_value_async("sys", "temp", self.wrapper_status_bar.update_temp)
 
     def tab_changed(self, id_tab):
         """Add an handler on tab changed : do nothing for the moment."""
@@ -773,6 +773,7 @@ class WrapperStatusBar(base_ui.WidgetUI):
         self.label_ffbcnx.setPixmap(self.icon_ko)
         self.label_ffbfreq.setText("")
         self.update_ffb_block_display(False)
+        self.line_temp.hide()
 
         self.serial_connected(False)
 
@@ -826,6 +827,12 @@ class WrapperStatusBar(base_ui.WidgetUI):
     def update_status(self, msg):
         """Change the status message in the bottom right."""
         self.label_status.setText(msg)
+
+    def update_temp(self,msg):
+        """Update temperature display"""
+        self.line_temp.show()
+        self.label_temp.setText(f"{msg} °C")
+
 
     def serial_connected(self, connected):
         """Enable or disable the label in the button, when connection status change."""
