@@ -91,7 +91,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             """Display the confirmation in log."""
             self.log("Save in flash: " + str(res))
             self.save_config_in_profile(self.FLASH_PROFILE_NAME)
-
+            self.set_save_btn(True)
+        
+        self.set_save_btn(False)
         self.get_value_async("sys", "save", callback=log_save_cb)
 
     def onclose(self):
