@@ -233,7 +233,7 @@ class ShifterButtonsConf(OptionsDialogGroupBox,CommunicationHandler):
             vbox.addWidget(QLabel(name))
             numBtnBox = QSpinBox()
             numBtnBox.setMinimum(0)
-            numBtnBox.setMaximum(4096)
+            numBtnBox.setMaximum(0xffff)
             vbox.addWidget(numBtnBox)
             return numBtnBox
 
