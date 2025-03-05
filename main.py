@@ -57,7 +57,7 @@ import activetasks
 import rmd_ui
 
 # This GUIs version
-VERSION = "1.16.0"
+VERSION = "1.16.1"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
