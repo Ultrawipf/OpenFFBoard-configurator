@@ -79,14 +79,15 @@ class OdriveUI(WidgetUI,CommunicationHandler):
         if(codes == 0):
             errs = ["None"]
 
-        for name,i in (self.ODRIVE_ERRORS.items()):
-            if(codes & i != 0):
-                errs.append(name)
+        # for name,i in (self.ODRIVE_ERRORS.items()):
+        #     if(codes & i != 0):
+        #         errs.append(name)
         if len(errs) == 0:
-            errs = [str(codes)]
-        errString = "\n".join(errs)
+            self.label_errornames.setText(str(codes) + "\n(Check error in odrivetool)")
+        else:
+            errString = "\n".join(errs)
 
-        self.label_errornames.setText(f"{errString} ({codes})")
+            self.label_errornames.setText(f"{errString} ({codes})")
 
     def stateCb(self,dat):
         if not self.connected:
