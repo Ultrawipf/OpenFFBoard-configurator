@@ -43,6 +43,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.vext = 0
         self.vint = 0
 
+        self.startTime = QTime.currentTime()
+        self.chartLastX = 0
+
         self.timer = QTimer(self)
         self.timer_status = QTimer(self)
     

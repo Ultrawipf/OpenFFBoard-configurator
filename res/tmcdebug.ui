@@ -39,7 +39,7 @@
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Warning: Openloop mode does NOT use current sensors. You are manually applying a PWM value. Carefully check the currents.&lt;br/&gt;High currents may DAMAGE the motor, driver, connected devices or cause INJURY.&lt;br/&gt;&lt;br/&gt;Set up motor before enabling this.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Warning: Be careful about the motor current. &lt;br/&gt;High currents may DAMAGE the motor, driver, connected devices or cause INJURY.&lt;br/&gt;&lt;br/&gt;Set up motor before enabling this.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -78,7 +78,7 @@
          <item row="1" column="0">
           <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>PWM</string>
+            <string>PWM/Current</string>
            </property>
           </widget>
          </item>
@@ -91,6 +91,9 @@
          </item>
          <item row="0" column="1">
           <widget class="QSlider" name="horizontalSlider_speed">
+           <property name="maximum">
+            <number>100</number>
+           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -154,6 +157,9 @@
            </property>
            <property name="suffix">
             <string> rpm</string>
+           </property>
+           <property name="maximum">
+            <number>100</number>
            </property>
           </widget>
          </item>
