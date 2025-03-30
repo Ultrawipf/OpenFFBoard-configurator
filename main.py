@@ -57,7 +57,7 @@ import activetasks
 import rmd_ui
 
 # This GUIs version
-VERSION = "1.16.1"
+VERSION = "1.16.2"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
@@ -416,7 +416,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         # Delete signals
         for connection in self.tab_connections:
-            PyQt6.QtCore.QObject.disconnect(connection)
+            try:
+                PyQt6.QtCore.QObject.disconnect(connection)
+            except Exception as e:
+                print("Error disconnecting", e)
 
     def update_tabs(self):
         """Get the active classes from the board, and add tab when not exist."""
