@@ -55,13 +55,14 @@ import updater
 import simplemotion_ui
 import activetasks
 import rmd_ui
+import canremote_ui
 
 # This GUIs version
-VERSION = "1.16.2"
+VERSION = "1.16.3"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.16.0"
+MIN_FW = "1.16.3"
 
 DEFAULTLANG = "en_US"
 
@@ -520,6 +521,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.actionEffects_forces.setEnabled(True)
                 elif classe_active["id"] == 0x8B or classe_active["id"] == 0x8C:
                     classe = rmd_ui.RmdUI(main=self, unique=classe_active["unique"])
+                    name_axis = classe_active["name"]
+                    self.active_classes[name] = classe
+                    self.add_tab(classe, name_axis)
+                    self.profile_ui.set_save_btn(True)
+                elif classe_active["id"] == 0x5:
+                    classe = canremote_ui.CanRemoteUi(main=self)
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
                     self.add_tab(classe, name_axis)
