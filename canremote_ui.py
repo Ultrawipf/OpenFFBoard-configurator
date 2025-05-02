@@ -33,14 +33,16 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
         self.axisconfbuttons = []
         self.active = 0
         self.rate = 0
+        self.dvals = [0]
+        self.avals = [0]
 
         self.canOptions = portconf_ui.CanOptionsDialog(0,"CAN",main)
 
-        # self.timer = QTimer(self)
+        self.timer = QTimer(self)
         self.buttonbtns.setExclusive(False)
         self.axisbtns.setExclusive(False)
 
-        # self.timer.timeout.connect(self.updateTimer)
+        self.timer.timeout.connect(self.updateTimer)
 
         self.register_callback("main","lsbtn",self.updateButtonClassesCB,0)
         self.register_callback("main","btntypes",self.updateButtonSources,0,int)
@@ -50,6 +52,8 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
         self.register_callback("main","canidain",self.spinBox_analog_id.setValue,0,int)
         self.register_callback("main","rate",self.reportrate_cb,0,typechar='!')
         self.register_callback("main","rate",self.comboBox_reportrate.setCurrentIndex,0,int,typechar='?')
+        self.register_callback("main","dvals",self.dvalsCb,0)
+        self.register_callback("main","avals",self.avalsCb,0)
 
         self.comboBox_reportrate.currentIndexChanged.connect(lambda val : self.send_value("main","rate",str(val)))
 
@@ -57,14 +61,14 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
         if(self.init_ui()):
             tabId = self.main.add_tab(self,title)
             self.main.select_tab(tabId)
-            # self.timer.start(500) # timer always updates
+            self.timer.start(500) # timer always updates
 
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
         self.pushButton_ids.clicked.connect(self.submit_ids)
         self.pushButton_cansettings.clicked.connect(self.canOptions.exec)
 
-        # self.timer.timeout.connect(self.updateTimer)
+        self.timer.timeout.connect(self.updateTimer)
         
     def submit_ids(self):
         self.send_value("main","canidbtn",self.spinBox_digital_id.value())
@@ -80,19 +84,37 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
         return True
 
     # Tab is currently shown
-    # def showEvent(self,event):
-    #     self.timer.start(500)
+    def showEvent(self,event):
+        self.timer.start(500)
 
-    # # Tab is hidden
-    # def hideEvent(self,event):
-    #     self.timer.stop()
+    # Tab is hidden
+    def hideEvent(self,event):
+        self.timer.stop()
 
  
-    # def updateTimer(self):
-    #     try:
-    #        pass
-    #     except:
-    #         self.main.log("Update error")
+    def updateTimer(self):
+        try:
+           self.send_commands("main",["avals","dvals"],0,'?')
+        except:
+            self.main.log("Update error")
+
+    def avalsCb(self,vals):
+        values = [[int(v) for v in line.split(":")] for line in vals.split("\n")]
+        if len(values) > 1:
+            text = "\n".join([f"{i}:{value}" for value,i in values])
+        else:
+            text = f"{values[0][0]}"
+        self.label_analogvals.setText("Analog values:\n"+text)
+
+
+    def dvalsCb(self,vals):
+        values = [[int(v) for v in line.split(":")] for line in vals.split("\n")]
+        if len(values) > 1:
+            text = "\n".join([f"{i}:{value:b}" for value,i in values])
+        else:
+            text = f"{values[0][0]:b}"
+        self.label_digitalvals.setText("Digital values:\n"+text)
+
 
   
     def reportrate_cb(self,modes):
@@ -121,6 +143,7 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
                 mask |= 1 << self.axisbtns.id(b)
 
         self.send_value("main","aintypes",str(mask))
+        self.avals = [0]
         
     def updateButtonClassesCB(self,reply):
         self.btnIds,self.btnClasses = classlistToIds(reply)
