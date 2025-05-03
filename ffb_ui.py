@@ -240,31 +240,28 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.btnIds,self.btnClasses = classlistToIds(reply)
 
     def updateButtonSources(self,types):
-        # btns = dat[0]
-        # types = int(dat[1])
         if not self.btnClasses:
             self.send_command("main","lsbtn",0,'?')
-            #print("Buttons missing")
             return
-        
-        # self.btnIds,self.btnClasses = classlistToIds(btns)
         if(types == None):
             self.main.log("Error getting buttons")
             return
         types = int(types)
-        layout = QGridLayout()
+        
+        layout = QGridLayout() if not self.groupBox_buttons.layout() else self.groupBox_buttons.layout()
         layout.setVerticalSpacing(0)
         layout.setContentsMargins(12,5,12,5)
         #clear
         for b in self.buttonconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            b.deleteLater()
+            for c in b :
+                c.deleteLater()
             #del b
         self.buttonconfbuttons.clear() # Clear buttons
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
-            #del b
+            # del b
             b.deleteLater()
         #add buttons
         row = 0
@@ -303,13 +300,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
             return
 
         types = int(types)
-        layout = QGridLayout()
+        layout = QGridLayout() if not self.groupBox_analogaxes.layout() else self.groupBox_analogaxes.layout()
         #clear
         for b in self.axisconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            #del b
-            b.deleteLater()
+            # del b
+            for c in b :
+                c.deleteLater()
         self.axisconfbuttons.clear()
         for b in self.axisbtns.buttons():
             self.axisbtns.removeButton(b)
@@ -338,7 +336,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             btn.setEnabled(creatable or enabled)
 
         self.groupBox_analogaxes.setLayout(layout)
-        
+
     @throttle(50)
     def cffilter_changed(self,v,send=True):
         self.tech_log.debug("Freq %s send %d", v, send)
