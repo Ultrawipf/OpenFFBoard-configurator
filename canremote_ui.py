@@ -99,15 +99,24 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
             self.main.log("Update error")
 
     def avalsCb(self,vals):
+        if not ":" in vals:
+            self.label_analogvals.setText("No analog values")
+            return
+    
         values = [[int(v) for v in line.split(":")] for line in vals.split("\n")]
         if len(values) > 1:
             text = "\n".join([f"{i}:{value}" for value,i in values])
         else:
             text = f"{values[0][0]}"
+        
         self.label_analogvals.setText("Analog values:\n"+text)
 
 
     def dvalsCb(self,vals):
+        if not ":" in vals:
+            self.label_analogvals.setText("No digital values")
+            return
+
         values = [[int(v) for v in line.split(":")] for line in vals.split("\n")]
         if len(values) > 1:
             text = "\n".join([f"{i}:{value:b}" for value,i in values])
@@ -156,19 +165,21 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
             self.main.log("Error getting buttons")
             return
         types = int(types)
-        layout = QGridLayout()
+        
+        layout = QGridLayout() if not self.groupBox_buttons.layout() else self.groupBox_buttons.layout()
         layout.setVerticalSpacing(0)
         layout.setContentsMargins(12,5,12,5)
         #clear
         for b in self.buttonconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            b.deleteLater()
+            for c in b :
+                c.deleteLater()
             #del b
         self.buttonconfbuttons.clear() # Clear buttons
         for b in self.buttonbtns.buttons():
             self.buttonbtns.removeButton(b)
-            #del b
+            # del b
             b.deleteLater()
         #add buttons
         row = 0
@@ -207,13 +218,14 @@ class CanRemoteUi(WidgetUI,CommunicationHandler):
             return
 
         types = int(types)
-        layout = QGridLayout()
+        layout = QGridLayout() if not self.groupBox_analogaxes.layout() else self.groupBox_analogaxes.layout()
         #clear
         for b in self.axisconfbuttons:
             self.remove_callbacks(b[1])
             b[0].setParent(None)
-            #del b
-            b.deleteLater()
+            # del b
+            for c in b :
+                c.deleteLater()
         self.axisconfbuttons.clear()
         for b in self.axisbtns.buttons():
             self.axisbtns.removeButton(b)
