@@ -62,7 +62,7 @@ VERSION = "1.16.3"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.16.3"
+MIN_FW = "1.16.0"
 
 DEFAULTLANG = "en_US"
 
