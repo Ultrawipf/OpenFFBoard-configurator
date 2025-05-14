@@ -209,7 +209,7 @@ class SerialComms(QObject):
                     callbackObject["callback"](reply)
                     
                 except RuntimeError as e:
-                    self.logger.error("Error calling object: " + str(e))
+                    self.logger.error(f"Error calling object {callbackObject['callback']}: " + str(e))
                     callbackObject["delete"] = True # force delete
 
                 if callbackObject["delete"]: # delete if flag is set

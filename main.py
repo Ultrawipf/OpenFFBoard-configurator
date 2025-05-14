@@ -658,6 +658,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.connected = False
             self.log("Disconnected")
             self.reset_tabs()
+            self.comms.removeAllCallbacks() # Ensure everything is cleared
 
     def reset_factory(self, btn):
         """Send a async message to reset factory settings."""

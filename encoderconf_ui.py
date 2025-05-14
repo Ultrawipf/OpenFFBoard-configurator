@@ -10,11 +10,11 @@ from base_ui import CommunicationHandler
 
 class EncoderOptions(QGroupBox):
     def __init__(self,main,id):
-        super().__init__()
+        QGroupBox.__init__(self,main)
         self.widget = None
         self.main = main
         self.setType(id)
-        
+
 
     def setType(self,id):
         layout = QVBoxLayout()
