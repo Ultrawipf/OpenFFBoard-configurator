@@ -1,5 +1,5 @@
 ### Changes this version:
-- Added remote CAN mainclass page
+- Added expo curve tuning UI (If used with v1.16.4 FW)
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab
@@ -8,3 +8,5 @@
 - Fixed shifter threshold range to allow increased ranges in v1.16 firmware
 - Added speed limit to profile
 - Removed ODrive error names
+- Added remote CAN mainclass page
+- Delete callbacks on connection close. Fixes random error messages if a UI element is not properly removed

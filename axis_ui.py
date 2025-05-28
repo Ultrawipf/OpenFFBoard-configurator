@@ -9,6 +9,7 @@ import main
 from base_ui import WidgetUI,CommunicationHandler
 from encoderconf_ui import EncoderOptions
 import encoder_tuning_ui
+import expo_ui
 
 
 class AxisUI(WidgetUI,CommunicationHandler):
@@ -37,6 +38,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timer_cb)
         self.encoder_tuning_dlg = encoder_tuning_ui.AdvancedTuningDialog(self, self.axis)
+
+        self.expo_dlg = expo_ui.ExpoTuneDialog(self,self.axis)
 
         self.horizontalSlider_power.valueChanged.connect(self.powerSiderMoved)
 
@@ -88,7 +91,11 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","axisfriction",lambda val : self.updateFriction(val),self.axis,int)
         self.register_callback("axis","axisinertia",lambda val : self.updateInertia(val),self.axis,int)
 
+        # Check if expo is available
+        self.register_callback("axis","cmdinfo",self.expoAvailable,self.axis,int,adr = 24)
+
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
+        self.pushButton_expo.clicked.connect(self.expo_dlg.display)
     
     def setSpeedLimit(self,val):
         if self.checkBox_speedlimit.isChecked():
@@ -158,6 +165,12 @@ class AxisUI(WidgetUI,CommunicationHandler):
         qtBlockAndCall(self.spinBox_inertia,self.spinBox_inertia.setValue,val)
         qtBlockAndCall(self.horizontalSlider_inertia,self.horizontalSlider_inertia.setValue,val)
 
+    def expoAvailable(self,available):
+        self.pushButton_expo.setEnabled(available>0)
+        self.expo_dlg.setEnabled(available>0)
+        # if available > 0:
+            # self.send_commands("axis",["expo","exposcale"],self.axis)
+
     def init_ui(self):
         try:
             self.getMotorDriver()
@@ -165,6 +178,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
             #self.updateSliders()
             self.send_commands("axis",["invert","cpr"],self.axis)
             self.send_command("axis","cmdinfo",self.axis,adr=17)
+            self.send_command("axis","cmdinfo",self.axis,adr=24) # Expo
        
         except:
             self.main.log("Error initializing Axis tab")
