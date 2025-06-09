@@ -29,7 +29,7 @@
    <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Exponential torque curve correction</string>
+      <string>Exponential torque curve correction (Gamma function)</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <property name="leftMargin">

@@ -259,7 +259,7 @@
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>Expo tuning...</string>
+            <string>Torque curve...</string>
            </property>
           </widget>
          </item>

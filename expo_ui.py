@@ -37,16 +37,19 @@ class ExpoTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def exposcaleCb(self,val):
         self.exposcale = val
+        #self.updateExponent(self.expo)
 
     def expoSliderCb(self,val):
         self.send_value("axis","expo",val,instance=self.axis)
         self.updateExponent(val)
 
     def exponentCb(self,val):
+        self.updateExponent(val)
         self.horizontalSlider_expo.setValue(val)
 
     def updateExponent(self,val):
         if self.exposcale == 0:
+            self.send_commands("axis",["exposcale"],self.axis)
             return # Or get scaler again
         # expoValInt = val
         if(val == 0):
@@ -126,7 +129,7 @@ class ExpoTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         xv = [i / 100 for i in range(-100,100,1)]
         for x in xv:
-            y = self.calcExpo(x,self.expo)
+            y = self.calcExpo(x,exponent)
         # yv = [self.calcExpo(i,self.expo) for i in xv]
             q_line.append(x,y)
         
