@@ -9,6 +9,7 @@ Authors : vincent
 import os
 import json
 import copy
+import sys
 
 import PyQt6.QtCore
 import PyQt6.QtWidgets
@@ -16,12 +17,20 @@ import PyQt6.QtGui
 import base_ui
 import helper
 
+def get_config_dir_path(profiles_filename):
+    if sys.platform == "linux" and not os.path.exists(profiles_filename):
+        defaultConfigDir = os.path.expandvars("$HOME/.config")
+        return os.path.join(os.getenv("XDG_CONFIG_HOME", defaultConfigDir), "openffboard")
+
+    return os.getcwd()
 
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the Profile selector and the board communication about them."""
 
     __RELEASE = 2
+
     __PROFILES_FILENAME = "profiles.json"
+    __PROFILES_FILEPATH = os.path.join(get_config_dir_path(__PROFILES_FILENAME), __PROFILES_FILENAME)
     __PROFILESSETUP_FILENAME = helper.res_path("profile.cfg")
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
@@ -134,7 +143,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def load_profiles(self):
         """Load profiles data in memory : from file if exits, or create a new file."""
-        check = os.path.exists(self.__PROFILES_FILENAME)
+        check = os.path.exists(self.__PROFILES_FILEPATH)
         if check:
             self.load_profiles_from_file()
         else:
@@ -142,10 +151,10 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def load_profiles_from_file(self):
         """Load profiles from file profiles.json ."""
-        with open(self.__PROFILES_FILENAME, "r", encoding="utf_8") as profile_file:
+        with open(self.__PROFILES_FILEPATH, "r", encoding="utf_8") as profile_file:
             self.profiles = json.load(profile_file)
         if self.profiles['release'] < self.__RELEASE :
-            os.rename(self.__PROFILES_FILENAME, self.__PROFILES_FILENAME + '.' + str(self.profiles['release']) + '.old')
+            os.rename(self.__PROFILES_FILEPATH, self.__PROFILES_FILEPATH + '.' + str(self.profiles['release']) + '.old')
             self.create_or_update_profile_file(create=True)
             self.log("Profile: profiles are not compatible, need to redo them")
         else:
@@ -178,8 +187,11 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log(f"Profile: use {default_lang} as default language")
             self.log("Profile: profile file created")
 
+            # Ensure the parent directory exists
+            os.makedirs(get_config_dir_path(), exist_ok=True)
+
         try:
-            with open(self.__PROFILES_FILENAME, "w", encoding="utf_8") as f:
+            with open(self.__PROFILES_FILEPATH, "w", encoding="utf_8") as f:
                 json.dump(self.profiles, f)
             return True
         except OSError:
