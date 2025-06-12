@@ -188,7 +188,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("Profile: profile file created")
 
             # Ensure the parent directory exists
-            os.makedirs(get_config_dir_path(), exist_ok=True)
+            os.makedirs(get_config_dir_path(self.__PROFILES_FILENAME), exist_ok=True)
 
         try:
             with open(self.__PROFILES_FILEPATH, "w", encoding="utf_8") as f:
