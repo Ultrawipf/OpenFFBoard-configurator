@@ -9,6 +9,7 @@ Authors : vincent
 import os
 import json
 import copy
+import sys
 
 import PyQt6.QtCore
 import PyQt6.QtWidgets
@@ -16,12 +17,19 @@ import PyQt6.QtGui
 import base_ui
 import helper
 
+def get_config_dir_path():
+    if sys.platform == "linux" and not os.path.exists("config.json"):
+        defaultConfigDir = os.path.expandvars("$HOME/.config")
+        return os.path.join(os.getenv("XDG_CONFIG_HOME", defaultConfigDir), "openffboard")
+
+    return os.getcwd()
 
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the Profile selector and the board communication about them."""
 
     __RELEASE = 2
-    __PROFILES_FILENAME = "profiles.json"
+
+    __PROFILES_FILENAME = os.path.join(get_config_dir_path(), "config.json")
     __PROFILESSETUP_FILENAME = helper.res_path("profile.cfg")
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
@@ -177,6 +185,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.profiles['global']['language'] = default_lang
             self.log(f"Profile: use {default_lang} as default language")
             self.log("Profile: profile file created")
+
+            # Ensure the parent directory exists
+            os.makedirs(get_config_dir_path(), exist_ok=True)
 
         try:
             with open(self.__PROFILES_FILENAME, "w", encoding="utf_8") as f:
