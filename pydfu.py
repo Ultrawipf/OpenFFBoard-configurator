@@ -85,9 +85,9 @@ def get_backend(): # Return a specific backend for windows
     bits, linkage = platform.architecture()
     if platform.system() == "Windows":
         if bits == "64bit":
-            return usb.backend.libusb1.get_backend(find_library=lambda x: ".\libusb-1.0.dll")
+            return usb.backend.libusb1.get_backend(find_library=lambda x: r".\libusb-1.0.dll")
         else:
-            return usb.backend.libusb1.get_backend(find_library=lambda x: ".\libusb-1.0_32b.dll")
+            return usb.backend.libusb1.get_backend(find_library=lambda x: r".\libusb-1.0_32b.dll")
     return None # default
 
 import inspect
