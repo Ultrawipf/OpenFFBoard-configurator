@@ -1,7 +1,5 @@
 ### Changes this version:
-- Added expo curve tuning UI (If used with v1.16.4 FW)
-- Using $XDG_CONFIG_HOME/openffb on linux if no local profile file found
-- Improved python 3.13 compatibility
+- Fixed analog input range sliders not updating correctly when autotune is toggled after changing channel numbers
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab
@@ -12,3 +10,6 @@
 - Removed ODrive error names
 - Added remote CAN mainclass page
 - Delete callbacks on connection close. Fixes random error messages if a UI element is not properly removed
+- Added expo curve tuning UI (If used with v1.16.4 FW)
+- Using $XDG_CONFIG_HOME/openffb on linux if no local profile file found
+- Improved python 3.13 compatibility

@@ -114,15 +114,18 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         if channels == self.channels:
             return
         self.channels = channels
-        
+        self.remove_callback(self.classname,"min",adr=None)
+        self.remove_callback(self.classname,"max",adr=None)
+
         if self.manual_tune:
             self.tuneBox.setVisible(channels > 0)
             start_row = len(self.tune_list) # Start index row
+            sliders = []
             for i in range(channels):
                 if len(self.tune_list) >= channels:
                     continue # Do not add more
                 rangeSlider = QtRangeSlider(self,0xfffe) # TODO fix slider to allow non 0 start values
-                
+                sliders.append(rangeSlider)
                 rawProgressBar = QProgressBar(self)
                 rawProgressBar.setRange(-32768, 32767)
                 rawProgressBar.setFixedHeight(QtRangeSlider.HEIGHT-4)
@@ -133,14 +136,13 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
                 self.tuneBoxLayout.addWidget(rawProgressBar,i+start_row,1)
                 self.tuneBoxLayout.addItem(QSpacerItem(QtRangeSlider.TRACK_PADDING,1,QSizePolicy.Policy.Fixed,QSizePolicy.Policy.Minimum) ,i+start_row,2)
                 self.tuneBoxLayout.addWidget(rangeSlider,i+start_row,0,1,2)
-                #rangeSlider.setValue(0x7fff)
-                self.register_callback(self.classname,"min",lambda v,slider=rangeSlider : slider.set_left_thumb_value(v+0x7fff) ,self.instance,adr=i,conversion=int)
-                self.register_callback(self.classname,"max",lambda v,slider=rangeSlider : slider.set_right_thumb_value(v+0x7fff),self.instance,adr=i,conversion=int)
-                
+                #rangeSlider.setValue(0x7fff)                
                 # for col,widget in enumerate(newWidgets):
                 #     self.tuneBoxLayout.addWidget(widget,i,col)
                 #     widget.setVisible(True)
             for ch,row in enumerate(self.tune_list):
+                self.register_callback(self.classname,"min",lambda v,slider=row[0] : slider.set_left_thumb_value(v+0x7fff) ,self.instance,adr=ch,conversion=int)
+                self.register_callback(self.classname,"max",lambda v,slider=row[0] : slider.set_right_thumb_value(v+0x7fff),self.instance,adr=ch,conversion=int)
                 for widget in row:
                     widget.setVisible(ch < channels)
 
