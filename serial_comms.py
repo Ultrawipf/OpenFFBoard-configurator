@@ -45,6 +45,12 @@ class SerialComms(QObject):
         callbackObj = {"handler":handler,"callback":callback,"convert":conversion,"instance":instance,"class":cls,"cmd":cmd,"address":adr,"delete":delete,"typechar":typechar}
         if callbackObj not in SerialComms.callbackDict[cls]:
             SerialComms.callbackDict[cls].append(callbackObj)
+
+    @staticmethod
+    def removeCallback(handler,cls=None,cmd=None,callback=None,instance=0,adr=None,typechar='?'):
+        if cls in SerialComms.callbackDict:
+            SerialComms.callbackDict[cls] = [ entry for entry in SerialComms.callbackDict[cls] if entry["handler"] != handler or ( (entry["instance"] not in [instance,None]) or (entry["cmd"] not in [cmd,None]) or (entry["callback"] not in [callback,None]) or (entry["address"] not in [adr,None]) or (entry["typechar"] not in  [typechar,None]))]
+
     @staticmethod
     def removeCallbacks(handler):
         for cls,item in (SerialComms.callbackDict.items()):

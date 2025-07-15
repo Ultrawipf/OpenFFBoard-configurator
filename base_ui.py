@@ -84,6 +84,21 @@ class CommunicationHandler:
         if handler is None : handler = self
         serial_comms.SerialComms.removeCallbacks(handler)
 
+    def remove_callback(
+        self,cls=None,cmd=None,callback=None,instance=0,adr=None,typechar='?'):
+        """Register a callback that can be deleted automatically later."""
+        # Callbacks normally must prevent sending a value change command in this callback
+        # to prevent the same value from being sent back again
+        serial_comms.SerialComms.removeCallback(
+            self,
+            cls=cls,
+            cmd=cmd,
+            callback=callback,
+            instance=instance,
+            adr=adr,
+            typechar=typechar,
+        )
+
     def register_callback(
         self,
         cls,
