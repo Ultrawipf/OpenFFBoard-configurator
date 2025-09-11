@@ -35,7 +35,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
         "global":{},
-        "profiles": [{"name": "None", "data": {}}],
+        "profiles": [{"name": "None", "data": []}],
     }
     FLASH_PROFILE_NAME = "Flash profile"
     NONE_PROFILE_NAME = "None"
