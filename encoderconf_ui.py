@@ -123,10 +123,18 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
         self.spinBox_cs.setRange(1,3)
         layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("CS pin"),self.spinBox_cs)
+
+        self.comboBox_mode = QComboBox()
+        layout.addRow(QLabel("Type"),self.comboBox_mode)
         self.setLayout(layout)
 
+    def updateModes(self,reply):
+        updateListComboBox(self.comboBox_mode,reply,entrySep='\n')
+
     def onshown(self):
+        self.get_value_async("mtenc","mode",self.updateModes,typechar='!')
         self.get_value_async("mtenc","cs",self.spinBox_cs.setValue,0,int)
+        self.get_value_async("mtenc","mode",self.comboBox_mode.setCurrentIndex,0,int)
 
     def apply(self):
         val = self.spinBox_cs.value()
