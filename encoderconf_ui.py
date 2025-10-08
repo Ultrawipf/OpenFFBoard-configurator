@@ -139,6 +139,7 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
     def apply(self):
         val = self.spinBox_cs.value()
         self.send_value("mtenc","cs",val=val)
+        self.send_value("mtenc","mode",val=self.comboBox_mode.currentData())
 
 class BissEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
