@@ -33,6 +33,8 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.axis = unique
 
+        self.cogging_data = [0] * 2880
+        self.cogging_data_received = [False] * 2880
         self.max_datapoints = 10000
         self.max_datapointsVisibleTime = 30
         self.adc_to_amps = 0#2.5 / (0x7fff * 60.0 * 0.0015)
@@ -51,6 +53,10 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
     
         self.pushButton_align.clicked.connect(self.alignEnc)
         self.pushButton_autotunepid.clicked.connect(self.autotunePid)
+        self.pushButton_cogging.clicked.connect(self.coggingDetection)
+        self.pushButton_resetCoggingTable.clicked.connect(self.resetCoggingTable)
+        self.pushButton_reloadCoggingTable.clicked.connect(self.reloadCoggingTable)
+        self.tabWidget.currentChanged.connect(self.tabChanged)
         #self.initUi()
         
         self.timer.timeout.connect(self.updateTimer)
@@ -119,6 +125,39 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             ax.setLabelsBrush(QApplication.instance().palette().text())
  
 
+        # Cogging Chart setup
+        self.chart_cogging = QChart()
+        self.chart_cogging.setBackgroundRoundness(5)
+        self.chart_cogging.setMargins(QMargins(0,0,0,0))
+        self.chart_cogging_Xaxis = QValueAxis(self.chart_cogging)
+        self.chart_cogging_Xaxis.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),128))
+        self.chart_cogging.addAxis(self.chart_cogging_Xaxis,Qt.AlignmentFlag.AlignBottom)
+
+        self.chart_cogging_Yaxis = QValueAxis(self.chart_cogging)
+        self.chart_cogging_Yaxis.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
+        self.chart_cogging.setBackgroundBrush(QApplication.instance().palette().window())
+        
+        self.chart_cogging.addAxis(self.chart_cogging_Yaxis,Qt.AlignmentFlag.AlignLeft)
+        
+        self.lines_cogging = QLineSeries(self.chart_cogging)
+        self.lines_cogging.setName("Cogging")
+        self.lines_cogging.setUseOpenGL(True)
+
+        self.chart_cogging.addSeries(self.lines_cogging)
+        self.lines_cogging.setColor(QColor("cornflowerblue"))
+        self.lines_cogging.attachAxis(self.chart_cogging_Yaxis)
+        self.lines_cogging.attachAxis(self.chart_cogging_Xaxis)
+
+        self.chart_cogging_Xaxis.setMax(10)
+        self.chart_cogging_Yaxis.setMax(20)
+        self.graphWidget_Cogging.setRubberBand(QChartView.RubberBand.VerticalRubberBand)
+        self.graphWidget_Cogging.setChart(self.chart_cogging)
+
+        self.chart_cogging.legend().setLabelBrush(QApplication.instance().palette().text())
+        for ax in self.chart_cogging.axes():
+            ax.setLabelsBrush(QApplication.instance().palette().text())
+
+
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()
         self.lastPrecI = self.checkBox_I_Precision.isChecked()
@@ -175,7 +214,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.register_callback("tmc","trqbq_mode",self.comboBox_torqueFilter.setCurrentIndex,self.axis,int)
         self.register_callback("tmc","trqbq_f",self.spinBox_torqueFilterFreq.setValue,self.axis,int)
     
+        self.register_callback("tmc","coggingTable",self.updateCogging,self.axis,str)
         self.register_callback("tmc","calibrated",self.calibrated,instance=self.axis,conversion=int)
+        self.register_callback("tmc","cogging",self.checkBox_cogging.setChecked,self.axis,int,typechar='?')
         
         self.checkBox_combineEncoders.stateChanged.connect(self.extEncoderChanged)
 
@@ -206,11 +247,13 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.doubleSpinBox_fluxoffset.setEnabled(True)
             self.checkBox_fluxdissipate.setEnabled(True)
             self.pushButton_autotunepid.setEnabled(True)
+            self.pushButton_cogging.setEnabled(True)
         else:
             self.spinBox_poles.setEnabled(False)
             self.doubleSpinBox_fluxoffset.setEnabled(False)
             self.checkBox_fluxdissipate.setEnabled(False)
             self.pushButton_autotunepid.setEnabled(False)
+            self.pushButton_cogging.setEnabled(False)
 
         if(data == 3):
             self.checkBox_svpwm.setEnabled(True)
@@ -297,7 +340,42 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             self.chartXaxis.setMin(max(self.lines_Amps.at(0).x(),max(0,self.chartLastX-self.max_datapointsVisibleTime)))
 
         except Exception as e:
-            self.main.log("TMC update error: " + str(e)) 
+            self.main.log("TMC update error: " + str(e))
+
+    def updateCogging(self,data):
+        try:
+            if "data" in data:
+                # Correctly parse the "item:X,data:(Y,Z,...)" format
+                item_str, data_str = data.split(',', 1)
+                start_index = int(item_str.split(':')[1])
+                
+                # Extract the numbers from within the parentheses
+                values_str = data_str.split('(')[1].split(')')[0]
+                points = [float(p) for p in values_str.split(',') if p]
+
+                for i, p in enumerate(points):
+                    if start_index + i < len(self.cogging_data):
+                        self.cogging_data[start_index + i] = p
+                        self.cogging_data_received[start_index + i] = True
+                
+                # Redraw the entire graph with the updated data
+                self.lines_cogging.clear()
+                degrees_per_point = 360.0 / len(self.cogging_data)
+                
+                valid_data = []
+                for i, p in enumerate(self.cogging_data):
+                    if self.cogging_data_received[i]:
+                        self.lines_cogging.append(i * degrees_per_point, p)
+                        valid_data.append(p)
+
+                self.chart_cogging_Xaxis.setMax(360)
+                
+                if valid_data:
+                    self.chart_cogging_Yaxis.setMax(max(valid_data))
+                    self.chart_cogging_Yaxis.setMin(min(valid_data))
+
+        except Exception as e:
+            self.main.log("TMC cogging update error: " + str(e))
 
     def updateTemp(self,t):
         t = t/100.0
@@ -359,6 +437,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.send_value("tmc","combineEncoder",val = 1 if self.checkBox_combineEncoders.isChecked() else 0,instance=self.axis)
         self.send_value("tmc","invertForce",val = 1 if self.checkBox_invertForce.isChecked() else 0,instance=self.axis)
+        self.send_value("tmc","cogging",val = 1 if self.checkBox_cogging.isChecked() else 0,instance=self.axis)
         
     def submitPid(self):
         # PIDs
@@ -438,6 +517,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.lines_Amps.clear()
         self.lines_Temps.clear()
         self.lines_Flux.clear()
+        self.clearCoggingGraph()
         self.chartYaxis_Amps.setMin(0)
         self.chartYaxis_Temps.setMin(0)
         self.chartYaxis_Temps.setMax(90)
@@ -445,6 +525,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
             # Fill encoder source types
             self.send_commands("tmc",["mtype","encsrc","tmcHwType","trqbq_mode"],self.axis,'!')
             self.send_commands("tmc",["tmctype","tmcHwType","iScale","calibrated","trqbq_f"],self.axis)
+            self.send_command("tmc","cogging",self.axis,'?')
             self.getMotor()
             self.getPids()
             if not self.init_done:
@@ -519,6 +600,40 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         self.get_value_async("tmc","encalign",f,self.axis,typechar='?')
         self.main.log("Started encoder alignment")
+        
+    def coggingDetection(self):
+        self.pushButton_cogging.setEnabled(False)
+        def f(res):
+            self.pushButton_cogging.setEnabled(True)
+            if(res):
+                msg = QMessageBox(QMessageBox.Icon.Information,"Cogging map reading",res)
+                msg.exec()
+
+        self.get_value_async("tmc","calibrateCogging",f,self.axis,typechar='?')
+        self.main.log("Started cogging detection")
+
+    def tabChanged(self, index):
+        # Assuming the tab is a QTabWidget and we can get the text
+        if self.tabWidget.tabText(index) == "Cogging":
+            # Load data only if it hasn't been loaded before
+            if not any(self.cogging_data_received):
+                self.reloadCoggingTable()
+
+    def clearCoggingGraph(self):
+        self.lines_cogging.clear()
+        self.cogging_data = [0] * 2880
+        self.cogging_data_received = [False] * 2880
+        # Reset axes to default values
+        self.chart_cogging_Yaxis.setMin(0)
+        self.chart_cogging_Yaxis.setMax(20)
+
+    def resetCoggingTable(self):
+        self.send_value("tmc", "coggingTable", 0, instance=self.axis)
+        self.clearCoggingGraph()
+
+    def reloadCoggingTable(self):
+        self.clearCoggingGraph()
+        self.send_command("tmc", "coggingTable", self.axis, '?')
         
 
     def getMotor(self):
