@@ -98,13 +98,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
         self.pushButton_expo.clicked.connect(self.expo_dlg.display)
 
-        # --- Smoothing Controls ---
-        self.recon_filter_modes = {0: "None", 1: "Responsive", 2: "Smooth", 3: "Mixed"}
-        self.horizontalSlider_reconfilter.setMinimum(0)
-        self.horizontalSlider_reconfilter.setMaximum(len(self.recon_filter_modes) - 1)
-        self.horizontalSlider_reconfilter.valueChanged.connect(self.send_recon_filter)
-        self.register_callback("axis", "reconfilter", self.update_recon_filter_ui, self.axis, int)
-
+        
         # The slew rate slider is named horizontalSlider in the UI file
         self.horizontalSlider.setMinimum(0)
         # self.horizontalSlider.setMaximum(5000) # Max value is now set dynamically
@@ -115,7 +109,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         # --- Equalizer Controls ---
         # Store all equalizer sliders in a list for easy access
-        self.eq_sliders = [self.verticalSlider, self.verticalSlider_2, self.verticalSlider_3, self.verticalSlider_4, self.verticalSlider_5, self.verticalSlider_6]
+        self.eq_sliders = [self.verticalSlider_eq1, self.verticalSlider_eq2, self.verticalSlider_eq3, self.verticalSlider_eq4, self.verticalSlider_eq5, self.verticalSlider_eq6]
         # Connect the checkbox stateChanged signal to send the enable/disable command
         self.checkBox_eq.stateChanged.connect(self.send_eq_enabled)
         # Iterate through each slider to connect its valueChanged signal
@@ -231,18 +225,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     # --- Smoothing Methods ---
 
-    # Called when the reconstruction filter slider is moved
-    def send_recon_filter(self, value):
-        """Sends the selected reconstruction filter mode to the firmware."""
-        self.send_value("axis", "reconfilter", value, instance=self.axis)
-        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
-
-    # Callback to update the reconstruction filter UI from firmware data
-    def update_recon_filter_ui(self, value):
-        """Updates the reconstruction filter slider and label."""
-        qtBlockAndCall(self.horizontalSlider_reconfilter, self.horizontalSlider_reconfilter.setValue, value)
-        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
-
     # Called when the slew rate limit slider is moved
     @throttle(50) # Throttle to prevent flooding the connection
     def send_slewrate(self, value):
@@ -329,7 +311,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
             # Request initial equalizer status and all band gains from the firmware
             self.send_commands("axis",["equalizer","eqb1","eqb2","eqb3","eqb4","eqb5","eqb6"],self.axis)
             # Request initial smoothing values. Slewrate is requested by the maxdrvslewrate callback chain.
-            self.send_commands("axis", ["reconfilter"], self.axis)
        
         except:
             self.main.log("Error initializing Axis tab")
