@@ -108,6 +108,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
         self.tabWidget_main.currentChanged.connect(self.tab_changed)
+        # Force the main window to resize to the content of the newly selected tab
+        self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
         self.errors_dlg = errors.ErrorsDialog(self)
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
