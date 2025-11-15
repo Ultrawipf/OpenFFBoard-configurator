@@ -54,12 +54,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.horizontalSlider_inertia.valueChanged.connect(lambda val : self.send_value("axis","axisinertia",val,instance=self.axis))
         self.pushButton_center.clicked.connect(lambda : self.send_command("axis","zeroenc",instance=self.axis))
         
-        #self.checkBox_invert.stateChanged.connect(lambda val : self.send_value("axis","invert",(0 if val == 0 else 1),instance=self.axis))
         self.checkBox_speedlimit.stateChanged.connect(self.setSpeedLimitEnabled)
         self.spinBox_speedlimit.valueChanged.connect(lambda val : self.send_value("axis","maxspeed",val,instance=self.axis))
 
-        self.spinBox_reduction_numerator.valueChanged.connect(self.updateReductionText)
-        self.spinBox_reduction_denominator.valueChanged.connect(self.updateReductionText)
         self.pushButton_apply_options.clicked.connect(self.applyOptions)
 
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
@@ -70,6 +67,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","power",self.updatePowerSlider,self.axis,int)
         self.register_callback("axis","degrees",lambda val : self.updateRange(val),self.axis,int)
 
+        self.register_callback("axis","maxspeed",self.speedLimitCb,self.axis,int)
         self.register_callback("axis","invert",lambda val : qtBlockAndCall(self.checkBox_invert,self.checkBox_invert.setChecked,val),self.axis,int)
         
         self.register_callback("axis","fxratio",lambda val : self.updateFxratio(val),self.axis,int)
@@ -81,9 +79,9 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         self.register_callback("axis","reduction",lambda val : self.updateReduction(val),self.axis,lambda x : tuple(map(int,x.split(":"))))
 
-        self.register_callback("axis","cmdinfo",self.reductionAvailable,self.axis,int,adr = 17)
+        # Check if reduction command is available
+        self.register_callback("axis","cmdinfo",self.reductionAvailable,self.axis,int,adr = 19)
 
-        self.register_callback("axis","maxspeed",self.speedLimitCb,self.axis,int)
 
         self.register_callback("axis","pos",self.enc_pos_cb,self.axis,int)
         self.register_callback("axis","cpr",self.cpr_cb,self.axis,int)
@@ -93,10 +91,69 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         # Check if expo is available
         self.register_callback("axis","cmdinfo",self.expoAvailable,self.axis,int,adr = 24)
+        
+        # manage display
+        self.groupBox_enableAxisBlock.toggled.connect(self.toggleAxisBlock)
 
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
         self.pushButton_expo.clicked.connect(self.expo_dlg.display)
+
+        
+        # The slew rate slider is named horizontalSlider in the UI file
+        self.horizontalSlider.setMinimum(0)
+        # self.horizontalSlider.setMaximum(5000) # Max value is now set dynamically
+        self.horizontalSlider.valueChanged.connect(self.send_slewrate)
+        self.register_callback("axis", "slewrate", self.update_slewrate_ui, self.axis, int)
+        self.register_callback("axis", "maxdrvslewrate", self.update_slewrate_slider_max, self.axis, int)
+
+
+        # --- Equalizer Controls ---
+        # Store all equalizer sliders in a list for easy access
+        self.eq_sliders = [self.verticalSlider_eq1, self.verticalSlider_eq2, self.verticalSlider_eq3, self.verticalSlider_eq4, self.verticalSlider_eq5, self.verticalSlider_eq6]
+        # Connect the checkbox stateChanged signal to send the enable/disable command
+        self.checkBox_eq.stateChanged.connect(self.send_eq_enabled)
+        # Iterate through each slider to connect its valueChanged signal
+        for i, slider in enumerate(self.eq_sliders):
+            # When a slider value changes, call send_eq_band_value with the slider's value and band number (index + 1)
+            slider.valueChanged.connect(lambda val, index=i: self.send_eq_band_value(val, index + 1))
+        
+        # Connect the reset button's clicked signal to the reset function
+        self.pushButton_resetEq.clicked.connect(self.reset_eq)
+
+        # Register callbacks to receive equalizer status updates from the firmware
+        self.register_callback("axis","equalizer",self.update_eq_enabled,self.axis,int)
+        for i in range(6):
+            # Register a callback for each equalizer band (eqb1, eqb2, etc.)
+            self.register_callback("axis",f"eqb{i+1}",lambda val, index=i: self.update_eq_band(val, index),self.axis,int)
+
+        # Set initial state of the collapsible groupbox
+        self.toggleAxisBlock(self.groupBox_enableAxisBlock.isChecked())
     
+    def toggleAxisBlock(self, checked):
+        # This function hides/shows the content of the groupbox and adjusts its height
+        # to create a collapsible effect.
+        self.groupBox_hardware.setVisible(checked)
+        self.groupBox_axisOption.setVisible(checked)
+        self.groupBox_encoder.setVisible(checked)
+
+        if checked:
+            # When checked (expanded), remove the maximum height constraint.
+            self.groupBox_enableAxisBlock.setMaximumHeight(16777215) # QWIDGETSIZE_MAX
+        else:
+            # When unchecked (collapsed), set a fixed height for the title bar.
+            # You might need to adjust this value (e.g., 30) to fit your UI style.
+            self.groupBox_enableAxisBlock.setMaximumHeight(40)
+            self.groupBox_enableAxisBlock.setMaximumWidth(800)
+        
+        # Notify this widget (the tab page) that its size hint has changed.
+        self.updateGeometry()
+        # Also notify the parent tab widget, forcing it to recalculate its own size hint.
+        self.main.tabWidget_main.updateGeometry()
+        
+        # Use a single shot timer to allow the event to process, then update the main window layout.
+        # This will now get the correct, updated size hint from the tab widget.
+        QTimer.singleShot(0, self.main.adjustSize)
+
     def setSpeedLimit(self,val):
         if self.checkBox_speedlimit.isChecked():
             self.send_value("axis","maxspeed",self.spinBox_speedlimit.value(),instance=self.axis)
@@ -113,33 +170,28 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.checkBox_speedlimit.setChecked(True)
             self.spinBox_speedlimit.setEnabled(True)
         
-
-    def setSpeedLimitEnabled(self,val):
-        self.spinBox_speedlimit.setEnabled(val)
-        if self.checkBox_speedlimit.isChecked():
-            self.send_value("axis","maxspeed",self.spinBox_speedlimit.value(),instance=self.axis)
-        else:
-            self.send_value("axis","maxspeed",0,instance=self.axis)
-        
-
     def updateReduction(self,val):
         numerator,denominator = val
         self.spinBox_reduction_numerator.setValue(numerator)
         self.spinBox_reduction_denominator.setValue(denominator)
-        self.updateReductionText()
 
     def reductionAvailable(self,available):
-        self.frame_reduction.setVisible(available>0)
+        self.groupBox_reduction.setVisible(available>0)
         if available > 0:
             self.send_command("axis","reduction",self.axis)
 
-    def updateReductionText(self):
-        self.label_gear_reduction_value.setText(f"Prescaler: {round(self.spinBox_reduction_numerator.value()/self.spinBox_reduction_denominator.value(),5)}")
-
     def applyOptions(self):
         self.send_value("axis","invert",(0 if self.checkBox_invert.isChecked() == 0 else 1),instance=self.axis)
-        if(self.frame_reduction.isVisible()):
-            self.send_value("axis","reduction",self.spinBox_reduction_numerator.value(),self.spinBox_reduction_denominator.value(),self.axis)
+        self.send_value("axis","reduction",self.spinBox_reduction_numerator.value(),self.spinBox_reduction_denominator.value(),self.axis)
+    
+        # check if speed is required
+        if self.checkBox_speedlimit.isChecked() :
+            self.send_value("axis","maxspeed",self.spinBox_speedlimit.value(),instance=self.axis)
+        else:
+            self.send_value("axis","maxspeed",0,instance=self.axis)
+            
+    def setSpeedLimitEnabled(self,val):
+        self.spinBox_speedlimit.setEnabled(val)
 
     def updateEsgain(self,val):
         qtBlockAndCall(self.spinBox_esgain,self.spinBox_esgain.setValue,val)
@@ -168,8 +220,85 @@ class AxisUI(WidgetUI,CommunicationHandler):
     def expoAvailable(self,available):
         self.pushButton_expo.setEnabled(available>0)
         self.expo_dlg.setEnabled(available>0)
-        # if available > 0:
-            # self.send_commands("axis",["expo","exposcale"],self.axis)
+        if available > 0:
+            self.send_commands("axis",["expo","exposcale"],self.axis)
+
+    # --- Smoothing Methods ---
+
+    # Called when the slew rate limit slider is moved
+    @throttle(50) # Throttle to prevent flooding the connection
+    def send_slewrate(self, value):
+        """Sends the slew rate limit value to the firmware."""
+        self.send_value("axis", "slewrate", value, instance=self.axis)
+        
+        # display the slew rate in A/ms if it's a tmc driver, else display a lot
+        if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
+            current = (value * self.adc_to_amps)
+            value = str(round(current,1)) + "A/ms"
+            
+        self.label_14.setText(f"{value}")
+
+    # Callback to update the slew rate limit UI from firmware data
+    def update_slewrate_ui(self, value):
+        """Updates the slew rate limit slider and label."""
+        qtBlockAndCall(self.horizontalSlider, self.horizontalSlider.setValue, value)
+        if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
+            current = (value * self.adc_to_amps)
+            value = str(round(current,1)) + "A/ms"
+        self.label_14.setText(f"{value}")
+
+    def update_slewrate_slider_max(self, max_val):
+        """Sets the maximum value of the slew rate slider and then requests the current value. """
+        if((self.driver_id == 1 or self.driver_id == 2) and self.adc_to_amps != 0):
+            current = (max_val * self.adc_to_amps)
+            value = str(round(current,1)) + "A/ms"
+        else:
+            value = max_val
+        self.label_maxDrvSlewRate.setText(value)
+        
+        self.horizontalSlider.setMaximum(max_val)
+        # Now that the maximum is set, request the current value to position the slider correctly.
+        self.send_command("axis", "slewrate", self.axis)
+
+
+    # --- Equalizer Methods ---
+
+    # Called when the 'Effect equalizer' checkbox is toggled
+    def send_eq_enabled(self, state):
+        """Sends the command to enable or disable the equalizer on the firmware."""
+        self.send_value("axis", "equalizer", 1 if state else 0, instance=self.axis)
+
+    # Called when any equalizer slider's value is changed
+    def send_eq_band_value(self, value, band):
+        """Sends the gain value for a specific equalizer band to the firmware."""
+        self.send_value("axis", f"eqb{band}", value, instance=self.axis)
+
+    # Called when the 'Reset gain' button is clicked
+    def reset_eq(self):
+        """Asks for user confirmation and then resets all equalizer sliders to 0."""
+        # Display a confirmation dialog
+        reply = QMessageBox.question(self, 'Reset Equalizer', "Are you sure you want to reset all equalizer bands to 0?",
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        # If the user clicks 'Yes'
+        if reply == QMessageBox.StandardButton.Yes:
+            # Set each slider's value to 0, which will also trigger the send_eq_band_value signal
+            for slider in self.eq_sliders:
+                slider.setValue(0)
+
+    # Callback function to update the checkbox when a value is received from the firmware
+    def update_eq_enabled(self, value):
+        """Updates the 'Effect equalizer' checkbox state based on data from the firmware."""
+        # qtBlockAndCall temporarily blocks signals from the checkbox, sets its state,
+        # and then unblocks them. This prevents the checkbox from re-sending the same value
+        # back to the firmware, avoiding a potential infinite loop.
+        qtBlockAndCall(self.checkBox_eq, self.checkBox_eq.setChecked, value)
+
+    # Callback function to update a slider when a value is received from the firmware
+    def update_eq_band(self, value, band):
+        """Updates an equalizer slider's value based on data from the firmware."""
+        # qtBlockAndCall is used here for the same reason as in update_eq_enabled:
+        # to prevent the slider's valueChanged signal from firing and re-sending the value.
+        qtBlockAndCall(self.eq_sliders[band], self.eq_sliders[band].setValue, value)
 
     def init_ui(self):
         try:
@@ -177,8 +306,11 @@ class AxisUI(WidgetUI,CommunicationHandler):
             self.getEncoder()
             #self.updateSliders()
             self.send_commands("axis",["invert","cpr"],self.axis)
-            self.send_command("axis","cmdinfo",self.axis,adr=17)
+            self.send_command("axis","cmdinfo",self.axis,adr=19) # reduction
             self.send_command("axis","cmdinfo",self.axis,adr=24) # Expo
+            # Request initial equalizer status and all band gains from the firmware
+            self.send_commands("axis",["equalizer","eqb1","eqb2","eqb3","eqb4","eqb5","eqb6"],self.axis)
+            # Request initial smoothing values. Slewrate is requested by the maxdrvslewrate callback chain.
        
         except:
             self.main.log("Error initializing Axis tab")
@@ -302,6 +434,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         commands = ["power","degrees","fxratio","esgain","idlespring","axisdamper","maxspeed","axisfriction","axisinertia"] # requests updates
         self.send_commands("axis",commands,self.axis)
+        self.send_command("axis", "maxdrvslewrate", self.axis) # Get max slew rate for slider
         self.cpr = -1 # Reset cpr
         self.updatePowerLabel(self.horizontalSlider_power.value())
 
@@ -351,10 +484,18 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         def encid_f(id):
             if(id == 255):
-                self.groupBox_encoder.setVisible(False)
+                #self.groupBox_encoder.setVisible(False)
+                self.label_encoderSource.setVisible(False)
+                self.comboBox_encoder.setVisible(False)
+                self.pushButton_submit_enc.setVisible(False)
+                self.stackedWidget_encoder.setVisible(False)
                 return
             else:
-                self.groupBox_encoder.setVisible(True)
+                #self.groupBox_encoder.setVisible(True)
+                self.label_encoderSource.setVisible(True)
+                self.comboBox_encoder.setVisible(True)
+                self.pushButton_submit_enc.setVisible(True)
+                self.stackedWidget_encoder.setVisible(True)
             if(id == None):
                 self.main.log("Error getting encoder")
                 return
