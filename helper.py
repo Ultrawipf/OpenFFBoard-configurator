@@ -39,7 +39,7 @@ def updateClassComboBox(combobox,ids,classes,selected = None):
     if(selected in ids and combobox.currentIndex() != ids[selected][0]):
         combobox.setCurrentIndex(ids[selected][0])
 
-def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dataconv = None):
+def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dataconv = None,labelconv = None):
     """Populates a combobox with entries formatted as Entrylabel<datasep>data<entrysep>..."""
     combobox.clear()
     if lookup != None:
@@ -50,9 +50,12 @@ def updateListComboBox(combobox,reply,entrySep=',',dataSep=':',lookup = None,dat
             continue # empty
         e = s.split(dataSep)
         data = e[1]
+        label = e[0]
         if dataconv != None:
             data = dataconv(data)
-        combobox.addItem(e[0],data)
+        if labelconv != None:
+            label = labelconv(label)
+        combobox.addItem(label,data)
         if lookup != None:
             lookup[data] = i
         i += 1

@@ -1,5 +1,6 @@
 ### Changes this version:
 - Fixed TMC4671 tab calibration warning popup blocking thread causing timeouts
+- Added MT encoder spi speed selector
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab

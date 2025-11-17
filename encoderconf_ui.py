@@ -126,20 +126,33 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
 
         self.comboBox_mode = QComboBox()
         layout.addRow(QLabel("Type"),self.comboBox_mode)
+
+        self.comboBox_spispeed = QComboBox()
+        layout.addRow(QLabel("SPI speed"),self.comboBox_spispeed)
+
         self.setLayout(layout)
 
     def updateModes(self,reply):
         updateListComboBox(self.comboBox_mode,reply,entrySep='\n')
 
+    def updateSpeeds(self,reply):
+        def f(data):
+            data = str(f"{float(data)/1000000:.5g}MHz")
+            return data
+        updateListComboBox(self.comboBox_spispeed,reply,entrySep='\n',labelconv=f)
+
     def onshown(self):
         self.get_value_async("mtenc","mode",self.updateModes,typechar='!')
+        self.get_value_async("mtenc","speed",self.updateSpeeds,typechar='!')
         self.get_value_async("mtenc","cs",self.spinBox_cs.setValue,0,int)
         self.get_value_async("mtenc","mode",self.comboBox_mode.setCurrentIndex,0,int)
+        self.get_value_async("mtenc","speed",self.comboBox_spispeed.setCurrentIndex,0,int)
 
     def apply(self):
         val = self.spinBox_cs.value()
         self.send_value("mtenc","cs",val=val)
         self.send_value("mtenc","mode",val=self.comboBox_mode.currentData())
+        self.send_value("mtenc","speed",val=self.comboBox_spispeed.currentData())
 
 class BissEncoderConf(EncoderOption,CommunicationHandler):
     def __init__(self,parent,main):
