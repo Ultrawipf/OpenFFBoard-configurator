@@ -135,6 +135,14 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.pushButton_calibrate.clicked.connect(lambda : self.send_command("tmc","calibrate",self.axis))
         self.checkBox_fluxdissipate.stateChanged.connect(lambda x : self.send_value("tmc","fluxbrake",val=1 if x else 0,instance=self.axis))
 
+        # Messageboxes
+        self.calmsg = QMessageBox()
+        self.calmsg.setIcon(QMessageBox.Icon.Warning)
+        self.calmsg.setWindowTitle(self.tr("Calibration required"))
+        self.calmsg.setText(self.tr("A calibration of ADC offsets and encoder settings is required."))
+        self.calmsg.setInformativeText(self.tr("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done."))
+        self.calmsg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+
         # Callbacks
         self.register_callback("tmc","temp",self.updateTemp,self.axis,int)
         self.register_callback("sys","vint",self.vintCb,0,int)
@@ -444,7 +452,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         try:
             # Fill encoder source types
             self.send_commands("tmc",["mtype","encsrc","tmcHwType","trqbq_mode"],self.axis,'!')
-            self.send_commands("tmc",["tmctype","tmcHwType","iScale","calibrated","trqbq_f"],self.axis)
+            self.send_commands("tmc",["tmctype","tmcHwType","iScale","trqbq_f"],self.axis)
             self.getMotor()
             self.getPids()
             if not self.init_done:
@@ -474,17 +482,14 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def calibrated(self,v):
         v = int(v)
-        if not v and self.isEnabled():
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setWindowTitle(self.tr("Calibration required"))
-            msg.setText(self.tr("A calibration of ADC offsets and encoder settings is required."))
-            msg.setInformativeText(self.tr("Please set up the encoder and motor parameters correctly, apply power and start the full calibration by clicking OK or Cancel and start the calibration manually later once everything is set up.\n\nCertain ADC and encoder settings are stored in flash to accelerate the startup.\nIf a new board is used a new calibration must be done."))
-            msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
-            ret = msg.exec()
+        if not v and self.isEnabled() and self.comboBox_mtype.currentIndex() != 0 and self.comboBox_enc.currentIndex() != 0:
             # Warning displayed
-            if ret == QMessageBox.StandardButton.Ok:
-                self.send_command("tmc","calibrate",self.axis)
+            def cb(ret):
+                print(ret)
+                if ret == QMessageBox.StandardButton.Ok:
+                    self.send_command("tmc","calibrate",self.axis)
+            self.calmsg.finished.connect(cb)
+            self.calmsg.open()
 
 
     def encsCb(self,encsrcs):
@@ -522,7 +527,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         
 
     def getMotor(self):
-        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce","fluxbrake"]
+        commands=["mtype","poles","encsrc","cpr","abnindex","abnpol","combineEncoder","invertForce","fluxbrake","calibrated"]
         self.send_commands("tmc",commands,self.axis)
 
 

@@ -1,5 +1,5 @@
 ### Changes this version:
-- Added MagnTek mode selector. Support for MT6835
+- Fixed TMC4671 tab calibration warning popup blocking thread causing timeouts
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab
@@ -14,3 +14,4 @@
 - Using $XDG_CONFIG_HOME/openffb on linux if no local profile file found
 - Improved python 3.13 compatibility
 - Fixed analog input range sliders not updating correctly when autotune is toggled after changing channel numbers
+- Added MagnTek mode selector. Support for MT6835
