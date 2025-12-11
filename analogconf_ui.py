@@ -111,7 +111,7 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
         
      # create min/max boxes or sliders
     def setChannels(self,channels : int):
-        if channels == self.channels:
+        if channels == self.channels and len(self.pgb_list) >= channels:
             return
         self.channels = channels
         self.remove_callback(self.classname,"min",adr=None)
@@ -153,7 +153,7 @@ class AnalogProcessingOptions(QWidget,CommunicationHandler):
 
                 pgb = QProgressBar(self)
                 pgb.setVisible(False)
-                pgb.setFixedHeight(16)
+                # pgb.setFixedHeight(16)
                 pgb.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 pgb.setRange(-32768, 32767)
                 pgb.setValue(-32768)
