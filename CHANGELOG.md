@@ -1,6 +1,5 @@
 ### Changes this version:
-- Fixed TMC4671 tab calibration warning popup blocking thread causing timeouts
-- Added MT encoder spi speed selector
+- Fixes analog axis progressbars cutting off text and ADS111x progressbars not populating when set to 4
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab
@@ -16,3 +15,5 @@
 - Improved python 3.13 compatibility
 - Fixed analog input range sliders not updating correctly when autotune is toggled after changing channel numbers
 - Added MagnTek mode selector. Support for MT6835
+- Fixed TMC4671 tab calibration warning popup blocking thread causing timeouts
+- Added MT encoder spi speed selector
