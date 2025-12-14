@@ -10,6 +10,7 @@ import os
 import json
 import copy
 import sys
+import shutil
 
 import PyQt6.QtCore
 import PyQt6.QtWidgets
@@ -17,20 +18,16 @@ import PyQt6.QtGui
 import base_ui
 import helper
 
-def get_config_dir_path(profiles_filename):
-    if sys.platform == "linux" and not os.path.exists(profiles_filename):
-        defaultConfigDir = os.path.expandvars("$HOME/.config")
-        return os.path.join(os.getenv("XDG_CONFIG_HOME", defaultConfigDir), "openffboard")
 
-    return os.getcwd()
 
 class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Manage the Profile selector and the board communication about them."""
 
-    __RELEASE = 2
+    __RELEASE = 3
 
     __PROFILES_FILENAME = "profiles.json"
-    __PROFILES_FILEPATH = os.path.join(get_config_dir_path(__PROFILES_FILENAME), __PROFILES_FILENAME)
+    __APP_NAME = "openffboard"
+    __PROFILES_FILEPATH = None
     __PROFILESSETUP_FILENAME = helper.res_path("profile.cfg")
     __PROFILES_TEMPLATE = {
         "release": __RELEASE,
@@ -58,6 +55,8 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self._profilename_tosave: str = None
 
         self.ui_initialized = False
+        
+        self.__PROFILES_FILEPATH = self.setup_and_migrate_config(self.__PROFILES_FILENAME, self.__APP_NAME)
 
         self.load_profile_settings()
         self.load_profiles()
@@ -92,6 +91,71 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         )
 
         self.setEnabled(False)
+        
+    def get_system_config_dir(self, app_name):
+        """
+        Returns the system-specific configuration directory.
+        """
+        home = os.path.expanduser("~")
+        
+        if sys.platform == "win32":
+            # Windows: User requested specific path: C:\Users\Name\.appname
+            # We add a dot prefix for Windows to match the request
+            return os.path.join(home, f".{app_name}")
+            
+        elif sys.platform == "darwin":
+            # macOS Standard: ~/Library/Application Support/appname
+            return os.path.join(home, "Library", "Application Support", app_name)
+            
+        else:
+            # Linux Standard: ~/.config/appname (XDG standard)
+            base = os.getenv("XDG_CONFIG_HOME", os.path.join(home, ".config"))
+            return os.path.join(base, app_name)
+
+    def setup_and_migrate_config(self, filename, app_name):
+        """
+        Prepares the configuration directory and migrates the old file if it exists locally.
+        Returns the final path of the file to use.
+        """
+        system_dir = self.get_system_config_dir(app_name)
+        system_file_path = os.path.join(system_dir, filename)
+        
+        # Old location (current working directory)
+        local_file_path = os.path.join(os.getcwd(), filename) 
+
+        # Create system directory if it doesn't exist
+        if not os.path.exists(system_dir):
+            try:
+                os.makedirs(system_dir)
+                self.log(f"[Info] Config directory created: {system_dir}")
+            except OSError as e:
+                self.log(f"[Error] Could not create directory: {e}")
+                return local_file_path
+
+        # Migration Logic, ff a file exists in the current directory (old method)...
+        if os.path.exists(local_file_path):
+            
+            # and NO file exists in the new system folder yet:
+            if not os.path.exists(system_file_path):
+                self.log("[Info] Migration in progress: Moving local config to system folder...")
+                try:
+                    shutil.move(local_file_path, system_file_path)
+                    self.log("[Success] Migration complete.")
+                except OSError as e:
+                    self.log(f"[Error] Migration failed: {e}")
+                    return local_file_path # Fallback to local on failure
+            
+            # if a file exists in BOTH locations (Conflict):
+            else:
+                self.log("[Warning] Config file exists in both locations.")
+                self.log("[Info] Renaming the local (old) file to .bak to avoid confusion.")
+                try:
+                    shutil.move(local_file_path, local_file_path + ".bak")
+                except Exception as e:
+                    self.log(f"[Error] Could not rename local file: {e}")
+
+        # 4. Return the final path (System path)
+        return system_file_path
 
     def save_clicked(self):
         """Save current seeting in Flash and replace the 'Flash profile' settings by the new one."""
@@ -188,7 +252,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.log("Profile: profile file created")
 
             # Ensure the parent directory exists
-            os.makedirs(get_config_dir_path(self.__PROFILES_FILENAME), exist_ok=True)
+            os.makedirs(self.get_system_config_dir(self.__APP_NAME), exist_ok=True)
 
         try:
             with open(self.__PROFILES_FILEPATH, "w", encoding="utf_8") as f:
