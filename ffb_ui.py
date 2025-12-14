@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
-from helper import res_path,classlistToIds,splitListReply,throttle
+from helper import res_path,classlistToIds,splitListReply,throttle,qtBlockAndCall
 from PyQt6.QtCore import QTimer,QEvent, pyqtSignal
 import main
 import buttonconf_ui
@@ -111,6 +111,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         
         self.register_callback("fx", "frictionPctSpeedToRampup", self.set_friction_pct_speed_rampup,0,int)
 
+        # --- Smoothing Controls ---
+        self.recon_filter_modes = {0: "None", 1: "Responsive", 2: "Smooth", 3: "Mixed"}
+        self.horizontalSlider_reconfilter.setMinimum(0)
+        self.horizontalSlider_reconfilter.setMaximum(len(self.recon_filter_modes) - 1)
+        self.horizontalSlider_reconfilter.valueChanged.connect(self.send_recon_filter)
+        self.register_callback("fx", "reconFilterMode", self.update_recon_filter_ui, 0, int)
+
         if(self.init_ui()):
             tabId = self.main.add_tab(self,title)
             self.main.select_tab(tabId)
@@ -131,6 +138,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             self.send_command("main","lsain",0,'?') # get analog types
             self.send_command("main","aintypes",0,'?') # get active analog
 
+            self.send_commands("fx", ["reconFilterMode"])
 
             self.updateSliders()
             self.send_command("main","hidsendspd",0,'!') # get speed
@@ -336,6 +344,18 @@ class FfbUI(WidgetUI,CommunicationHandler):
             btn.setEnabled(creatable or enabled)
 
         self.groupBox_analogaxes.setLayout(layout)
+
+    # Called when the reconstruction filter slider is moved
+    def send_recon_filter(self, value):
+        """Sends the selected reconstruction filter mode to the firmware."""
+        self.send_value("fx", "reconFilterMode", value)
+        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
+
+    # Callback to update the reconstruction filter UI from firmware data
+    def update_recon_filter_ui(self, value):
+        """Updates the reconstruction filter slider and label."""
+        qtBlockAndCall(self.horizontalSlider_reconfilter, self.horizontalSlider_reconfilter.setValue, value)
+        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
 
     @throttle(50)
     def cffilter_changed(self,v,send=True):

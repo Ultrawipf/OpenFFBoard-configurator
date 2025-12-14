@@ -29,20 +29,22 @@ class EncoderOptions(QGroupBox):
             found = False
         elif(id == 4): # MT SPI
             self.widget = (MtEncoderConf(self,self.main))
-            self.setTitle("SPI Settings")
+            self.setTitle("SPI Settings (port SPI3)")
         elif(id == 5): # BISS-C
             self.widget = (BissEncoderConf(self,self.main))
-            self.setTitle("BISS Settings")
+            self.setTitle("BISS Settings (port SPI3 - exclusif usage)")
         elif(id == 6): # SSI
             self.widget = (SsiEncoderConf(self,self.main))
-            self.setTitle("SSI Settings")
+            self.setTitle("SSI Settings (port SPI3 - exclusif usage)")
         else:
             layout.addWidget(QLabel("No settings"))
 
+        layout.setContentsMargins(5,0,5,0)
+        layout.setStretch(0,0)
+        layout.addWidget(self.widget)
+        self.setLayout(layout)
         
-        layout.setContentsMargins(0,0,0,0)
-        if self.widget:
-            layout.addWidget(self.widget)
+        if self.widget:            
             self.applyBtn = QPushButton("Apply")
             self.applyBtn.clicked.connect(self.widget.apply)
             footer = QHBoxLayout()
@@ -52,7 +54,6 @@ class EncoderOptions(QGroupBox):
             footer.addStretch(5)
             layout.addLayout(footer)
  
-        self.setLayout(layout)
 
 class EncoderOption(QWidget):
     def __init__(self,parent):
@@ -89,7 +90,7 @@ class LocalEncoderConf(EncoderOption,CommunicationHandler):
 
         self.spinBox_cpr = QSpinBox()
         self.spinBox_cpr.setRange(0,0xffff)
-        layout.addWidget(QLabel("CPR = 4x PPR"))
+        layout.addRow(QLabel("CPR = 4x PPR"))
         layout.addRow(QLabel("CPR:"),self.spinBox_cpr)
 
         self.checkBox_index = QCheckBox("Use index homing")
@@ -121,7 +122,6 @@ class MtEncoderConf(EncoderOption,CommunicationHandler):
 
         self.spinBox_cs = QSpinBox()
         self.spinBox_cs.setRange(1,3)
-        layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("CS pin"),self.spinBox_cs)
 
         self.comboBox_mode = QComboBox()
@@ -169,10 +169,8 @@ class BissEncoderConf(EncoderOption,CommunicationHandler):
         self.checkBox_direction = QCheckBox("Reverse direction (default)")
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
-        layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("Bits"),self.spinBox_bits)
         layout.addWidget(self.checkBox_direction)
-        layout.addWidget(QLabel("Port is used exclusively!"))
         self.setLayout(layout)
 
     def onshown(self):
@@ -202,11 +200,9 @@ class SsiEncoderConf(EncoderOption,CommunicationHandler):
         self.comboBox_mode = QComboBox()
         self.comboBox_speed = QComboBox()
 
-        layout.addWidget(QLabel("SPI3 extension port"))
         layout.addRow(QLabel("Bits"),self.spinBox_bits)
         layout.addRow(QLabel("Mode"),self.comboBox_mode)
         layout.addRow(QLabel("SPI speed"),self.comboBox_speed)
-        layout.addWidget(QLabel("Port is used exclusively!"))
         self.setLayout(layout)
 
     def updateSpeeds(self,reply):
