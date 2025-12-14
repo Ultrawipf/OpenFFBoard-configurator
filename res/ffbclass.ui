@@ -678,6 +678,25 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>comboBox_reportrate</tabstop>
+  <tabstop>horizontalSlider_cffilter</tabstop>
+  <tabstop>horizontalSlider_CFq</tabstop>
+  <tabstop>doubleSpinBox_CFq</tabstop>
+  <tabstop>radioButton_reconfilter_0</tabstop>
+  <tabstop>radioButton_reconfilter_1</tabstop>
+  <tabstop>radioButton_reconfilter_2</tabstop>
+  <tabstop>radioButton_reconfilter_3</tabstop>
+  <tabstop>horizontalSlider_spring</tabstop>
+  <tabstop>doubleSpinBox_spring</tabstop>
+  <tabstop>horizontalSlider_damper</tabstop>
+  <tabstop>doubleSpinBox_damper</tabstop>
+  <tabstop>horizontalSlider_friction</tabstop>
+  <tabstop>doubleSpinBox_friction</tabstop>
+  <tabstop>horizontalSlider_inertia</tabstop>
+  <tabstop>doubleSpinBox_inertia</tabstop>
+  <tabstop>pushButton_advanced_tuning</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
