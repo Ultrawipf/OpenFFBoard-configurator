@@ -112,10 +112,10 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.register_callback("fx", "frictionPctSpeedToRampup", self.set_friction_pct_speed_rampup,0,int)
 
         # --- Smoothing Controls ---
-        self.recon_filter_modes = {0: "None", 1: "Responsive", 2: "Smooth", 3: "Mixed"}
-        self.horizontalSlider_reconfilter.setMinimum(0)
-        self.horizontalSlider_reconfilter.setMaximum(len(self.recon_filter_modes) - 1)
-        self.horizontalSlider_reconfilter.valueChanged.connect(self.send_recon_filter)
+        self.radioButton_reconfilter_0.toggled.connect(lambda checked: self.send_recon_filter(0) if checked else None)
+        self.radioButton_reconfilter_1.toggled.connect(lambda checked: self.send_recon_filter(1) if checked else None)
+        self.radioButton_reconfilter_2.toggled.connect(lambda checked: self.send_recon_filter(2) if checked else None)
+        self.radioButton_reconfilter_3.toggled.connect(lambda checked: self.send_recon_filter(3) if checked else None)
         self.register_callback("fx", "reconFilterMode", self.update_recon_filter_ui, 0, int)
 
         if(self.init_ui()):
@@ -349,13 +349,23 @@ class FfbUI(WidgetUI,CommunicationHandler):
     def send_recon_filter(self, value):
         """Sends the selected reconstruction filter mode to the firmware."""
         self.send_value("fx", "reconFilterMode", value)
-        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
 
     # Callback to update the reconstruction filter UI from firmware data
     def update_recon_filter_ui(self, value):
         """Updates the reconstruction filter slider and label."""
-        qtBlockAndCall(self.horizontalSlider_reconfilter, self.horizontalSlider_reconfilter.setValue, value)
-        self.label_reconfilter.setText(self.recon_filter_modes.get(value, "Unknown"))
+        button_radio = None 
+        if (value < 0 or value >= 4):
+            self.main.log(f"Warning: Received unknown reconstruction filter mode value: {value}")
+        elif value == 0:
+            button_radio = self.radioButton_reconfilter_0
+        elif value == 1:
+            button_radio = self.radioButton_reconfilter_1
+        elif value == 2:
+            button_radio = self.radioButton_reconfilter_2
+        elif value == 3:
+            button_radio = self.radioButton_reconfilter_3
+        qtBlockAndCall(button_radio, button_radio.setChecked, True)
+        button_radio.setChecked(True)
 
     @throttle(50)
     def cffilter_changed(self,v,send=True):

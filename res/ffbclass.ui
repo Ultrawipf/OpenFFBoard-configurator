@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>543</width>
-    <height>552</height>
+    <height>542</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -459,23 +459,71 @@
      <property name="flat">
       <bool>false</bool>
      </property>
-     <layout class="QGridLayout" name="gridLayout" rowminimumheight="0,0,30">
+     <layout class="QGridLayout" name="gridLayout">
       <property name="horizontalSpacing">
        <number>10</number>
       </property>
       <property name="verticalSpacing">
        <number>5</number>
       </property>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_11">
+      <item row="0" column="4">
+       <widget class="QLabel" name="label_cffilter">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" rowspan="2">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Orientation::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QDoubleSpinBox" name="doubleSpinBox_CFq">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="keyboardTracking">
+         <bool>false</bool>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>0.800000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.010000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QSlider" name="horizontalSlider_cffilter">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lowpass filter frequency for constant force effect.&lt;/p&gt;&lt;p&gt;Applies only to the CF effect (usually covers all physics based forces for most games) and interpolated between updates.&lt;/p&gt;&lt;p&gt;Use this filter to tune between sharp and smooth forces and to reduce noise. &lt;br/&gt;Should be lower than games FFB update speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-        <property name="text">
-         <string>Freq.</string>
+        <property name="minimum">
+         <number>10</number>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        <property name="maximum">
+         <number>500</number>
+        </property>
+        <property name="pageStep">
+         <number>4</number>
+        </property>
+        <property name="value">
+         <number>10</number>
+        </property>
+        <property name="sliderPosition">
+         <number>10</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
        </widget>
       </item>
@@ -508,31 +556,69 @@
        </widget>
       </item>
       <item row="2" column="0" colspan="3">
-       <widget class="QLabel" name="label_12">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The reconstruction filter help increase good feeling on low FFB rate.&lt;/p&gt;&lt;p&gt;There is 3 options :&lt;/p&gt;&lt;p&gt;*) Responsive (low delay, less details)&lt;/p&gt;&lt;p&gt;*) Smooth (more delay, High Fidelity )&lt;/p&gt;&lt;p&gt;*) Mixed (low delay, optimum details)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
+       <widget class="QLabel" name="label_13">
         <property name="text">
          <string>Reconstruction Filter</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QLabel" name="label_reconfilter">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>0</height>
-         </size>
+      <item row="2" column="3" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QRadioButton" name="radioButton_reconfilter_0">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable the reconstruction filter.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>None</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_reconfilter_1">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The linear reconstruction filter takes the last two points sent by the game and calculates the linear line between the two points. &lt;/p&gt;&lt;p&gt;The FFB engine calculates subsamples every time on this straight line. &lt;/p&gt;&lt;p&gt;The game signal is slowed by 1 sample before being sent to the driver.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Linear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_reconfilter_2">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The &amp;quot;High Fidelity&amp;quot; reconstruction filter takes the last four points sent by the game and calculates a spline between the four points. &lt;/p&gt;&lt;p&gt;The FFB engine calculates subsamples between the last two points by following this spline most faithfully. &lt;/p&gt;&lt;p&gt;The signal coming from the game is slowed down by 1.5 samples before being sent to the driver.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>High Fidelity</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioButton_reconfilter_3">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The &amp;quot;Mixed&amp;quot; reconstruction filter takes the last three points sent by the game and calculates a spline between these points, less faithfully than &amp;quot;HiFi&amp;quot; mode, but more finely than &amp;quot;Linear&amp;quot; mode. &lt;/p&gt;&lt;p&gt;The FFB engine calculates the subsamples between the last three points following this curve. The signal from the game is slowed down by 1 sample, like linear mode, before being sent to the driver.&lt;/p&gt;&lt;p&gt;This solution combines the advantage of spline precision and the responsiveness of linear mode, it is recommended by default.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Mixed (optimum)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Q Factor for constant force low pass filter.&lt;br/&gt;Controls how sharp the response drops at the frequency limit.&lt;/p&gt;&lt;p&gt;Be careful to prevent oscillations by not limiting the bandwidth too much.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>N/A</string>
+         <string>Q</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -561,84 +647,16 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QSlider" name="horizontalSlider_cffilter">
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_11">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lowpass filter frequency for constant force effect.&lt;/p&gt;&lt;p&gt;Applies only to the CF effect (usually covers all physics based forces for most games) and interpolated between updates.&lt;/p&gt;&lt;p&gt;Use this filter to tune between sharp and smooth forces and to reduce noise. &lt;br/&gt;Should be lower than games FFB update speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
-        <property name="minimum">
-         <number>10</number>
-        </property>
-        <property name="maximum">
-         <number>500</number>
-        </property>
-        <property name="pageStep">
-         <number>4</number>
-        </property>
-        <property name="value">
-         <number>10</number>
-        </property>
-        <property name="sliderPosition">
-         <number>10</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="4">
-       <widget class="QDoubleSpinBox" name="doubleSpinBox_CFq">
-        <property name="minimumSize">
-         <size>
-          <width>100</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="keyboardTracking">
-         <bool>false</bool>
-        </property>
-        <property name="minimum">
-         <double>0.010000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>0.800000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Q Factor for constant force low pass filter.&lt;br/&gt;Controls how sharp the response drops at the frequency limit.&lt;/p&gt;&lt;p&gt;Be careful to prevent oscillations by not limiting the bandwidth too much.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
         <property name="text">
-         <string>Q</string>
+         <string>Freq.</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QSlider" name="horizontalSlider_reconfilter">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QLabel" name="label_cffilter">
-        <property name="text">
-         <string>0</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" rowspan="2">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
