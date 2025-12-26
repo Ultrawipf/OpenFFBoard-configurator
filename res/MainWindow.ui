@@ -161,21 +161,8 @@
     <addaction name="actionActive_features"/>
     <addaction name="actionActive_threads"/>
     <addaction name="actionDebug_mode"/>
-    <addaction name="actionUpdates"/>
     <addaction name="menuLanguage"/>
     <addaction name="actionAbout"/>
-   </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Hardware</string>
-    </property>
-    <addaction name="actionDFU_Uploader"/>
-    <addaction name="separator"/>
-    <addaction name="actionReset_Factory_Config"/>
-    <addaction name="actionSave_chip_config"/>
-    <addaction name="actionRestore_chip_config"/>
-    <addaction name="separator"/>
-    <addaction name="actionReboot"/>
    </widget>
    <widget class="QMenu" name="menuMonitoring">
     <property name="title">
@@ -184,7 +171,6 @@
     <addaction name="actionEffectsMonitor"/>
     <addaction name="actionEffects_forces"/>
    </widget>
-   <addaction name="menuSettings"/>
    <addaction name="menuMonitoring"/>
    <addaction name="menuHelp"/>
   </widget>

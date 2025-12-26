@@ -35,7 +35,6 @@ import helper
 # UIs
 import base_ui
 import serial_ui
-import dfu_ui
 import dark_palette
 import profile_ui
 import ffb_ui
@@ -57,6 +56,7 @@ import activetasks
 import rmd_ui
 import canremote_ui
 import settings_ui
+import about_ui
 
 # This GUIs version
 VERSION = "1.16.9"
@@ -125,6 +125,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         # Settings panel
         self.settings_ui = settings_ui.Settings(self, self.serial)
+        
+        # About panel
+        self.about_ui = about_ui.AboutUI(self, VERSION, None)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -170,12 +173,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.wrapper_status_bar.serial_connected)
 
         # self.serial.readyRead.connect(self.serialReceive)
-        self.actionAbout.triggered.connect(self.open_about)
         self.serialchooser.connected.connect(self.serial_connected)
         # Keep Settings UI in sync when the serial port opens/closes
         self.serialchooser.connected.connect(self.settings_ui.update_connected)
-
-        self.actionUpdates.triggered.connect(self.open_updater)
 
         self.actionDebug_mode.triggered.connect(self.toggle_debug)
 
@@ -186,8 +186,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.effects_graph_dlg.setEnabled(False)
 
         # Toolbar menu items
-        self.actionDFU_Uploader.triggered.connect(self.open_dfu_dialog)
-
         self.actionErrors.triggered.connect(self.open_logs_errors_dialog)  # Open error list
 
         self.actionActive_features.triggered.connect(
@@ -218,6 +216,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             if panel.get("static"):
                 if panel.get("name") == "settings":
                     widget = self.settings_ui
+                elif panel.get("name") == "about":
+                    widget = self.about_ui
                 else:
                     widget = PyQt6.QtWidgets.QWidget()
                 pos = panel.get("position", "auto")
@@ -294,17 +294,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
             notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
-
-    def open_dfu_dialog(self):
-        """Open the dfu dialog and start managing."""
-        msg = PyQt6.QtWidgets.QDialog()
-        msg.setWindowTitle(self.tr("Firmware"))
-        dfu = dfu_ui.DFUModeUI(parentWidget=msg, mainUI=self)
-        layout = PyQt6.QtWidgets.QVBoxLayout()
-        layout.addWidget(dfu)
-        msg.setLayout(layout)
-        msg.exec()
-        dfu.deleteLater()
         
 
     def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
@@ -331,15 +320,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if (point.x() + width) < self.screen().size().width() :
             self.errors_dlg.move(point)
             self.errors_dlg.resize(width,height)
-
-
-    def open_about(self):
-        """Open the about dialog box."""
-        AboutDialog(self).exec()
-
-    def open_updater(self):
-        """Opens updater window"""
-        updater.UpdateBrowser(self,self.profile_ui).exec()
 
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
@@ -975,20 +955,6 @@ class WrapperStatusBar(base_ui.WidgetUI):
     def append_log(self, message):
         """Display the last log message in the status bar."""
         self.label_log.setText(message)
-
-
-class AboutDialog(PyQt6.QtWidgets.QDialog):
-    """Display the about dialog box."""
-
-    def __init__(self, parent : MainUi = None ):
-        """Display the about box with the release number updated."""
-        PyQt6.QtWidgets.QDialog.__init__(self, parent)
-        PyQt6.uic.loadUi(helper.res_path("about.ui"), self)
-        verstr = "Version: " + VERSION
-        if parent.fw_version_str:
-            verstr += " / Firmware: " + parent.fw_version_str
-        self.version.setText(verstr)
-
 
 def windows_theme_is_light():
     """Detect if the user is using Dark Mode in Windows.
