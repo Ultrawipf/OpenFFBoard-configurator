@@ -329,7 +329,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
         self.process_events_timer.stop()
-        if port_checked != self.serialchooser.main_id:
+        if port_checked != self.settings_ui.main_id:
             self.reset_port()
             self.log("Communication error. Please reconnect")
         else:

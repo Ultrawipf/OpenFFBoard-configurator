@@ -36,9 +36,6 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         base_ui.CommunicationHandler.__init__(self)
         self._serial = serial
         self.main = main_ui
-        self.main_id = None
-        self._classes = []
-        self._class_ids = {}
         self._port = None
         self._ports = []
 

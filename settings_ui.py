@@ -210,6 +210,9 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         # Update Tab
         #self.groupBox_dfu.setEnabled(state)
         self.pushButton_DFU.setEnabled(state)
+        
+        if state:
+            self.get_main_classes()
 
     def update_mains(self, dat):
         """Parse the list of main classes received from board, and update the combobox."""
