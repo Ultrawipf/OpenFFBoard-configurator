@@ -36,7 +36,7 @@
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>Main config - Terminal</string>
+       <string>OpenFFBoard</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <property name="leftMargin">
@@ -63,13 +63,20 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Configuration</string>
+          <string>Hardware</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
           <item row="0" column="0">
            <widget class="QLabel" name="label">
             <property name="text">
              <string>Main Class</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="pushButton_mainclasschange">
+            <property name="text">
+             <string>Change</string>
             </property>
            </widget>
           </item>
@@ -83,18 +90,43 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="pushButton_mainclasschange">
+          <item row="1" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QPushButton" name="pushButton_resetFactory">
+              <property name="text">
+               <string>Reset Factory config</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_load">
+              <property name="text">
+               <string>Load chip config</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_save">
+              <property name="text">
+               <string>Save chip config</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="pushButton_reboot">
             <property name="text">
-             <string>Change</string>
+             <string>Reboot</string>
             </property>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox">
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_terminal">
          <property name="title">
           <string>Terminal</string>
          </property>

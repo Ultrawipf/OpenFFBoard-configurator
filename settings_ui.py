@@ -14,6 +14,7 @@ import PyQt6.QtWidgets
 import base_ui
 import main
 import helper
+import config
 
 
 class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
@@ -26,12 +27,12 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     OFFICIAL_VID_PID = [(0x1209, 0xFFB0)]  # Highlighted in serial selector
 
-    def __init__(self,  main, serialport : PyQt6.QtSerialPort.QSerialPort):
+    def __init__(self,  main_ui, serialport : PyQt6.QtSerialPort.QSerialPort):
         """Initialize the manager with the QSerialPort for serial commmunication and the mainUi."""
-        base_ui.WidgetUI.__init__(self, main, "settings_serial.ui")
+        base_ui.WidgetUI.__init__(self, main_ui, "settings_serial.ui")
         base_ui.CommunicationHandler.__init__(self)
 
-        self.main = main
+        self.main = main_ui
         self.main_id = None
 
         # prefer the serial port managed by the shared comms object if present
@@ -40,9 +41,69 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.pushButton_send.clicked.connect(self.send_line)
         self.lineEdit_cmd.returnPressed.connect(self.send_line)
         self.pushButton_mainclasschange.clicked.connect(self.main_btn)
+
+        self.pushButton_reboot.clicked.connect(self.reboot)
+        self.pushButton_save.clicked.connect(self.save_flashdump_to_file)
+        self.pushButton_load.clicked.connect(self.load_flashdump_from_file)
+        self.pushButton_resetFactory.clicked.connect(self.reset_factory_btn)
         
         # Update UI according to current connection state
         self.update_connected()
+
+    def reboot(self):
+        """Send the reboot message to the board."""
+        self.send_command("sys", "reboot")
+        self.main.reconnect()
+
+    def save_flashdump_to_file(self):
+        """Send a async message to get the flashdump from board."""
+        self.get_value_async("sys", "flashdump", config.saveDump)
+
+    def load_flashdump_from_file(self):
+        """Load dumpfile and send config to board."""
+        dump = config.loadDump()
+        if not dump:
+            return
+
+        if self.main.connected:
+            for sector in dump["flash"]:
+                self.send_value("sys", "flashraw", sector["val"], sector["addr"], 0)
+            # Message
+            msg = PyQt6.QtWidgets.QMessageBox(
+                PyQt6.QtWidgets.QMessageBox.Icon.Information,
+                self.tr("Restore flash dump"),
+                self.tr("Uploaded flash dump.\nPlease reboot."),
+            )
+        else:
+            # Message
+            msg = PyQt6.QtWidgets.QMessageBox(
+                PyQt6.QtWidgets.QMessageBox.Icon.Warning,
+                self.tr("Can't restore flash dump"),
+                self.tr("Please connect board first."),
+            )
+
+
+        msg.exec()
+
+    def reset_factory(self, btn):
+        """Send a async message to reset factory settings."""
+        cmd = btn.text()
+        if cmd == "OK":
+            self.send_value("sys", "format", 1)
+            self.send_command("sys", "reboot")
+            self.main.reset_port()
+
+    def reset_factory_btn(self):
+        """Prompt a confirmation to the user when he click on reset factory."""
+        msg = PyQt6.QtWidgets.QMessageBox()
+        msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
+        msg.setText(self.tr("Format flash and reset?"))
+        msg.setStandardButtons(
+            PyQt6.QtWidgets.QMessageBox.StandardButton.Ok
+            | PyQt6.QtWidgets.QMessageBox.StandardButton.Cancel
+        )
+        msg.buttonClicked.connect(self.reset_factory) # pylint: disable=no-value-for-parameter
+        msg.exec()
 
     def showEvent(self, event): # pylint: disable=unused-argument, invalid-name
         """On show event, init the param.
@@ -87,26 +148,14 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Disable connection button, dropbox, etc.
         Emit for all the UI the [connected] event.
         """
-        if state:
-            
-            self.label.setEnabled(True)
-            self.comboBox_main.setEnabled(True)
-            self.pushButton_mainclasschange.setEnabled(True)
-                                          
-            self.pushButton_send.setEnabled(True)
-            self.lineEdit_cmd.setEnabled(True)
-            self.groupBox_system.setEnabled(True)
+        if state is None:
+            state = self.main.connected
 
-            self.get_main_classes()
-        else:
-            
-            self.label.setEnabled(False)
-            self.comboBox_main.setEnabled(False)
-            self.pushButton_mainclasschange.setEnabled(False)
-            
-            self.pushButton_send.setEnabled(False)
-            self.lineEdit_cmd.setEnabled(False)
-            self.groupBox_system.setEnabled(False)
+        self.pushButton_send.setEnabled(state)
+        self.lineEdit_cmd.setEnabled(state)
+        self.tabWidget.setEnabled(state)
+        self.groupBox_system.setEnabled(state)
+
 
     def update_mains(self, dat):
         """Parse the list of main classes received from board, and update the combobox."""
@@ -114,10 +163,8 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self._class_ids, self._classes = helper.classlistToIds(dat)
 
         if self.main_id is None:
-            # TODO VMA self.main.resetPort()
             self.groupBox_system.setEnabled(False)
             return
-        #self.groupBox_system.setEnabled(True)
 
         helper.updateClassComboBox(
             self.comboBox_main, self._class_ids, self._classes, self.main_id
