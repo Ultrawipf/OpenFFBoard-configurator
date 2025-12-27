@@ -157,12 +157,10 @@
      </property>
      <addaction name="separator"/>
     </widget>
-    <addaction name="actionErrors"/>
     <addaction name="actionActive_features"/>
     <addaction name="actionActive_threads"/>
     <addaction name="actionDebug_mode"/>
     <addaction name="menuLanguage"/>
-    <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuMonitoring">
     <property name="title">

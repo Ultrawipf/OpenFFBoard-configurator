@@ -3,6 +3,8 @@ from PyQt6 import uic
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
 import base_ui
 import helper
+import activelist
+import activetasks
 
 class ErrorsModel(QAbstractTableModel):
     def __init__(self, parent):
@@ -79,14 +81,7 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.textBrowser_license.setText(f.read())
         except FileNotFoundError:
             self.textBrowser_license.setText("LICENSE file not found.")
-
-        # Assign the widgets from the loaded errors_widget to the AboutUI instance
-        #self.logBox_1 = self.errors_widget.logBox_1
-        #self.tableView = self.errors_widget.tableView
-        #self.pushButton_refresh = self.errors_widget.pushButton_refresh
-        #self.pushButton_clearErrors = self.errors_widget.pushButton_clearErrors
-        #self.pushButton_clearLogs = self.errors_widget.pushButton_clearLogs
-        
+    
         # Setup logic
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearErrors.clicked.connect(self.clear_errors)
@@ -99,13 +94,42 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.logger.register_to_logger(self.append_log)
         self.setEnabled(False)
 
+        # Setup Modules tab
+        self.active_class_ui = activelist.ActiveClassUI(self)
+        self.active_task_ui = activetasks.ActiveTaskUI(self)
+
+        # Push content in groupBox_features
+        layout = self.groupBox_features.layout()
+        for i in reversed(range(layout.count())):
+            widgetToRemove = layout.itemAt(i).widget()
+            layout.removeWidget(widgetToRemove)
+            widgetToRemove.setParent(None)
+        layout.addWidget(self.active_class_ui)
+
+        # Replace content in groupBox_thread
+        layout = self.groupBox_thread.layout()
+        for i in reversed(range(layout.count())):
+            widgetToRemove = layout.itemAt(i).widget()
+            layout.removeWidget(widgetToRemove)
+            widgetToRemove.setParent(None)
+        layout.addWidget(self.active_task_ui)
+
     def set_connected(self, connected):
         self.setEnabled(connected)
         if connected:
             self.registerCallbacks()
             self.clear_stored_errors()
+            # Refresh modules
+            self.active_class_ui.read()
+            self.active_task_ui.read()
         else:
             self.remove_callbacks()
+
+    def set_taskstats_enabled(self, enabled):
+        self.active_task_ui.taskstats_enabled = enabled
+
+    def set_tasklist_enabled(self, enabled):
+        self.active_task_ui.tasklist_enabled = enabled
 
     def append_log(self, message):
         """Display the log message."""

@@ -137,8 +137,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
         self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
         self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
-        self.active_class_dlg = activelist.ActiveClassDialog(self)
-        self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
 
@@ -181,13 +179,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
         self.effects_graph_dlg.setEnabled(False)
 
-        self.actionActive_features.triggered.connect(
-            self.active_class_dlg.show
-        )  # Open active classes list
-        self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
-        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
+        self.actionActive_features.setVisible(False)
+        self.actionActive_threads.setVisible(False)
 
-        self.actionActive_threads.triggered.connect(self.active_threads_dlg.show)
+        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
         self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
@@ -213,6 +208,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     widget = self.about_ui
                 else:
                     widget = PyQt6.QtWidgets.QWidget()
+                    self.log(f"Warning: Unknown static panel '{panel.get('name')}' in PANEL_CONFIG.")
                 pos = panel.get("position", "auto")
                 self.add_tab(widget, panel.get("name"), panel.get("title"), panel.get("icon"), position=pos)
         
@@ -295,7 +291,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         diff = event.pos() - event.oldPos()
 
         list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.effects_monitor_dlg,
-            self.effects_graph_dlg, self.active_class_dlg]
+            self.effects_graph_dlg]
         for dialog in list_dialog:
             if dialog and dialog.isVisible():
                 dialog.move(dialog.pos() + diff)
@@ -304,7 +300,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
         # Reload mainclasses
-        self.serialchooser.get_main_classes() # TODO better move somewhere else
+        self.settings_ui.get_main_classes()
 
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
@@ -631,10 +627,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             "sys", "heapfree", self.wrapper_status_bar.update_ram_used, delete=True
         )
         def cmdinfo18_cb(x):
-            self.actionActive_threads.setEnabled(x==1)
-            self.active_threads_dlg.set_taskstats_enabled(x==1) 
+            self.about_ui.set_taskstats_enabled(x==1) 
         self.get_value_async("sys","cmdinfo",adr=18,conversion=int,callback=cmdinfo18_cb) # Check taskstats
-        self.get_value_async("sys","cmdinfo",adr=23,conversion=int,callback=lambda x:self.active_threads_dlg.set_tasklist_enabled(x==1) ) # Check taskstats
+        self.get_value_async("sys","cmdinfo",adr=23,conversion=int,callback=lambda x:self.about_ui.set_tasklist_enabled(x==1) ) # Check taskstats
 
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
