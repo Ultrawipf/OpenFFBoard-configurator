@@ -43,7 +43,6 @@ import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
-import errors
 import activelist
 import tmcdebug_ui
 import odrive_ui
@@ -134,7 +133,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         #self.tabWidget_main.currentChanged.connect(self.tab_changed)
         # Force the main window to resize to the content of the newly selected tab
         #self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
-        self.errors_dlg = errors.ErrorsDialog(self)
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
         self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
@@ -143,7 +141,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
-
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
@@ -157,9 +154,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
-                # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
-        self.tabsinitialized.connect(self.errors_dlg.connected_cb)
-
         self.systray.open_main_ui_signal.connect(self.display_ui)
         self.systray.change_profile_signal.connect(self.change_profile)
         
@@ -176,6 +170,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.serial_connected)
         # Keep Settings UI in sync when the serial port opens/closes
         self.serialchooser.connected.connect(self.settings_ui.update_connected)
+        
+        self.serialchooser.connected.connect(self.about_ui.set_connected)
 
         self.actionDebug_mode.triggered.connect(self.toggle_debug)
 
@@ -184,9 +180,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
         self.effects_graph_dlg.setEnabled(False)
-
-        # Toolbar menu items
-        self.actionErrors.triggered.connect(self.open_logs_errors_dialog)  # Open error list
 
         self.actionActive_features.triggered.connect(
             self.active_class_dlg.show
@@ -301,25 +294,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         super().moveEvent(event)
         diff = event.pos() - event.oldPos()
 
-        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.errors_dlg, self.effects_monitor_dlg,
+        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.effects_monitor_dlg,
             self.effects_graph_dlg, self.active_class_dlg]
         for dialog in list_dialog:
             if dialog and dialog.isVisible():
                 dialog.move(dialog.pos() + diff)
                 dialog.update()
-
-    def open_logs_errors_dialog(self):
-        """Display the log file on the right if it fill in the screen."""
-        # Move the dialog to the widget that called it
-        self.errors_dlg.show()
-
-        point = self.window().frameGeometry().topRight()
-        height = self.size().height()
-        width = self.errors_dlg.size().width()
-
-        if (point.x() + width) < self.screen().size().width() :
-            self.errors_dlg.move(point)
-            self.errors_dlg.resize(width,height)
 
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
@@ -755,7 +735,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         if connected:
             self.get_value_async("main", "id", id_cb, 0)
-            self.errors_dlg.registerCallbacks()
             self.get_value_async("sys", "swver", self.version_check)
             self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
             self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)

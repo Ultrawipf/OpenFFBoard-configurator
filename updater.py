@@ -134,7 +134,7 @@ class UpdateNotification(QDialog):
         self.releasenotes = QTextBrowser(self)
         self.releasenotes.setMarkdown(GithubRelease.get_description(release))
         self.vbox.addWidget(self.releasenotes)
-        self.vbox.addWidget(self.updatebrowserbutton)
+        #self.vbox.addWidget(self.updatebrowserbutton)
 
         if donotnotifysetting:
             self.donotnotify = QCheckBox("Notify about releases at startup",self)
