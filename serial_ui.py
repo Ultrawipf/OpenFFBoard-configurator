@@ -13,7 +13,7 @@ import PyQt6.QtCore
 import PyQt6.QtWidgets
 import base_ui
 import main
-import helper
+import updater
 
 
 class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
@@ -41,8 +41,11 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         self.pushButton_refresh.clicked.connect(self.get_ports)
         self.pushButton_connect.clicked.connect(self.serial_connect_button)
+        self.pushButton_update.clicked.connect(self.open_settings_firmware_tab)
         
         self.update()
+        # Initially hide the update button (already hidden in UI file)
+        self.pushButton_update.setVisible(False)
 
     def showEvent(self, event): # pylint: disable=unused-argument, invalid-name
         """On show event, init the param.
@@ -186,3 +189,35 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def auto_connect(self, nb_compatible_device):
         if (nb_compatible_device == 1) :
             self.serial_connect_button()
+    
+    def check_for_updates(self):
+        """Check for available updates and show/hide the update button accordingly."""
+        # Check firmware version against latest release
+        release = updater.GithubRelease.get_latest_release(updater.MAINREPO)
+        if not release:
+            return
+        releaseversion, _ = updater.GithubRelease.get_version(release)
+        # Compare firmware version with latest release
+        if updater.UpdateChecker.compare_versions(self.main.fw_version_str, releaseversion):
+            # New release available for firmware
+            self.pushButton_update.setText(f"Update available {releaseversion}")
+            self.pushButton_update.setVisible(True)
+        else:
+            self.pushButton_update.setVisible(False)
+    
+    def open_settings_firmware_tab(self):
+        """Open the settings tab and select the firmware sub-tab when update button is clicked."""
+        self.main.select_tab("settings")
+        try:
+            # Use a single shot timer to delay the tab selection
+            PyQt6.QtCore.QTimer.singleShot(100, self.select_update_tab)
+        except Exception as e:
+            pass
+
+    def select_update_tab(self):
+        """Select the Update Browser tab in the settings UI."""
+        try:
+            # Try to access the tabWidget_update and select the second tab (index 1)
+            self.main.settings_ui.findChild(PyQt6.QtWidgets.QTabWidget).setCurrentIndex(1)
+        except Exception as e:
+            pass
