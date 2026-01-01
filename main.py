@@ -230,7 +230,17 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def restart_app(self):
         self.restart_app_flag = True
         self.reset_port()
+        # Ensure we clean up all callbacks before quitting
         base_ui.CommunicationHandler.comms.removeAllCallbacks()
+        # Clear all tab connections
+        for connection in self.tab_connections:
+            try:
+                PyQt6.QtCore.QObject.disconnect(connection)
+            except Exception:
+                pass
+        self.tab_connections.clear()
+        self.reset_tabs(force=True)
+
         app.quit()
  
     def check_configurator_update(self):
@@ -431,7 +441,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Check if the tab "name" exist in the tab list."""
         return class_name in self.TAB_MAPPING
 
-    def reset_tabs(self):
+    def reset_tabs(self, force=False):
         """Remove all the tab and unregister the callBack."""
         self.active_classes = {}
         self.profile_ui.set_save_btn(False)
@@ -439,7 +449,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Remove tabs from board, keep settings/support/serial
         tab_to_delete = []
         for item in self.TAB_MAPPING:
-            if self.TAB_MAPPING[item]["from_board"]:
+            if self.TAB_MAPPING[item]["from_board"] or force:
                 tab_to_delete.append(item)
                 
         for tab_id in tab_to_delete:
