@@ -114,14 +114,19 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             layout.removeWidget(widgetToRemove)
             widgetToRemove.setParent(None)
         layout.addWidget(self.active_task_ui)
+        
+    def showEvent(self, a0):
+        self.tableView.resizeColumnsToContents()
+        # Vérifier l'état des fonctionnalités taskstats et tasklist
+        self.check_taskstats()
+        # Refresh modules
+        self.active_class_ui.read()
+        self.active_task_ui.read()
 
     def set_connected(self, connected):
         self.setEnabled(connected)
         if connected:
             self.registerCallbacks()
-            # Refresh modules
-            self.active_class_ui.read()
-            self.active_task_ui.read()
         else:
             # remove the handler on disconnect
             self.remove_callbacks()
@@ -152,11 +157,6 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def registerCallbacks(self):
         self.register_callback("sys", "errors", self.errorCallback, 0, typechar="?")
-
-    def showEvent(self, a0):
-        self.tableView.resizeColumnsToContents()
-        # Vérifier l'état des fonctionnalités taskstats et tasklist
-        self.check_taskstats()
 
     def readErrors(self):
         if self.isEnabled():
