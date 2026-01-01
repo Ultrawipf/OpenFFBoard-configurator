@@ -81,8 +81,12 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 self.textBrowser_license.setText(f.read())
         except FileNotFoundError:
             self.textBrowser_license.setText("LICENSE file not found.")
+            
+        # Setup logging for all apps to get event here
+        self.logger.register_to_logger(self.append_log)
+
     
-        # Setup logic
+        # Setup logic for Errors tab
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearErrors.clicked.connect(self.clear_errors)
         self.pushButton_clearLogs.clicked.connect(self.clear_logs)
@@ -90,10 +94,7 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.tableView.setModel(self.errors)
         header = self.tableView.horizontalHeader()
         header.setStretchLastSection(True)
-        
-        self.logger.register_to_logger(self.append_log)
-        self.setEnabled(False)
-
+                
         # Setup Modules tab
         self.active_class_ui = activelist.ActiveClassUI(self)
         self.active_task_ui = activetasks.ActiveTaskUI(self)
@@ -118,11 +119,11 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.setEnabled(connected)
         if connected:
             self.registerCallbacks()
-            self.clear_stored_errors()
             # Refresh modules
             self.active_class_ui.read()
             self.active_task_ui.read()
         else:
+            # remove the handler on disconnect
             self.remove_callbacks()
 
     def set_taskstats_enabled(self, enabled):
@@ -130,7 +131,7 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def set_tasklist_enabled(self, enabled):
         self.active_task_ui.tasklist_enabled = enabled
-
+    
     def append_log(self, message):
         """Display the log message."""
         self.logBox_1.append(message)
@@ -154,6 +155,8 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
+        # Vérifier l'état des fonctionnalités taskstats et tasklist
+        self.check_taskstats()
 
     def readErrors(self):
         if self.isEnabled():
@@ -171,3 +174,11 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             errors.append(error)
         self.errors.setErrors(errors)
         self.tableView.resizeColumnsToContents()
+
+    def check_taskstats(self):
+        """Vérifie l'état des fonctionnalités taskstats et tasklist lorsque l'onglet est affiché."""
+        if self.isEnabled():
+            # Vérifier taskstats
+            self.get_value_async("sys", "cmdinfo", adr=18, conversion=int, callback=lambda x: self.set_taskstats_enabled(x==1))
+            # Vérifier tasklist
+            self.get_value_async("sys", "cmdinfo", adr=23, conversion=int, callback=lambda x: self.set_tasklist_enabled(x==1))

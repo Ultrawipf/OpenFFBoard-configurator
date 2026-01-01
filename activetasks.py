@@ -66,22 +66,6 @@ class ActiveTaskModel(QAbstractTableModel):
         self.items = items
         self.endResetModel()
 
-class ActiveTaskDialog(PyQt6.QtWidgets.QDialog):
-    def __init__(self, parent = None):
-        PyQt6.QtWidgets.QDialog.__init__(self, parent)
-        self.active_class_ui = ActiveTaskUI(parent)
-        self.layout = PyQt6.QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.active_class_ui)
-        self.setLayout(self.layout)
-        self.setWindowTitle("Active threads")
-
-    def set_taskstats_enabled(self,enabled):
-        self.active_class_ui.taskstats_enabled = enabled
-        
-    def set_tasklist_enabled(self,enabled):
-        self.active_class_ui.tasklist_enabled = enabled
-
 class ActiveTaskUI(WidgetUI, CommunicationHandler):
     def __init__(self, parent = None):
         WidgetUI.__init__(self, parent, 'activelist.ui')
@@ -135,8 +119,6 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
                 items.setdefault(item["name"], {})
                 items[item["name"]].update(item)
             self.items.setItems(list(items.values()))
-            self.parent.show()
-
 
     def updateStatsCb(self,string):
         for line in string.split("\n"):
@@ -160,4 +142,3 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
             self.items_list.append(item)
 
         self.updateItems()
-        

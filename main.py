@@ -43,7 +43,6 @@ import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
-import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
@@ -51,7 +50,6 @@ import effects_monitor
 import effects_graph_ui
 import updater
 import simplemotion_ui
-import activetasks
 import rmd_ui
 import canremote_ui
 import settings_ui
@@ -178,9 +176,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
         self.effects_graph_dlg.setEnabled(False)
-
-        self.actionActive_features.setVisible(False)
-        self.actionActive_threads.setVisible(False)
 
         self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
@@ -443,7 +438,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
     def select_tab(self, class_name):
         """Select a specific tab from the idx parameter."""
-        if class_name not in self.TAB_MAPPING:
+        if not self.has_tab(class_name):
             print(f"Erreur: L'onglet avec l'ID '{class_name}' n'existe pas.")
             return
 
@@ -462,12 +457,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Change la page dans le QStackedWidget
         self.content_stack.setCurrentWidget(selected_tab_data["page"])
 
-    def has_tab(self, name) -> bool:
+    def has_tab(self, class_name) -> bool:
         """Check if the tab "name" exist in the tab list."""
-        names = [
-            #self.tabWidget_main.tabText(i) for i in range(self.tabWidget_main.count())
-        ]
-        return name in names
+        return class_name in self.TAB_MAPPING
 
     def reset_tabs(self):
         """Remove all the tab and unregister the callBack."""
@@ -489,7 +481,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.effects_monitor_dlg.setEnabled(False)
         self.effects_graph_dlg.setEnabled(False)
         self.effects_graph_dlg.set_total_output_display(False)
-        self.actionActive_threads.setEnabled(False)
         self.actionEffectsMonitor.setEnabled(False)
         self.actionEffects_forces.setEnabled(False)
         self.axes = 0
@@ -626,10 +617,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.get_value_async(
             "sys", "heapfree", self.wrapper_status_bar.update_ram_used, delete=True
         )
-        def cmdinfo18_cb(x):
-            self.about_ui.set_taskstats_enabled(x==1) 
-        self.get_value_async("sys","cmdinfo",adr=18,conversion=int,callback=cmdinfo18_cb) # Check taskstats
-        self.get_value_async("sys","cmdinfo",adr=23,conversion=int,callback=lambda x:self.about_ui.set_tasklist_enabled(x==1) ) # Check taskstats
+        
 
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""

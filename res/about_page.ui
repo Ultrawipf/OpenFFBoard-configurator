@@ -107,9 +107,9 @@
        <item row="2" column="0" rowspan="3" colspan="2">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QPushButton" name="pushButton_clearErrors">
+          <widget class="QPushButton" name="pushButton_clearLogs">
            <property name="text">
-            <string>Clear Errors</string>
+            <string>Clear Logs</string>
            </property>
           </widget>
          </item>
@@ -121,9 +121,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_clearLogs">
+          <widget class="QPushButton" name="pushButton_clearErrors">
            <property name="text">
-            <string>Clear Logs</string>
+            <string>Clear Errors</string>
            </property>
           </widget>
          </item>
