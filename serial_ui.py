@@ -63,23 +63,6 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """
         self.hidden.emit()
 
-    # def serial_log(self, txt):
-    #     """Add a new text in the history widget."""
-    #     if isinstance(txt, list):
-    #         txt = "\n".join(txt)
-    #     else:
-    #         txt = str(txt)
-
-    # def send_line(self):
-    #     """Read the command input text, display it in history widget and send it to the board."""
-    #     cmd = self.lineEdit_cmd.text() + "\n"
-    #     self.serial_log(">" + cmd)
-    #     self.serial_write_raw(cmd)
-
-    # def write(self, data):
-    #     """Write data to the serial port."""
-    #     self._serial.write(data)
-
     def update(self):
         """Update the UI when a connection is successfull.
 
@@ -144,9 +127,9 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
                 port.vendorIdentifier(),
                 port.productIdentifier(),
             ) in self.OFFICIAL_VID_PID
-            
+  	    
 
-            if supported_vid_pid and not name.startswith("cu."):
+            if supported_vid_pid and not port.portName().startswith("cu."):
                 name = F"FFBoard device ({port.portName()})"
             else:
                 name = F"{port.description()} ({port.portName()})"
@@ -189,6 +172,16 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def auto_connect(self, nb_compatible_device):
         if (nb_compatible_device == 1) :
             self.serial_connect_button()
+
+    def update_port_name_outdated(self):
+        """Change the color of the port name in the combo box."""
+        # Get the current text of the combo box
+        current_text = self.comboBox_port.currentText()
+        
+        # If we have a valid text, change its color
+        if current_text:
+            current_index = self.comboBox_port.currentIndex()
+            self.comboBox_port.setItemText(current_index, current_text + " [OUTDATED !]")
     
     def check_for_updates(self):
         """Check for available updates and show/hide the update button accordingly."""
