@@ -90,6 +90,9 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Update UI according to current connection state
         self.update_connected()
+        
+        # Connect the debug checkbox from UI
+        self.checkBox_debug.stateChanged.connect(self.toggle_debug_mode)
 
     def reboot(self):
         """Send the reboot message to the board."""
@@ -557,3 +560,10 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
         # Emit signal to restart application (as in original code)
         self.main.languagechanged.emit()
+        
+    def toggle_debug_mode(self, state):
+        """Toggle debug mode on the board."""
+        # Send debug mode command to board
+        self.send_value("sys", "debug", 1 if state else 0)
+        # Reload main classes to apply debug mode
+        self.get_main_classes()

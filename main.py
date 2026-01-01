@@ -165,15 +165,13 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         self.serialchooser.connected.connect(self.about_ui.set_connected)
 
-        self.actionDebug_mode.triggered.connect(self.toggle_debug)
-
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
         self.effects_monitor_dlg.setEnabled(False)
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
         self.effects_graph_dlg.setEnabled(False)
 
-        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
+        #self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
         self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
