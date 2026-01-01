@@ -117,17 +117,25 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
+        # Vérifier l'état des fonctionnalités taskstats et tasklist
+        self.check_taskstats()
+        # Refresh modules
+        self.active_class_ui.read()
+        self.active_task_ui.read()
 
     def set_connected(self, connected):
-        self.tab_log.setEnabled(connected)
-        self.tab_module.setEnabled(connected)
-        self.active_task_ui.connect(connected)
+        self.setEnabled(connected)
         if connected:
             self.registerCallbacks()
         else:
             # remove the handler on disconnect
             self.remove_callbacks()
 
+    def set_taskstats_enabled(self, enabled):
+        self.active_task_ui.taskstats_enabled = enabled
+
+    def set_tasklist_enabled(self, enabled):
+        self.active_task_ui.tasklist_enabled = enabled
     
     def append_log(self, message):
         """Display the log message."""
@@ -166,3 +174,11 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             errors.append(error)
         self.errors.setErrors(errors)
         self.tableView.resizeColumnsToContents()
+
+    def check_taskstats(self):
+        """Vérifie l'état des fonctionnalités taskstats et tasklist lorsque l'onglet est affiché."""
+        if self.isEnabled():
+            # Vérifier taskstats
+            self.get_value_async("sys", "cmdinfo", adr=18, conversion=int, callback=lambda x: self.set_taskstats_enabled(x==1))
+            # Vérifier tasklist
+            self.get_value_async("sys", "cmdinfo", adr=23, conversion=int, callback=lambda x: self.set_tasklist_enabled(x==1))
