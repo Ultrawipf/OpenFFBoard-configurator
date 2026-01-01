@@ -124,7 +124,8 @@ class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.active_task_ui.read()
 
     def set_connected(self, connected):
-        self.setEnabled(connected)
+        self.tab_log.setEnabled(connected)
+        self.tab_module.setEnabled(connected)
         if connected:
             self.registerCallbacks()
         else:

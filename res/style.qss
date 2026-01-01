@@ -13,6 +13,11 @@ QGroupBox#groupBox_profilemanager {
     border: 3px solid #2f7c2f;
 }
 
+QGroupBox#groupBox_profilemanager:disabled {
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+    border: 3px solid #2f7c2f;
+}
+
 QGroupBox#groupBox_profilemanager QPushButton {
     background-color: #00AA00;
     font-size: 14px;
@@ -21,8 +26,13 @@ QGroupBox#groupBox_profilemanager QPushButton {
     padding: 5px 20px;
     min-width: 120px;
 }
+
 QGroupBox#groupBox_profilemanager QPushButton:hover {
     background-color: #008800;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton:disabled {
+    background-color: #334633;
 }
 
 /* --- Styles pour le bandeau supérieur (statusBarFrame) --- */

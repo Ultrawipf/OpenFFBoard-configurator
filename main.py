@@ -709,7 +709,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.get_value_async("main", "id", id_cb, 0)
             self.get_value_async("sys", "swver", self.version_check)
             self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
-            self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
             
             if (self.serial_timer is None) :
                 self.serial_timer = PyQt6.QtCore.QTimer(singleShot=True, timeout=timer_cb)
