@@ -151,14 +151,7 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <widget class="QMenu" name="menuLanguage">
-     <property name="title">
-      <string>Language</string>
-     </property>
-     <addaction name="separator"/>
-    </widget>
     <addaction name="actionDebug_mode"/>
-    <addaction name="menuLanguage"/>
    </widget>
    <widget class="QMenu" name="menuMonitoring">
     <property name="title">

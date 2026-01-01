@@ -26,7 +26,6 @@ import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
 from PyQt6.QtCore import QEventLoop
-from PyQt6.QtGui import QAction,QActionGroup
 
 import config
 import helper
@@ -84,11 +83,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         {"name": "about", "title": "About", "icon": "res/img/support.png", "static": True, "position": "bottom"},
     ]
     
-    def __init__(self):
+    def __init__(self, translator=None):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
         base_ui.CommunicationHandler.__init__(self)
         
+        # Initialize translator here so it's accessible from the class
+        self.translator = translator if translator is not None else PyQt6.QtCore.QTranslator(self)
+
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
         self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
 
@@ -107,10 +109,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.systray : SystrayWrapper = None
 
-        self.lang_actions = {}
-        self.language_action_group = QActionGroup(self)
-        self.language_action_group.setExclusive(True)
-
         self.tab_connections = [] # Signals to disconnect on reset
 
         # Systray
@@ -118,19 +116,17 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         # Profile
         self.profile_ui.initialize_ui() # Profile UI
-        self.make_lang_selector()
-        
         # Settings panel
         self.settings_ui = settings_ui.Settings(self, self.serial)
+        # Initialize language selector in settings tab
+        self.settings_ui.init_language_selector()
         
         # About panel
         self.about_ui = about_ui.AboutUI(self, VERSION, None)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
-        #self.tabWidget_main.currentChanged.connect(self.tab_changed)
         # Force the main window to resize to the content of the newly selected tab
-        #self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
         self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
@@ -226,22 +222,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """load language file"""
         if langid != DEFAULTLANG:
             langfile = helper.res_path(f"{langid}.qm","translations")
-            if translator.load(langfile):
-                app.installTranslator(translator)
-
-    def change_lang_callback(self, enabled:bool):
-        """Change language of the UI, this will run too when initializing the UI"""
-        if(not enabled):  # Language not selected
-            return
-        
-        user_lang_id = self.language_action_group.checkedAction().data()
-
-        if user_lang_id == self.profile_ui.get_global_setting("language",DEFAULTLANG): # If user selected language same as current language
-            return 
-        
-        app.removeTranslator(translator)
-        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
-        self.languagechanged.emit() # loading in next start
+            if self.translator.load(langfile):
+                app = PyQt6.QtWidgets.QApplication.instance()
+                if app:
+                    app.installTranslator(self.translator)
 
     def restart_app(self):
         self.restart_app_flag = True
@@ -249,20 +233,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         base_ui.CommunicationHandler.comms.removeAllCallbacks()
         app.quit()
  
-    def make_lang_selector(self):
-        '''Create the language selector menu, and connect the callback to change language.'''
-        languages = [DEFAULTLANG]
-        languages.extend([os.path.splitext(os.path.basename(f))[0] for f in glob.glob(helper.res_path("*.qm","translations"))])
-        
-        for langid in languages:
-            action = QAction(langid)
-            action.setData(langid)
-            action.setCheckable(True)
-            self.language_action_group.addAction(action)
-            self.lang_actions[langid] = action
-            self.menuLanguage.addAction(action)
-            action.toggled.connect(self.change_lang_callback)
-
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
         donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
@@ -968,7 +938,7 @@ if __name__ == "__main__":
     translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
-        window = MainUi()
+        window = MainUi(translator = translator)
         if (sys.platform == "win32" or "Windows" in sys.platform):
             # only on windows, for macOS and linux use system palette.
             # windows server is not called win32
