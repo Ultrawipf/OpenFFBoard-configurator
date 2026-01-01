@@ -90,6 +90,9 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Update UI according to current connection state
         self.update_connected()
+        
+        # Connect the debug checkbox from UI
+        self.checkBox_debug.stateChanged.connect(self.toggle_debug_mode)
 
     def reboot(self):
         """Send the reboot message to the board."""
@@ -508,3 +511,59 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
             return
         url = current.data(Qt.ItemDataRole.UserRole)
         self.label_fileUrl.setText(f"<a href=\"{url}\">Download</a>")
+
+    def init_language_selector(self):
+        """Initialize the language selector in the settings tab."""
+        # Get available languages
+        import glob
+        import os
+        languages = ["en_US"]  # Default language
+        languages.extend([os.path.splitext(os.path.basename(f))[0] for f in glob.glob(helper.res_path("*.qm","translations"))])
+        
+        # Clear existing items
+        self.comboBox_language.clear()
+        
+        # Add languages to combo box
+        for langid in languages:
+            self.comboBox_language.addItem(langid)
+        
+        # Set current language
+        current_lang = self.main.profile_ui.get_global_setting("language", "en_US")
+        current_index = self.comboBox_language.findText(current_lang)
+        if current_index >= 0:
+            self.comboBox_language.setCurrentIndex(current_index)
+        
+        # Connect signal
+        self.comboBox_language.currentTextChanged.connect(self.change_language)
+
+    def change_language(self, language_id):
+        """Change the application language."""
+        # Check if language is different from current
+        if language_id == self.main.profile_ui.get_global_setting("language", "en_US"):
+            return
+            
+        # Remove current translator
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app and hasattr(self.main, 'translator'):
+            app.removeTranslator(self.main.translator)
+        
+        # Load new language
+        if language_id != "en_US":
+            langfile = helper.res_path(f"{language_id}.qm", "translations")
+            if hasattr(self.main, 'translator') and self.main.translator.load(langfile):
+                if app:
+                    app.installTranslator(self.main.translator)
+        
+        # Store language setting
+        self.main.profile_ui.set_global_setting("language", language_id)
+        
+        # Emit signal to restart application (as in original code)
+        self.main.languagechanged.emit()
+        
+    def toggle_debug_mode(self, state):
+        """Toggle debug mode on the board."""
+        # Send debug mode command to board
+        self.send_value("sys", "debug", 1 if state else 0)
+        # Reload main classes to apply debug mode
+        self.get_main_classes()

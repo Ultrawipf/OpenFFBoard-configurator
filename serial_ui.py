@@ -71,13 +71,16 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """
         if self._serial.isOpen():
             self.pushButton_connect.setText(self.tr("Disconnect"))
-            self.comboBox_port.setEnabled(False)
             self.pushButton_refresh.setVisible(False)
+            self.comboBox_port.setVisible(False)
+            self.label_port.setVisible(True)
+            self.label_port.setText(self.comboBox_port.currentText())
             self.connected.emit(True)
         else:
             self.pushButton_connect.setText(self.tr("Connect"))
-            self.comboBox_port.setEnabled(True)
             self.pushButton_refresh.setVisible(True)
+            self.comboBox_port.setVisible(True)
+            self.label_port.setVisible(False)
             self.connected.emit(False)
 
     def serial_connect_button(self):
@@ -176,13 +179,15 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def update_port_name_outdated(self):
         """Change the color of the port name in the combo box."""
         # Get the current text of the combo box
-        current_text = self.comboBox_port.currentText()
+        current_text = self.label_port.text() #self.comboBox_port.currentText()
         outdated_text = " [OUTDATED !]"
+        self.label_port.setEnabled(False)
         
         # If we have a valid text, change its color
         if current_text and not (outdated_text in current_text) :
-            current_index = self.comboBox_port.currentIndex()
-            self.comboBox_port.setItemText(current_index, current_text + outdated_text)
+            #current_index = self.comboBox_port.currentIndex()
+            #self.comboBox_port.setItemText(current_index, current_text + outdated_text)
+            self.label_port.setText(current_text + outdated_text) 
     
     def check_for_updates(self):
         """Check for available updates and show/hide the update button accordingly."""

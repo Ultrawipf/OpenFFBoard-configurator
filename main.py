@@ -26,7 +26,6 @@ import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
 from PyQt6.QtCore import QEventLoop
-from PyQt6.QtGui import QAction,QActionGroup
 
 import config
 import helper
@@ -46,7 +45,6 @@ import midi_ui
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
-import effects_monitor
 import effects_graph_ui
 import updater
 import simplemotion_ui
@@ -54,6 +52,9 @@ import rmd_ui
 import canremote_ui
 import settings_ui
 import about_ui
+import dashboard
+import qdarkstyle
+
 
 # This GUIs version
 VERSION = "1.16.9"
@@ -84,11 +85,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         {"name": "about", "title": "About", "icon": "res/img/support.png", "static": True, "position": "bottom"},
     ]
     
-    def __init__(self):
+    def __init__(self, translator=None):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
         base_ui.CommunicationHandler.__init__(self)
         
+        # Initialize translator here so it's accessible from the class
+        self.translator = translator if translator is not None else PyQt6.QtCore.QTranslator(self)
+
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
         self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
 
@@ -107,10 +111,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.systray : SystrayWrapper = None
 
-        self.lang_actions = {}
-        self.language_action_group = QActionGroup(self)
-        self.language_action_group.setExclusive(True)
-
         self.tab_connections = [] # Signals to disconnect on reset
 
         # Systray
@@ -118,23 +118,24 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         # Profile
         self.profile_ui.initialize_ui() # Profile UI
-        self.make_lang_selector()
-        
         # Settings panel
         self.settings_ui = settings_ui.Settings(self, self.serial)
+        # Initialize language selector in settings tab
+        self.settings_ui.init_language_selector()
         
         # About panel
         self.about_ui = about_ui.AboutUI(self, VERSION, None)
+        
+        # Dashboard panel
+        self.dashboard = dashboard.DashboardUI(self)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
-        #self.tabWidget_main.currentChanged.connect(self.tab_changed)
         # Force the main window to resize to the content of the newly selected tab
-        #self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
-        self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
-        self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
-        self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
-        self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
+        #TODO VMA remove self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
+        #TODO VMA remove self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
         self.active_classes = {}
         self.fw_version_str = None
 
@@ -169,21 +170,21 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         self.serialchooser.connected.connect(self.about_ui.set_connected)
 
-        self.actionDebug_mode.triggered.connect(self.toggle_debug)
-
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
-        self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
-        self.effects_graph_dlg.setEnabled(False)
+        #TODO check if always required self.effects_graph_dlg.setEnabled(False)
 
-        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
+        #self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
-        self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
+        #TODO VMA remove self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display) plus besoin des deux l'enable se fait si on recoit la classe
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
 
-        self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
+        #TODO VMA remove self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
+
+        self.serialchooser.connected.connect(self.dashboard.set_connected)
         
         icon = PyQt6.QtGui.QPixmap("res/img/openffboard.png", "PNG")
         self.icon.setPixmap(icon.scaled(60, 60, PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio))
@@ -201,11 +202,15 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     widget = self.settings_ui
                 elif panel.get("name") == "about":
                     widget = self.about_ui
+                elif panel.get("name") == "dashboard":
+                    widget = self.dashboard
                 else:
                     widget = PyQt6.QtWidgets.QWidget()
                     self.log(f"Warning: Unknown static panel '{panel.get('name')}' in PANEL_CONFIG.")
                 pos = panel.get("position", "auto")
                 self.add_tab(widget, panel.get("name"), panel.get("title"), panel.get("icon"), position=pos)
+
+        self.select_tab("dashboard")
         
     def apply_stylesheet(self, qss_file):
         """Charge et applique une feuille de style QSS."""
@@ -226,43 +231,27 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """load language file"""
         if langid != DEFAULTLANG:
             langfile = helper.res_path(f"{langid}.qm","translations")
-            if translator.load(langfile):
-                app.installTranslator(translator)
-
-    def change_lang_callback(self, enabled:bool):
-        """Change language of the UI, this will run too when initializing the UI"""
-        if(not enabled):  # Language not selected
-            return
-        
-        user_lang_id = self.language_action_group.checkedAction().data()
-
-        if user_lang_id == self.profile_ui.get_global_setting("language",DEFAULTLANG): # If user selected language same as current language
-            return 
-        
-        app.removeTranslator(translator)
-        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
-        self.languagechanged.emit() # loading in next start
+            if self.translator.load(langfile):
+                app = PyQt6.QtWidgets.QApplication.instance()
+                if app:
+                    app.installTranslator(self.translator)
 
     def restart_app(self):
         self.restart_app_flag = True
         self.reset_port()
+        # Ensure we clean up all callbacks before quitting
         base_ui.CommunicationHandler.comms.removeAllCallbacks()
+        # Clear all tab connections
+        for connection in self.tab_connections:
+            try:
+                PyQt6.QtCore.QObject.disconnect(connection)
+            except Exception:
+                pass
+        self.tab_connections.clear()
+        self.reset_tabs(force=True)
+
         app.quit()
  
-    def make_lang_selector(self):
-        '''Create the language selector menu, and connect the callback to change language.'''
-        languages = [DEFAULTLANG]
-        languages.extend([os.path.splitext(os.path.basename(f))[0] for f in glob.glob(helper.res_path("*.qm","translations"))])
-        
-        for langid in languages:
-            action = QAction(langid)
-            action.setData(langid)
-            action.setCheckable(True)
-            self.language_action_group.addAction(action)
-            self.lang_actions[langid] = action
-            self.menuLanguage.addAction(action)
-            action.toggled.connect(self.change_lang_callback)
-
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
         donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
@@ -278,19 +267,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
             notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
-        
-
-    def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
-        """Move all modal dialog when moving main ui."""
-        super().moveEvent(event)
-        diff = event.pos() - event.oldPos()
-
-        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.effects_monitor_dlg,
-            self.effects_graph_dlg]
-        for dialog in list_dialog:
-            if dialog and dialog.isVisible():
-                dialog.move(dialog.pos() + diff)
-                dialog.update()
 
     def open_dfu_dialog(self):
         """Open the dfu dialog and start managing."""
@@ -515,7 +491,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Check if the tab "name" exist in the tab list."""
         return class_name in self.TAB_MAPPING
 
-    def reset_tabs(self):
+    def reset_tabs(self, force=False):
         """Remove all the tab and unregister the callBack."""
         self.active_classes = {}
         self.profile_ui.set_save_btn(False)
@@ -523,7 +499,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Remove tabs from board, keep settings/support/serial
         tab_to_delete = []
         for item in self.TAB_MAPPING:
-            if self.TAB_MAPPING[item]["from_board"]:
+            if self.TAB_MAPPING[item]["from_board"] or force:
                 tab_to_delete.append(item)
                 
         for tab_id in tab_to_delete:
@@ -532,11 +508,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
-        self.effects_monitor_dlg.setEnabled(False)
-        self.effects_graph_dlg.setEnabled(False)
-        self.effects_graph_dlg.set_total_output_display(False)
-        self.actionEffectsMonitor.setEnabled(False)
-        self.actionEffects_forces.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.set_total_output_display(False)
+        #TODO VMA remove self.actionEffectsMonitor.setEnabled(False)
+        #TODO VMA remove self.actionEffects_forces.setEnabled(False)
         self.axes = 0
         self.maxaxischanged.emit(self.axes)
 
@@ -587,7 +563,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     elif classe_active["id"] == 2 :
                         name_main = "FFB Joystick"
                     self.add_tab(self.main_class_ui, classname, name_main, icon_path=helper.res_path("ffb.png","res/img"))
-                    self.select_tab(classname)
+                    # self.select_tab(classname)
                     
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
@@ -608,7 +584,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.profile_ui.set_save_btn(True)
                     self.axes = max(self.axes,classe.axis)
                     self.maxaxischanged.emit(self.axes)
-                    self.effects_graph_dlg.set_total_output_display(True)
+                    #TODO VMA A analyser self.effects_graph_dlg.set_total_output_display(True)
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
@@ -648,10 +624,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xA02: # Effects manager
-                    self.effects_monitor_dlg.setEnabled(True)
-                    self.effects_graph_dlg.setEnabled(True)
-                    self.actionEffectsMonitor.setEnabled(True)
-                    self.actionEffects_forces.setEnabled(True)
+                    self.dashboard.setEffectAvailable(True)
+                    #TODO VMA enabled the effects self.effects_monitor_dlg.setEnabled(True)
+                    #TODO VMA enabled self.effects_graph_dlg.setEnabled(True)
+                    #TODO VMA remove self.actionEffectsMonitor.setEnabled(True)
+                    #TODO VMA remove self.actionEffects_forces.setEnabled(True)
+                    pass
                 elif classe_active["id"] == 0x8B or classe_active["id"] == 0x8C:
                     classe = rmd_ui.RmdUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
@@ -785,7 +763,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.get_value_async("main", "id", id_cb, 0)
             self.get_value_async("sys", "swver", self.version_check)
             self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
-            self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
             
             if (self.serial_timer is None) :
                 self.serial_timer = PyQt6.QtCore.QTimer(singleShot=True, timeout=timer_cb)
@@ -1025,24 +1002,14 @@ if __name__ == "__main__":
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt6'))
+
     translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
-        window = MainUi()
-        if (sys.platform == "win32" or "Windows" in sys.platform):
-            # only on windows, for macOS and linux use system palette.
-            # windows server is not called win32
-            # pylint: disable=import-error
-            from winreg import (
-                HKEY_CURRENT_USER as hkey,
-                QueryValueEx as getSubkeyValue,
-                OpenKey as getKey,
-            )
-            # Check if is not using windows 11 style(windows 11 style is dark mode compatible)
-            if windows_theme_is_light() == 0 and app.style().objectName() != "windows11":
-                app.setStyle("Fusion")
-                app.setPalette(dark_palette.PALETTE_DARK)
-                window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
+               
+        window = MainUi(translator = translator)
+        # Force dark theme on all platforms
 
         window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
         window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
