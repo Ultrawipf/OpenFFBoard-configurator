@@ -53,6 +53,7 @@ import rmd_ui
 import canremote_ui
 import settings_ui
 import about_ui
+import dashboard
 
 # This GUIs version
 VERSION = "1.16.9"
@@ -123,6 +124,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         
         # About panel
         self.about_ui = about_ui.AboutUI(self, VERSION, None)
+        
+        # Dashboard panel
+        self.dashboard = dashboard.DashboardUI(self)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
@@ -195,6 +199,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     widget = self.settings_ui
                 elif panel.get("name") == "about":
                     widget = self.about_ui
+                elif panel.get("name") == "dashboard":
+                    widget = self.dashboard
                 else:
                     widget = PyQt6.QtWidgets.QWidget()
                     self.log(f"Warning: Unknown static panel '{panel.get('name')}' in PANEL_CONFIG.")
