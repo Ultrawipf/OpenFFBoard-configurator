@@ -37,7 +37,7 @@ QGroupBox#groupBox_profilemanager QPushButton:disabled {
 
 /* --- Styles pour le bandeau supérieur (statusBarFrame) --- */
 QWidget#serial_panel {
-    color: white;
+    color: #E0E0E0;
     border-radius: 0px;
 }
 
@@ -46,7 +46,6 @@ QWidget#serial_panel QComboBox {
     color: #f2f2f2;
     font-size: 16px;
     font-weight: bold;
-    border: none;
     padding: 5px 10px;
     min-height:30px
 }
@@ -54,6 +53,7 @@ QWidget#serial_panel QComboBox {
 QWidget#serial_panel QComboBox:disabled {
     background-color: #45c145;
     color: #E0E0E0;
+    border: none;
 }
 
 /* Cache la flèche déroulante quand il est désactivé */
@@ -67,7 +67,7 @@ QWidget#serial_panel QComboBox::drop-down:disabled {
 
 QWidget#serial_panel QPushButton {
     background-color: #d68c02;
-    color: white;
+    color: #E0E0E0;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -89,7 +89,7 @@ QWidget#serial_panel QPushButton:disabled {
 /* Style for the update button in serialchooser */
 QWidget#serial_panel QPushButton#pushButton_update {
     background-color: #00BFFF;
-    color: white;
+    color: #E0E0E0;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -221,11 +221,13 @@ QGroupBox {
     font-size: 14px;
     text-transform: uppercase;
     font-weight: bold;
+    color: #E0E0E0;
 }
 
 QGroupBox:disabled {
     background-color:  #1f2124;
     border: 3px solid #32393c;
+    color: #5c6a6f;
 }
 
 QGroupBox::title {
@@ -249,7 +251,8 @@ QStatusBar {
 /* --- Styles for button --- */
 
 QPushButton {
-    background-color: #00BFFF;
+    background-color: #0097c9;
+    color: #E0E0E0;
     font-size: 12px;
     font-weight: bold;
     border-radius: 5px;
@@ -257,13 +260,26 @@ QPushButton {
     min-width: 100px;
 }
 QPushButton:hover {
-    background-color: #0099CC;
+    background-color: #007ca5;
 }
 
 QPushButton:disabled {
-    background-color: #003547;
+    background-color: #002e3d;
     color: #5c6a6f;
 }
+
+QComboBox {
+    background-color: transparent;
+    border: 1px solid #3A3D42;
+    color: #E0E0E0;
+}
+
+QComboBox::item:hover,
+QComboBox::item:selected {
+    background-color: #003547;  /* Votre couleur rouge */
+    color:  #E0E0E0;         /* Changez le texte en blanc pour la lisibilité */
+}
+
 
 QGroupBox#groupBox_FFBAxes > QProgressBar, 
 QGroupBox#groupBox_secAxis > QProgressBar,

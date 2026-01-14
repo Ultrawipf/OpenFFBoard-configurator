@@ -951,21 +951,12 @@ if __name__ == "__main__":
     translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
+
+        app.setStyle("Fusion")
+        app.setPalette(dark_palette.PALETTE_DARK)
+                
         window = MainUi(translator = translator)
-        if (sys.platform == "win32" or "Windows" in sys.platform):
-            # only on windows, for macOS and linux use system palette.
-            # windows server is not called win32
-            # pylint: disable=import-error
-            from winreg import (
-                HKEY_CURRENT_USER as hkey,
-                QueryValueEx as getSubkeyValue,
-                OpenKey as getKey,
-            )
-            # Check if is not using windows 11 style(windows 11 style is dark mode compatible)
-            if windows_theme_is_light() == 0 and app.style().objectName() != "windows11":
-                app.setStyle("Fusion")
-                app.setPalette(dark_palette.PALETTE_DARK)
-                window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
+        # Force dark theme on all platforms
 
         window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
         window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
