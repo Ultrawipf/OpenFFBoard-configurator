@@ -46,7 +46,7 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             # Hide status label when connected successfully
             self.lbl_status.setVisible(False)
             self.groupBox_FFBAxes.setVisible(True)
-            self.groupBox_ffbeffect.setVisible(True)
+            self.groupBox_ffbeffect.setVisible(False)
             self.groupBox_secAxis.setVisible(True)
             self.groupBox_matrixButton.setVisible(True)
         else:
@@ -64,8 +64,21 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.lbl_status.setVisible(False)
         
         # Update axis values
-        self.progressBar_X.setValue(report.axis_x)
-        self.progressBar_Y.setValue(report.axis_y)
+        if (report.axis_x > 0) :
+            self.progressBar_X_pos.setValue(report.axis_x)
+            self.progressBar_X_neg.setValue(0)
+        else :
+            self.progressBar_X_pos.setValue(0)
+            self.progressBar_X_neg.setValue(-report.axis_x)
+
+        if (report.axis_y > 0) :
+            self.progressBar_Y_pos.setValue(report.axis_y)
+            self.progressBar_Y_neg.setValue(0)
+        else :
+            self.progressBar_Y_pos.setValue(0)
+            self.progressBar_Y_neg.setValue(-report.axis_y)
+
+
         self.progressBar_Z.setValue(report.axis_z)
         self.progressBar_RX.setValue(report.axis_rx)
         self.progressBar_RY.setValue(report.axis_ry)

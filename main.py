@@ -206,6 +206,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.log(f"Warning: Unknown static panel '{panel.get('name')}' in PANEL_CONFIG.")
                 pos = panel.get("position", "auto")
                 self.add_tab(widget, panel.get("name"), panel.get("title"), panel.get("icon"), position=pos)
+
+        self.select_tab("dashboard")
         
     def apply_stylesheet(self, qss_file):
         """Charge et applique une feuille de style QSS."""
@@ -517,7 +519,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     elif classe_active["id"] == 2 :
                         name_main = "FFB Joystick"
                     self.add_tab(self.main_class_ui, classname, name_main, icon_path=helper.res_path("ffb.png","res/img"))
-                    self.select_tab(classname)
+                    # self.select_tab(classname)
                     
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)

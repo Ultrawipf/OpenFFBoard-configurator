@@ -98,13 +98,13 @@ class HIDWorker(QThread):
             self.is_connected = False
             self.connection_status.emit(False, f"Unexpected error during connexion: {e}")
 
-        return (self.device_joy is not None) and (self.device_cmd is not None)
+        return (self.device_joy is not None) or (self.device_cmd is not None)
     
     def disconnect_device(self):
         """Disconnect from HID device"""
-        if self.device:
+        if self.device_joy:
             try:
-                self.device.close()
+                self.device_joy.close()
                 self.is_connected = False
                 print("Device disconnected")
             except Exception as e:
@@ -117,24 +117,27 @@ class HIDWorker(QThread):
             return
 
         try:
+
+            self.connection_status.emit(True, "Successfull")
+
             # Read the report from the hid device
-            self.sendCommand(1,0xA01,0,0x00,0) # get power
+            #self.sendCommand(1,0xA01,0,0x00,0) # get power
             
             # On lit jusqu'à 65 bytes
-            data = self.device_cmd.read(65)
+            #data = self.device_cmd.read(65)
             
-            if data:
-               self.parse_and_print_response(data)
+            #if data:
+            #   self.parse_and_print_response(data)
                 
             print("   [Thread Joystick] Démarré")
             while self.running and self.device_joy:
                 # Lecture brute (taille max 64)
                 data = self.device_joy.read(64)
                 if data:
-                    parsed_report = self.parse_report(report)
+                    parsed_report = self.parse_report(data)
                     if parsed_report:
                         self.data_received.emit(parsed_report)
-                self.sleep(0.002) # ~500Hz
+                self.msleep(10) # ~100Hz
                     
         except Exception as e:
             print(f"Error HID: {e}")

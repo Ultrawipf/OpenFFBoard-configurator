@@ -284,22 +284,18 @@ QComboBox::item:selected {
 QGroupBox#groupBox_FFBAxes > QProgressBar, 
 QGroupBox#groupBox_secAxis > QProgressBar,
 QGroupBox#groupBox_ffbeffect > QProgressBar{
+    background-color: #31363b;
     border: 1px solid #76797C;
     border-radius: 2px;
-    background-color: #31363b;
     text-align: center;
 }
 
-QGroupBox#groupBox_FFBAxes > QProgressBar::chunk {
-    background-color: #3daee9;
-    width: 20px;
-}
-
-QGroupBox#groupBox_secAxis > QProgressBar::chunk,
+QGroupBox#groupBox_FFBAxes > QProgressBar::chunk, 
+QGroupBox#groupBox_secAxis > QProgressBar::chunk, 
 QGroupBox#groupBox_ffbeffect > QProgressBar::chunk {
     background-color: #3daee9;
-    width: 10px;
 }
+
 
 QLabel#lbl_status {
     font-size: 24px;
