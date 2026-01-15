@@ -92,6 +92,7 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # add timer handler
         self.timer.timeout.connect(self.updateTimer)
+        self.setup_sre_ui()
         
     def setEnabled(self, a0: bool) -> None: # pylint: disable=unused-argument, invalid-name
         """Enable the item."""
@@ -200,6 +201,86 @@ class AdvancedFFBTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def updateTimer(self):
         self.send_commands("axis",["curpos","curspd","curaccel"],self.spinBox_axis.value())
+    # --- meadhours hand protection ui ---
+    def setup_sre_ui(self):
+        """Python kodu ile arayuze sonradan SRE sliderlari ekler."""
+        main_layout = self.layout()
+        if main_layout is None: return
+        self.sre_group = PyQt6.QtWidgets.QGroupBox("Hands-off Protection")
+        self.sre_group.setStyleSheet("""
+            QGroupBox { 
+                margin-top: 20px; 
+                font-weight: bold; 
+                border: 1px solid #444; 
+                border-radius: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 3px 0 3px;
+            }
+        """)
+        
+        self.sre_layout = PyQt6.QtWidgets.QVBoxLayout()
+        
+        # --- SLIDER 1: LIMIT ---
+        limit_layout = PyQt6.QtWidgets.QHBoxLayout() # Yan yana dizmek icin
+        self.lbl_limit = PyQt6.QtWidgets.QLabel("Safety Speed Limit: 20000")
+        self.lbl_limit.setFixedWidth(150) # Yazi kaymasin diye sabit genislik
+        
+        self.slider_limit = PyQt6.QtWidgets.QSlider(PyQt6.QtCore.Qt.Orientation.Horizontal)
+        self.slider_limit.setRange(0, 30000)
+        self.slider_limit.setSingleStep(1000)
+        self.slider_limit.setValue(20000)
+        self.slider_limit.valueChanged.connect(self.update_sre_limit)
+        
+        limit_layout.addWidget(self.lbl_limit)
+        limit_layout.addWidget(self.slider_limit)
+        self.sre_layout.addLayout(limit_layout)
+
+        # --- SLIDER 2: DAMPING ---
+        damp_layout = PyQt6.QtWidgets.QHBoxLayout()
+        self.lbl_damp = PyQt6.QtWidgets.QLabel("Safety Damping: 0.5")
+        self.lbl_damp.setFixedWidth(150)
+        
+        self.slider_damp = PyQt6.QtWidgets.QSlider(PyQt6.QtCore.Qt.Orientation.Horizontal)
+        self.slider_damp.setRange(0, 50) 
+        self.slider_damp.setValue(5)
+        self.slider_damp.valueChanged.connect(self.update_sre_damp)
+        
+        damp_layout.addWidget(self.lbl_damp)
+        damp_layout.addWidget(self.slider_damp)
+        self.sre_layout.addLayout(damp_layout)
+        self.sre_group.setLayout(self.sre_layout)
+        next_row = main_layout.rowCount()
+        main_layout.addWidget(self.sre_group, next_row, 0, 1, 2)
+
+        # Callbackleri tanimla
+        self.register_callback("fx", "safetyLimit", self.sre_sync_limit, 0, int)
+        self.register_callback("fx", "safetyDamping", self.sre_sync_damp, 0, int)
+
+    def update_sre_limit(self, val):
+        self.lbl_limit.setText(f"Safety Speed Limit: {val}")
+        self.send_value("fx", "safetyLimit", val)
+
+    def update_sre_damp(self, val):
+        real_val = val / 10.0
+        self.lbl_damp.setText(f"Safety Damping: {real_val}")
+        self.send_value("fx", "safetyDamping", val)
+
+    def sre_sync_limit(self, val):
+        self.slider_limit.blockSignals(True)
+        self.slider_limit.setValue(val)
+        self.lbl_limit.setText(f"Safety Speed Limit: {val}")
+        self.slider_limit.blockSignals(False)
+
+    def sre_sync_damp(self, val):
+        self.slider_damp.blockSignals(True)
+        self.slider_damp.setValue(val)
+        real_val = val / 10.0
+        self.lbl_damp.setText(f"Safety Damping: {real_val}")
+        self.slider_damp.blockSignals(False)
+    # --- meadhours hand protection ui ---
 
     def set_spring_scaler_cb(self,repl):
         dat = map_infostring(repl)
