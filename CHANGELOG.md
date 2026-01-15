@@ -1,5 +1,6 @@
 ### Changes this version:
 - Fixes analog axis progressbars cutting off text and ADS111x progressbars not populating when set to 4
+- Fixed task list sorting and command ID
 
 ### Changes in v16.x:
 - Added RMD CAN motor tab
