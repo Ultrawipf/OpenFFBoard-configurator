@@ -544,7 +544,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.actionActive_threads.setEnabled(x==1)
             self.active_threads_dlg.set_taskstats_enabled(x==1) 
         self.get_value_async("sys","cmdinfo",adr=18,conversion=int,callback=cmdinfo18_cb) # Check taskstats
-        self.get_value_async("sys","cmdinfo",adr=23,conversion=int,callback=lambda x:self.active_threads_dlg.set_tasklist_enabled(x==1) ) # Check taskstats
+        self.get_value_async("sys","cmdinfo",adr=25,conversion=int,callback=lambda x:self.active_threads_dlg.set_tasklist_enabled(x==1) ) # Check taskstats
 
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
