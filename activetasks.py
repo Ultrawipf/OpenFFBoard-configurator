@@ -1,7 +1,7 @@
 from PyQt6.QtGui import QHideEvent
 from base_ui import WidgetUI,CommunicationHandler
 import PyQt6.QtWidgets
-from PyQt6.QtCore import QAbstractTableModel,Qt,QModelIndex,QTimer
+from PyQt6.QtCore import QAbstractTableModel,Qt,QModelIndex,QTimer,QSortFilterProxyModel
 import re
 
 
@@ -89,7 +89,10 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
         self.parent = parent
         self.pushButton_refresh.clicked.connect(self.read)
         self.items = ActiveTaskModel()
-        self.tableView.setModel(self.items)
+        self.proxyModel = QSortFilterProxyModel(self)
+        self.proxyModel.setSourceModel(self.items)
+        self.proxyModel.setSortRole(Qt.ItemDataRole.DisplayRole)
+        self.tableView.setModel(self.proxyModel)
         header = self.tableView.horizontalHeader()
         header.setSectionResizeMode(0,PyQt6.QtWidgets.QHeaderView.ResizeMode.Stretch) # Stretch first section
         self.tableView.setSortingEnabled(True)
