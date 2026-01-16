@@ -25,7 +25,7 @@
      <number>10</number>
     </property>
     <property name="topMargin">
-     <number>0</number>
+     <number>10</number>
     </property>
     <property name="rightMargin">
      <number>10</number>
@@ -138,24 +138,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>778</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuMonitoring">
-    <property name="title">
-     <string>Monitoring</string>
-    </property>
-    <addaction name="actionEffectsMonitor"/>
-    <addaction name="actionEffects_forces"/>
-   </widget>
-   <addaction name="menuMonitoring"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionFFB_Wheel_TMC_wizard">
    <property name="text">
@@ -165,22 +147,6 @@
   <action name="actionToggle_dark_mode">
    <property name="text">
     <string>toggle dark mode</string>
-   </property>
-  </action>
-  <action name="actionEffectsMonitor">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Effect stats</string>
-   </property>
-  </action>
-  <action name="actionEffects_forces">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Effect live forces</string>
    </property>
   </action>
  </widget>

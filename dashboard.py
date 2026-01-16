@@ -2,7 +2,8 @@ import PyQt6.QtWidgets
 from PyQt6 import uic
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
 import base_ui
-import hid_worker
+import hid_comms
+import effects_monitor
 
 
 class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
@@ -14,11 +15,25 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         base_ui.WidgetUI.__init__(self, main_ui, "dashboard.ui")
         base_ui.CommunicationHandler.__init__(self)
         self.main = main_ui
+
+        self.ffbeffect_ui = effects_monitor.EffectStatsUI(main=self.main, parent=self)
+        self.ffbeffect_ui.setEnabled(False)
+
+        # Push content in groupBox_features
+        layout = self.groupBox_ffbeffect.layout()
+        for i in reversed(range(layout.count())):
+            widgetToRemove = layout.itemAt(i).widget()
+            if widgetToRemove:
+                layout.removeWidget(widgetToRemove)
+                widgetToRemove.setParent(None)
+        layout.addWidget(self.ffbeffect_ui)
         
-        # Lancement du Thread HID
-        self.worker = hid_worker.HIDWorker()
+        # start Thread HID
+        self.worker = hid_comms.HIDWorker()
         self.worker.data_received.connect(self.update_dashboard)
         self.worker.connection_status.connect(self.handle_connection_status)
+
+        self.serial_connected = False
         
         
     def showEvent(self, a0):
@@ -31,12 +46,18 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         return super().hideEvent(a0)
 
     def set_connected(self, connected):
+        self.serial_connected = connected
+        self.groupBox_ffbeffect.setEnabled(connected)
+        self.ffbeffect_ui.setEnabled(connected)
         if connected:
             self.registerCallbacks()
         else:
             # remove the handler on disconnect
             self.remove_callbacks()
 
+    def setEffectAvailable(self, a0: bool) -> None:
+        self.ffbeffect_ui.setEffectAvailable(a0)
+        
     def registerCallbacks(self):
         pass
 
@@ -46,9 +67,11 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             # Hide status label when connected successfully
             self.lbl_status.setVisible(False)
             self.groupBox_FFBAxes.setVisible(True)
-            self.groupBox_ffbeffect.setVisible(False)
+            self.groupBox_ffbeffect.setVisible(True)
             self.groupBox_secAxis.setVisible(True)
             self.groupBox_matrixButton.setVisible(True)
+            self.worker.sendCommand(1,0x000,0,0x7) # ask the main class without CDC connexion
+
         else:
             # Show error message in status label
             self.lbl_status.setVisible(True)
@@ -59,6 +82,15 @@ class DashboardUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self.groupBox_matrixButton.setVisible(False)
 
     def update_dashboard(self, report):
+
+        if isinstance(report, hid_comms.CMDReport):
+            rep: hid_comms.CMDReport = report
+            if (rep.cls == 0 and rep.command == 0x7): # sys.0.main response
+                if rep.value==1 :
+                    self.progressBar_Y_pos.setEnabled(False)
+                    self.progressBar_Y_neg.setEnabled(False)
+            return
+
         """Update dashboard with HID report data"""
         # Hide status label when data is received
         self.lbl_status.setVisible(False)

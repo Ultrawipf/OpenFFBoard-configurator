@@ -45,7 +45,6 @@ import midi_ui
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
-import effects_monitor
 import effects_graph_ui
 import updater
 import simplemotion_ui
@@ -131,10 +130,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
         # Force the main window to resize to the content of the newly selected tab
-        self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
-        self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
-        self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
-        self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
+        #TODO VMA remove self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
+        #TODO VMA remove self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
         self.active_classes = {}
         self.fw_version_str = None
 
@@ -170,18 +169,20 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.about_ui.set_connected)
 
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
-        self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
-        self.effects_graph_dlg.setEnabled(False)
+        #TODO check if always required self.effects_graph_dlg.setEnabled(False)
 
         #self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
-        self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
+        #TODO VMA remove self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display) plus besoin des deux l'enable se fait si on recoit la classe
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
 
-        self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
+        #TODO VMA remove self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
+
+        self.serialchooser.connected.connect(self.dashboard.set_connected)
         
         icon = PyQt6.QtGui.QPixmap("res/img/openffboard.png", "PNG")
         self.icon.setPixmap(icon.scaled(60, 60, PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio))
@@ -264,19 +265,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             msg =  "New configurator update available.<br>Warning: Check if compatible with firmware.<br>Install firmware from <a href=\"https://github.com/Ultrawipf/OpenFFBoard/releases\"> main repo</a>"
             notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
-        
-
-    def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
-        """Move all modal dialog when moving main ui."""
-        super().moveEvent(event)
-        diff = event.pos() - event.oldPos()
-
-        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.effects_monitor_dlg,
-            self.effects_graph_dlg]
-        for dialog in list_dialog:
-            if dialog and dialog.isVisible():
-                dialog.move(dialog.pos() + diff)
-                dialog.update()
 
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
@@ -464,11 +452,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
-        self.effects_monitor_dlg.setEnabled(False)
-        self.effects_graph_dlg.setEnabled(False)
-        self.effects_graph_dlg.set_total_output_display(False)
-        self.actionEffectsMonitor.setEnabled(False)
-        self.actionEffects_forces.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.set_total_output_display(False)
+        #TODO VMA remove self.actionEffectsMonitor.setEnabled(False)
+        #TODO VMA remove self.actionEffects_forces.setEnabled(False)
         self.axes = 0
         self.maxaxischanged.emit(self.axes)
 
@@ -540,7 +528,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.profile_ui.set_save_btn(True)
                     self.axes = max(self.axes,classe.axis)
                     self.maxaxischanged.emit(self.axes)
-                    self.effects_graph_dlg.set_total_output_display(True)
+                    #TODO VMA A analyser self.effects_graph_dlg.set_total_output_display(True)
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
@@ -580,10 +568,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xA02: # Effects manager
-                    self.effects_monitor_dlg.setEnabled(True)
-                    self.effects_graph_dlg.setEnabled(True)
-                    self.actionEffectsMonitor.setEnabled(True)
-                    self.actionEffects_forces.setEnabled(True)
+                    self.dashboard.setEffectAvailable(True)
+                    #TODO VMA enabled the effects self.effects_monitor_dlg.setEnabled(True)
+                    #TODO VMA enabled self.effects_graph_dlg.setEnabled(True)
+                    #TODO VMA remove self.actionEffectsMonitor.setEnabled(True)
+                    #TODO VMA remove self.actionEffects_forces.setEnabled(True)
+                    pass
                 elif classe_active["id"] == 0x8B or classe_active["id"] == 0x8C:
                     classe = rmd_ui.RmdUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]

@@ -8,8 +8,11 @@ VID = 0x1209
 PID = 0xFFB0 
 
 @dataclass
-class HIDReport:
+class ObjectReport:
     report_id: int
+
+@dataclass
+class HIDReport(ObjectReport):
     buttons: int
     axis_x: int
     axis_y: int
@@ -24,12 +27,22 @@ class HIDReport:
         """Helper to check if button N (0-63) is pressed"""
         return (self.buttons >> button_index) & 1
     
+@dataclass
+class CMDReport(ObjectReport):
+    report_id: int
+    type: int
+    cls: int
+    instance: int
+    command: int
+    value: int
+    address: int
+    
 class HIDWorker(QThread):
     """
     Dedicated thread for HID reading to avoid blocking the UI.
     """
     # Signal to send HIDReport data
-    data_received = pyqtSignal(HIDReport)
+    data_received = pyqtSignal(ObjectReport)
     # Signal to notify connection status
     connection_status = pyqtSignal(bool, str)  # connected, message
     
@@ -119,25 +132,16 @@ class HIDWorker(QThread):
         try:
 
             self.connection_status.emit(True, "Successfull")
-
-            # Read the report from the hid device
-            #self.sendCommand(1,0xA01,0,0x00,0) # get power
-            
-            # On lit jusqu'à 65 bytes
-            #data = self.device_cmd.read(65)
-            
-            #if data:
-            #   self.parse_and_print_response(data)
-                
             print("   [Thread Joystick] Démarré")
             while self.running and self.device_joy:
                 # Lecture brute (taille max 64)
                 data = self.device_joy.read(64)
                 if data:
                     parsed_report = self.parse_report(data)
-                    if parsed_report:
+                    if parsed_report is not None:
                         self.data_received.emit(parsed_report)
                 self.msleep(10) # ~100Hz
+                #self.sendCommand(1,0xA01,0,0x00,0) # get power
                     
         except Exception as e:
             print(f"Error HID: {e}")
@@ -190,9 +194,9 @@ class HIDWorker(QThread):
         fmt = '<BBHBIqQ'
         report_id = 0xA1
         buffer = struct.pack(fmt, report_id, type, cls, inst, cmd, data, adr)
-        self.device_cmd.write(buffer)
+        self.device_joy.write(buffer)
         
-    def parse_and_print_response(self, data):
+    def parse_command(self, data):
         """
         Décode la réponse brute reçue (liste d'entiers)
         """
@@ -202,18 +206,20 @@ class HIDWorker(QThread):
         # Vérification du Report ID (0xA1 selon ton code)
         if raw[0] == 0xA1:
             try:
-                # On découpe selon ton code pywinusb :
-                # data[0] = ID
-                t = raw[1]
-                cls = struct.unpack('<H', raw[2:4])[0]
-                instance = raw[4]
-                cmd = struct.unpack('<L', raw[5:9])[0]
-                val = struct.unpack('<q', raw[9:17])[0]
-                addr = struct.unpack('<q', raw[17:25])[0]
+
+                return CMDReport(
+                    report_id=raw[0],
+                    type=raw[1],
+                    cls = struct.unpack('<H', raw[2:4])[0],
+                    instance= raw[4],
+                    command= struct.unpack('<L', raw[5:9])[0],
+                    value= struct.unpack('<q', raw[9:17])[0],
+                    address= struct.unpack('<q', raw[17:25])[0]
+                )
                 
-                print(f"REÇU -> Type: {t}, Class: {hex(cls)}.{instance}, Cmd: {cmd}, Val: {val}, Addr: {addr}")
             except struct.error:
                 print("Erreur de décodage paquet")
+                return None
 
     def parse_report(self, data):
         """Parse the HID raw data in report
@@ -225,38 +231,43 @@ class HIDWorker(QThread):
         if isinstance(data, list):
             data = bytes(data)
 
-        # 2. Size verification
-        # Structure: 1B (ID) + 8B (Buttons) + 8 * 2B (Axes) = 25 bytes
-        if self.unpack_format is None:
-            if not self.detect_format(len(data)):
-                return None
-        
-        # NOTE : Sometimes hidapi returns more data (USB padding to 64 bytes), 
-        # so we just check that we have *at least* the required size.
-        if len(data) < self.expected_len:
-            print(f"Error: Incomplete data (received {len(data)} bytes, expected {self.expected_len})")
-            return None
+        if data[0] == 0xA1:
+            return self.parse_command(data)
 
-        try:
-            # 3. Decoding (Unpack)
-          
-            # We only take the first 25 bytes even if the buffer is larger
-            unpacked = struct.unpack(self.unpack_format, data[:self.expected_len])
+        elif data[0] == 0x01:
+
+            # 2. Size verification
+            # Structure: 1B (ID) + 8B (Buttons) + 8 * 2B (Axes) = 25 bytes
+            if self.unpack_format is None:
+                if not self.detect_format(len(data)):
+                    return None
             
-            # 4. Object creation
-            return HIDReport(
-                report_id=unpacked[0],
-                buttons=unpacked[1],
-                axis_x=unpacked[2],
-                axis_y=unpacked[3],
-                axis_z=unpacked[4],
-                axis_rx=unpacked[5],
-                axis_ry=unpacked[6],
-                axis_rz=unpacked[7],
-                dial=unpacked[8],
-                slider=unpacked[9]
-            )
+            # NOTE : Sometimes hidapi returns more data (USB padding to 64 bytes), 
+            # so we just check that we have *at least* the required size.
+            if len(data) < self.expected_len:
+                print(f"Error: Incomplete data (received {len(data)} bytes, expected {self.expected_len})")
+                return None
 
-        except struct.error as e:
-            print(f"Error parsing struct: {e}")
-            return None
+            try:
+                # 3. Decoding (Unpack)
+            
+                # We only take the first 25 bytes even if the buffer is larger
+                unpacked = struct.unpack(self.unpack_format, data[:self.expected_len])
+                
+                # 4. Object creation
+                return HIDReport(
+                    report_id=unpacked[0],
+                    buttons=unpacked[1],
+                    axis_x=unpacked[2],
+                    axis_y=unpacked[3],
+                    axis_z=unpacked[4],
+                    axis_rx=unpacked[5],
+                    axis_ry=unpacked[6],
+                    axis_rz=unpacked[7],
+                    dial=unpacked[8],
+                    slider=unpacked[9]
+                )
+
+            except struct.error as e:
+                print(f"Error parsing struct: {e}")
+                return None
