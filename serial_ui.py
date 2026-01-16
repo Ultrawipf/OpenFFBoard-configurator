@@ -177,11 +177,12 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Change the color of the port name in the combo box."""
         # Get the current text of the combo box
         current_text = self.comboBox_port.currentText()
+        outdated_text = " [OUTDATED !]"
         
         # If we have a valid text, change its color
-        if current_text:
+        if current_text and not (outdated_text in current_text) :
             current_index = self.comboBox_port.currentIndex()
-            self.comboBox_port.setItemText(current_index, current_text + " [OUTDATED !]")
+            self.comboBox_port.setItemText(current_index, current_text + outdated_text)
     
     def check_for_updates(self):
         """Check for available updates and show/hide the update button accordingly."""
