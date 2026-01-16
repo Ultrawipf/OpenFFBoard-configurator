@@ -1,4 +1,7 @@
-/* Main Styles */
+/*********************************************************************************************************************************/
+/*                                                       Global Widget                                                           */
+/*********************************************************************************************************************************/
+/* --- Styles for button --- */
 QMainWindow {
     color: #E0E0E0;
     background-image: url("./res/img/background_dark.png");
@@ -7,33 +10,38 @@ QMainWindow {
     background-attachment: fixed;
 }
 
-
-QGroupBox#groupBox_profilemanager {
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
-    border: 3px solid #2f7c2f;
-}
-
-QGroupBox#groupBox_profilemanager:disabled {
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
-    border: 3px solid #2f7c2f;
-}
-
-QGroupBox#groupBox_profilemanager QPushButton {
-    background-color: #00AA00;
-    font-size: 14px;
+QPushButton {
+    background-color: #0097c9;
+    color: #E0E0E0;
+    font-size: 12px;
     font-weight: bold;
     border-radius: 5px;
-    padding: 5px 20px;
-    min-width: 120px;
+    padding: 5px 10px;
+    min-width: 100px;
+}
+QPushButton:hover {
+    background-color: #007ca5;
 }
 
-QGroupBox#groupBox_profilemanager QPushButton:hover {
-    background-color: #008800;
+QPushButton:disabled {
+    background-color: #002e3d;
+    color: #5c6a6f;
 }
 
-QGroupBox#groupBox_profilemanager QPushButton:disabled {
-    background-color: #334633;
+QComboBox {
+    background-color: transparent;
+    border: 1px solid #3A3D42;
+    /*color: #E0E0E0;*/
 }
+
+QComboBox::item:hover,
+QComboBox::item:selected {
+    background-color: #003547;  /* Votre couleur rouge */
+    /*color:  #E0E0E0;*/         /* Changez le texte en blanc pour la lisibilité */
+}
+
+/*******************************************************************************************/
+
 
 /* --- Styles pour le bandeau supérieur (statusBarFrame) --- */
 QWidget#serial_panel {
@@ -41,29 +49,24 @@ QWidget#serial_panel {
     border-radius: 0px;
 }
 
-QWidget#serial_panel QComboBox {
+QComboBox#comboBox_port {
     border: 1px solid #3A3D42;
-    color: #f2f2f2;
-    font-size: 16px;
     font-weight: bold;
     padding: 5px 10px;
-    min-height:30px
+    min-height: 30px
 }
 
-QWidget#serial_panel QComboBox:disabled {
-    background-color: #45c145;
-    color: #E0E0E0;
-    border: none;
-}
-
-/* Cache la flèche déroulante quand il est désactivé */
-QWidget#serial_panel QComboBox::drop-down:disabled {
+QLabel#label_port {
     background-color: transparent;
-    border: none;
-    width: 0px;
-    image: none;
+    color: #45c145;
+    font-size: 24px;
+    font-weight: bold;
 }
 
+/* disabled is used with the board is outdated */
+QLabel#label_port:disabled {
+    color: #a03b00;
+}
 
 QWidget#serial_panel QPushButton {
     background-color: #d68c02;
@@ -110,6 +113,35 @@ QPushButton#statusBarSettingsButton {
 QPushButton#statusBarSettingsButton QIcon {
     qproperty-iconSize: 24px;
 }
+
+
+QGroupBox#groupBox_profilemanager {
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+    border: 3px solid #2f7c2f;
+}
+
+QGroupBox#groupBox_profilemanager:disabled {
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+    border: 3px solid #2f7c2f;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton {
+    background-color: #00AA00;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 20px;
+    min-width: 120px;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton:hover {
+    background-color: #008800;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton:disabled {
+    background-color: #334633;
+}
+
 
 
 /*********************************************************************************************************************************/
@@ -245,40 +277,6 @@ QStatusBar {
     background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
 }
 
-/*********************************************************************************************************************************/
-/*                                                       Global Widget                                                           */
-/*********************************************************************************************************************************/
-/* --- Styles for button --- */
-
-QPushButton {
-    background-color: #0097c9;
-    color: #E0E0E0;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 5px;
-    padding: 5px 10px;
-    min-width: 100px;
-}
-QPushButton:hover {
-    background-color: #007ca5;
-}
-
-QPushButton:disabled {
-    background-color: #002e3d;
-    color: #5c6a6f;
-}
-
-QComboBox {
-    background-color: transparent;
-    border: 1px solid #3A3D42;
-    color: #E0E0E0;
-}
-
-QComboBox::item:hover,
-QComboBox::item:selected {
-    background-color: #003547;  /* Votre couleur rouge */
-    color:  #E0E0E0;         /* Changez le texte en blanc pour la lisibilité */
-}
 
 
 QGroupBox#groupBox_FFBAxes > QProgressBar, 
