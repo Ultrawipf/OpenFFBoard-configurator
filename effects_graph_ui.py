@@ -35,6 +35,7 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         self.chart = PyQt6.QtCharts.QChart()
+        self.chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
 
@@ -70,15 +71,6 @@ class EffectsGraphUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self.chart_yaxis_output.setMin(-10)
         self.chart_yaxis_output.setMax(10)
 
-        self.chart.legend().setLabelBrush(
-            PyQt6.QtWidgets.QApplication.instance().palette().text()
-        )
-        for ax in self.chart.axes():
-            ax.setLabelsBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-
-        self.chart.setBackgroundBrush(PyQt6.QtWidgets.QApplication.instance().palette().window())
         self.graphWidget_Forces.setChart(self.chart)
 
         # Setup the Qline for the the effect

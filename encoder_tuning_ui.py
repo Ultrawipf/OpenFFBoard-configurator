@@ -226,12 +226,10 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
+        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()
-        chart.setBackgroundBrush(
-            PyQt6.QtWidgets.QApplication.instance().palette().window()
-        )
 
         font = PyQt6.QtGui.QFont()
         font.setPixelSize(7)
@@ -271,10 +269,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             )
         )
         chart.addAxis(chart_y_axis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-
-        for axe in chart.axes():
-            axe.setTitleBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
-            axe.setLabelsBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
 
         self.graph_min.setChart(chart)
 
@@ -350,12 +344,10 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
+        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()
-        chart.setBackgroundBrush(
-            PyQt6.QtWidgets.QApplication.instance().palette().window()
-        )
 
         font = PyQt6.QtGui.QFont()
         font.setPixelSize(7)
@@ -396,10 +388,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             )
         )
         chart.addAxis(chart_y_axis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-
-        for axe in chart.axes():
-            axe.setTitleBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
-            axe.setLabelsBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
 
         self.graph_random.setChart(chart)
 
@@ -457,13 +445,11 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
+        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()
-        chart.setBackgroundBrush(
-            PyQt6.QtWidgets.QApplication.instance().palette().window()
-        )
-
+        
         font = PyQt6.QtGui.QFont()
         font.setPixelSize(7)
 
@@ -504,10 +490,6 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             )
         )
         chart.addAxis(chart_y_axis_forces, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-
-        for axe in chart.axes():
-            axe.setTitleBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
-            axe.setLabelsBrush(PyQt6.QtWidgets.QApplication.instance().palette().text())
 
         self.graph_accel.setChart(chart)
 

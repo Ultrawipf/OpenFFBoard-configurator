@@ -10,6 +10,12 @@ QMainWindow {
     background-attachment: fixed;
 }
 
+/*  Widget section */
+
+QWidget, QLabel, QRadioButton, QCheckBox, QProgressBar, QSlider, QChartView, QComboBox {
+    background-color: transparent;
+}
+
 QPushButton {
     background-color: #0097c9;
     color: #E0E0E0;
@@ -28,24 +34,46 @@ QPushButton:disabled {
     color: #5c6a6f;
 }
 
-QComboBox {
-    background-color: transparent;
-    border: 1px solid #3A3D42;
-    /*color: #E0E0E0;*/
+QComboBox QAbstractItemView {
+    background-color: #00171f;
 }
 
-QComboBox::item:hover,
-QComboBox::item:selected {
-    background-color: #003547;  /* Votre couleur rouge */
-    /*color:  #E0E0E0;*/         /* Changez le texte en blanc pour la lisibilité */
+QComboBox QAbstractItemView::item:selected,
+QComboBox QAbstractItemView::item:hover
+{
+    background-color: #007ca5;
 }
 
-/*******************************************************************************************/
-
-
-/* --- Styles pour le bandeau supérieur (statusBarFrame) --- */
-QWidget#serial_panel {
+/* GroupBox content */
+QGroupBox {
+    background: rgba(45, 48, 53, 160); /* #2D3035 with 75% transparency */
+    border: 3px solid #005e7d;
+    border-radius: 8px;
+    padding: 25px 10px 5px 10px;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
     color: #E0E0E0;
+}
+
+QGroupBox:disabled {
+    background-color:  #1f2124;
+    border: 3px solid #32393c;
+    color: #5c6a6f;
+}
+
+QGroupBox::title {
+    subcontrol-origin: padding;
+    subcontrol-position: top left;
+    padding: 5px 10px;
+}
+
+/*********************************************************************************************************************************/
+/*                                      North Zone : the top layout (serial and profile manager)                                 */
+/*********************************************************************************************************************************/
+
+
+QWidget#serial_panel {
     border-radius: 0px;
 }
 
@@ -116,12 +144,12 @@ QPushButton#statusBarSettingsButton QIcon {
 
 
 QGroupBox#groupBox_profilemanager {
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 with 50% de transparency */
     border: 3px solid #2f7c2f;
 }
 
 QGroupBox#groupBox_profilemanager:disabled {
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 with 50% de transparency */
     border: 3px solid #2f7c2f;
 }
 
@@ -150,8 +178,8 @@ QGroupBox#groupBox_profilemanager QPushButton:disabled {
 
 
 /* --- Left Menu Layout --- */
-QFrame#sideMenuFrame { /* objectName donné dans Qt Designer */
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+QFrame#sideMenuFrame
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 with 50% transparency */
     border-radius: 8px;
     border: 3px solid #005e7d;
     padding: 5px;
@@ -159,7 +187,7 @@ QFrame#sideMenuFrame { /* objectName donné dans Qt Designer */
 
 /* --- Left Menu Button --- */
 QFrame#sideMenuFrame QPushButton {
-    background-color: rgba(00, 191, 255, 32); /* #00BFFF avec 12.5% de transparence */
+    background-color: rgba(00, 191, 255, 32); /* #00BFFF with 12.5% transparency */
     border: none;
     border-radius: 0px;
 
@@ -175,7 +203,7 @@ QFrame#sideMenuFrame QPushButton {
 }
 
 QFrame#sideMenuFrame QPushButton:hover {
-    background-color: rgba(00, 191, 255, 64); /* #00BFFF avec 25% de transparence */
+    background-color: rgba(00, 191, 255, 64); /* #00BFFF with 25% transparency */
     border: 1px solid #00BFFF;
 }
 
@@ -196,12 +224,6 @@ QStackedWidget#content_stack {
 }
 
 /* remove the background to see the image */
-/*
-QStackedWidget#content_stack > QWidget, QStackedWidget#content_stack > QWidget:disabled {
-    background-color: transparent;
-    padding: 20px;
-}*/
-
 QTabBar:tab {
     background-color: rgba(00, 191, 255, 32); /* #00BFFF avec 12.5% de transparence */
     border: none;
@@ -220,7 +242,7 @@ QTabBar:tab {
 }
 
 QTabBar:tab:hover {
-    background-color: rgba(00, 191, 255, 64); /* #00BFFF avec 25% de transparence */
+    background-color: rgba(00, 191, 255, 64); /* #00BFFF with 25% transparency */
     border: 1px solid #00BFFF;
 }
 
@@ -230,7 +252,7 @@ QTabBar:tab:selected {
 }
 
 QTabBar:tab:disabled {
-    background: rgba(45, 48, 53, 160); /* #2D3035 avec 75% de transparence */
+    background: rgba(45, 48, 53, 160); /* #2D3035 with 75% transparency */
     border: none;
     color: #5c6a6f;
 }
@@ -244,53 +266,19 @@ QTabWidget > QWidget, QTabWidget > QWidget:disabled {
     background-color:  rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
 }
 
-/* GroupBox content */
-QGroupBox {
-    background: rgba(45, 48, 53, 160); /* #2D3035 avec 75% de transparence */
-    border: 3px solid #005e7d;
-    border-radius: 8px;
-    padding: 25px 10px 5px 10px;
-    font-size: 14px;
-    text-transform: uppercase;
-    font-weight: bold;
-    color: #E0E0E0;
-}
 
-QGroupBox:disabled {
-    background-color:  #1f2124;
-    border: 3px solid #32393c;
-    color: #5c6a6f;
-}
-
-QGroupBox::title {
-    background-color: transparent;
-    subcontrol-origin: padding;
-    subcontrol-position: top left;
-    padding: 5px 10px;
-}
-
-/*********************************************************************************************************************************/
-/*                                                        South Zone                                                             */
-/*********************************************************************************************************************************/
-
-QStatusBar {
-    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
-}
-
-
-
-QGroupBox#groupBox_FFBAxes > QProgressBar, 
-QGroupBox#groupBox_secAxis > QProgressBar,
-QGroupBox#groupBox_ffbeffect > QProgressBar{
+QGroupBox#groupBox_FFBAxes QProgressBar, 
+QGroupBox#groupBox_secAxis QProgressBar,
+QGroupBox#groupBox_ffbeffect QProgressBar{
     background-color: #31363b;
     border: 1px solid #76797C;
     border-radius: 2px;
     text-align: center;
 }
 
-QGroupBox#groupBox_FFBAxes > QProgressBar::chunk, 
-QGroupBox#groupBox_secAxis > QProgressBar::chunk, 
-QGroupBox#groupBox_ffbeffect > QProgressBar::chunk {
+QGroupBox#groupBox_FFBAxes QProgressBar::chunk, 
+QGroupBox#groupBox_secAxis QProgressBar::chunk, 
+QGroupBox#groupBox_ffbeffect QProgressBar::chunk {
     background-color: #3daee9;
 }
 
@@ -300,3 +288,13 @@ QLabel#lbl_status {
     font-weight: bold;
     color: #a40000;
 }
+
+
+/*********************************************************************************************************************************/
+/*                                                        South Zone                                                             */
+/*********************************************************************************************************************************/
+
+QStatusBar {
+    background-color: rgba(45, 48, 53, 128); /* #2D3035 avec 50% de transparence */
+}
+

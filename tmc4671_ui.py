@@ -59,6 +59,7 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
    
         # Chart setup
         self.chart = QChart()
+        self.chart.setTheme(QChart.ChartTheme.ChartThemeDark)
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis(self.chart)
@@ -73,7 +74,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         # use Application.instance().palette().dark().color() but with 25% opacity
         self.chartYaxis_Amps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
         self.chartYaxis_Temps.setGridLineColor(QColor(QApplication.instance().palette().dark().color().red(),QApplication.instance().palette().dark().color().green(),QApplication.instance().palette().dark().color().blue(),64))
-        self.chart.setBackgroundBrush(QApplication.instance().palette().window())
         
         self.chart.addAxis(self.chartYaxis_Amps,Qt.AlignmentFlag.AlignLeft)
         
@@ -112,12 +112,6 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
         self.chartYaxis_Amps.setMax(20)
         self.graphWidget_Amps.setRubberBand(QChartView.RubberBand.VerticalRubberBand)
         self.graphWidget_Amps.setChart(self.chart) # Set the chart widget
-
-        # Set graph theme colors
-        self.chart.legend().setLabelBrush(QApplication.instance().palette().text())
-        for ax in self.chart.axes():
-            ax.setLabelsBrush(QApplication.instance().palette().text())
- 
 
         self.checkBox_advancedpid.stateChanged.connect(self.advancedPidChanged)
         self.lastPrecP = self.checkBox_P_Precision.isChecked()

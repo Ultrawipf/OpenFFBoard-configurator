@@ -53,6 +53,8 @@ import canremote_ui
 import settings_ui
 import about_ui
 import dashboard
+import qdarkstyle
+
 
 # This GUIs version
 VERSION = "1.16.9"
@@ -940,13 +942,12 @@ if __name__ == "__main__":
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt6'))
+
     translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
-
-        app.setStyle("Fusion")
-        app.setPalette(dark_palette.PALETTE_DARK)
-                
+               
         window = MainUi(translator = translator)
         # Force dark theme on all platforms
 
