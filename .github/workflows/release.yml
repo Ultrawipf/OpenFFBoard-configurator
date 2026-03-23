@@ -31,13 +31,18 @@ jobs:
         run: for i in */; do zip -r "${i%/}.zip" "$i"; done
         working-directory: etc/usr/artifacts/
 
+      - name: Make changelog
+        run: |
+          echo -e "## Changes\n" > /tmp/CHANGELOG.md
+          perl -0777 -ne 'print "$1\n$2" if /^(#+.+)\n((?:[^#\n]+\n)+)/m; exit' ${{ github.workspace }}/CHANGELOG.md >> /tmp/CHANGELOG.md
+
       # Create release
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: "Configurator ${{github.ref_name}}"
-          body_path: ${{ github.workspace }}/CHANGELOG.md
+          body_path: /tmp/CHANGELOG.md
           body: "Release notes coming soon"
           files: etc/usr/artifacts/*.zip
           prerelease: ${{contains(github.ref_name, '-')}}
