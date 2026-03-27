@@ -30,6 +30,7 @@ from PyQt6.QtGui import QAction,QActionGroup
 
 import config
 import helper
+from devsignature import ECSignature
 
 
 # UIs
@@ -58,13 +59,16 @@ import rmd_ui
 import canremote_ui
 
 # This GUIs version
-VERSION = "1.16.9"
+VERSION = "1.17.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.16.6"
+MIN_FW = "1.17.0"
 
 DEFAULTLANG = "en_US"
+
+# Internal signature
+PUBKEY = bytes.fromhex("7d78762398c6e397e4faa2b03c4cdfa481c2c861add82bc8a5f6ed369d8259c0")
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
@@ -117,6 +121,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
+        self.hwtype = None
+        self.hwuid = None
+        self.hwsignature = None
+        self.signature_valid = False
 
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
@@ -133,6 +141,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
                 # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
         self.tabsinitialized.connect(self.errors_dlg.connected_cb)
+        self.tabsinitialized.connect(self.connected_callback_late)
 
         self.systray.open_main_ui_signal.connect(self.display_ui)
         self.systray.change_profile_signal.connect(self.change_profile)
@@ -628,8 +637,44 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
                 notification.exec()
    
+    def signature_check(self,signature,uid,suffix=""):
+        """Checks if the chip signature matches its UID"""
+        key = ECSignature.key_from_bytes_public(PUBKEY)
+        sigres = ECSignature.check(uid,signature,key,bytes(suffix,"utf-8"))
+        self.signature_valid = sigres
+        if(sigres):
+            self.wrapper_status_bar.set_board_text(self.hwtype + " ✅")
+        else:
+            self.wrapper_status_bar.set_board_text(self.hwtype + " ❌")
+        return sigres
+    
+    def connected_callback_late(self,connected):
+        """Called after the tabs have been initialized to speed up initial connection"""
+        if not connected:
+            return
+        def sig_cb(signature):
+            if(signature == "0" or len(signature) % 2 != 0):
+                self.hwsignature = bytes(0)
+            else:
+                self.hwsignature = bytes.fromhex(signature)
+            if(self.hwsignature != None and self.hwuid != None):
+                self.signature_check(self.hwsignature,self.hwuid)
 
+        def uid_cb(uid):
+            self.hwuid = ECSignature.processuid(uid)
+            if(self.hwsignature != None and self.hwuid != None):
+                self.signature_check(self.hwsignature,self.hwuid)
 
+        def hwtype_cb(hwtype):
+            self.hwtype = hwtype
+            self.wrapper_status_bar.set_board_text(hwtype)
+
+        self.get_value_async("sys", "swver", self.version_check)
+        self.get_value_async("sys", "hwtype", hwtype_cb)
+        self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
+        self.get_value_async("sys", "uid", uid_cb,typechar="?")
+        self.get_value_async("sys", "signature", sig_cb,typechar="!")
+    
     def serial_connected(self, connected):
         """Check the release when a board is connected."""
         
@@ -646,9 +691,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if connected:
             self.get_value_async("main", "id", id_cb, 0)
             self.errors_dlg.registerCallbacks()
-            self.get_value_async("sys", "swver", self.version_check)
-            self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
-            self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
             
             if (self.serial_timer is None) :
                 self.serial_timer = PyQt6.QtCore.QTimer(singleShot=True, timeout=timer_cb)

@@ -1,6 +1,8 @@
 ### v1.17.0
 - Fixes analog axis progressbars cutting off text and ADS111x progressbars not populating when set to 4
 - Fixed task list sorting and command ID
+- Faster startup in some cases
+- Added signature check indicator
 
 ### v1.16.8
 - Fixed TMC4671 tab calibration warning popup blocking thread causing timeouts
