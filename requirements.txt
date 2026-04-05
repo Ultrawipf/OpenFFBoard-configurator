@@ -6,3 +6,4 @@ PyQt6-sip
 pyusb
 intelhex
 requests
+cryptography

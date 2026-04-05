@@ -645,7 +645,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if(sigres):
             self.wrapper_status_bar.set_board_text(self.hwtype + " ✅")
         else:
-            self.wrapper_status_bar.set_board_text(self.hwtype + " ❌")
+            self.wrapper_status_bar.set_board_text(self.hwtype + " ❓")
         return sigres
     
     def connected_callback_late(self,connected):
