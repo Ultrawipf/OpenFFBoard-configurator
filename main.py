@@ -648,6 +648,19 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.wrapper_status_bar.set_board_text(self.hwtype + " ❓")
         return sigres
     
+    def update_signature(self,sig):
+        try:
+            sigbytes = bytes.fromhex(sig)
+            ints = ECSignature.signature_to_ints(sigbytes)
+            # Write into chip
+            for a,v in enumerate(ints):
+                self.send_value("sys","signature",v,a)
+        except Exception as e:
+            return
+        self.hwsignature = sigbytes
+        self.signature_check(self.hwsignature,self.hwuid)
+
+    
     def connected_callback_late(self,connected):
         """Called after the tabs have been initialized to speed up initial connection"""
         if not connected:
@@ -908,7 +921,6 @@ class WrapperStatusBar(base_ui.WidgetUI):
         """Display the last log message in the status bar."""
         self.label_log.setText(message)
 
-
 class AboutDialog(PyQt6.QtWidgets.QDialog):
     """Display the about dialog box."""
 
@@ -917,10 +929,88 @@ class AboutDialog(PyQt6.QtWidgets.QDialog):
         PyQt6.QtWidgets.QDialog.__init__(self, parent)
         PyQt6.uic.loadUi(helper.res_path("about.ui"), self)
         verstr = "Version: " + VERSION
+        self.hwuid = parent.hwuid
+        self.sig_dialog = SignatureInputDialog(self,parent.hwuid)
         if parent.fw_version_str:
             verstr += " / Firmware: " + parent.fw_version_str
-        self.version.setText(verstr)
 
+        self.version.setText(verstr)
+        self.pushButton_signature.clicked.connect(self.signature_dialog)
+
+        if parent.hwuid:
+            self.label_hwid.setText("HW UID: "+parent.hwuid.hex())
+        self.frame_signature.setVisible(parent.hwuid != None)
+        self.pushButton_signature.setEnabled(False)
+
+        signaturestr = self.tr("Signature: ")
+        if not parent.hwsignature:
+            signaturestr += self.tr("Missing")
+            self.pushButton_signature.setEnabled(True)
+        else:
+            signaturestr += self.tr("Valid ✅" if parent.signature_valid else "Invalid ❌")
+        self.label_signature.setText(signaturestr)
+
+        self.sig_dialog.signature_result.connect(parent.update_signature)
+
+    def signature_dialog(self):
+        self.sig_dialog.open()
+
+class SignatureInputDialog(PyQt6.QtWidgets.QDialog):
+    signature_result = PyQt6.QtCore.pyqtSignal(str)
+    def __init__(self, parent=None,hwid = None):
+        super().__init__(parent)
+        self.parent = parent
+        self.uidstring = hwid.hex() if hwid else ""
+        self.setWindowTitle("Enter Signature")
+        self.setModal(True)
+        self.setup_ui()
+
+    def check_signature(self,text):
+        result = False
+        try:
+            sig = bytes.fromhex(text)
+            key = ECSignature.key_from_bytes_public(PUBKEY)
+            result = ECSignature.check(self.parent.hwuid,sig,key)
+        except Exception as e:
+            result = False
+        self.submit_button.setEnabled(result)
+        return result
+    
+    def submit(self):
+        if self.check_signature(self.hex_input.text()):
+            self.signature_result.emit(self.hex_input.text())
+            self.accept()
+        else:
+            self.reject()
+        
+    def setup_ui(self):
+        layout = PyQt6.QtWidgets.QVBoxLayout()
+        # Header
+        uidlayout = PyQt6.QtWidgets.QHBoxLayout()
+        layout.addWidget(PyQt6.QtWidgets.QLabel(self.tr("Enter signature and click \"submit\" to write to chip.\nTHIS CAN NOT BE UNDONE")))
+        uidlabel = PyQt6.QtWidgets.QLabel("UID: "+self.uidstring)
+        uidlabel.setTextInteractionFlags(PyQt6.QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        uidlayout.addWidget(uidlabel)
+        uidcopybutton = PyQt6.QtWidgets.QPushButton("Copy to clipboard")
+        uidlayout.addWidget(uidcopybutton)
+        layout.addLayout(uidlayout)
+        uidcopybutton.clicked.connect(lambda: app.clipboard().setText(self.uidstring))
+        # Text input
+        self.hex_input = PyQt6.QtWidgets.QLineEdit("")
+        self.hex_input.setPlaceholderText("AABB112233...")
+        layout.addWidget(self.hex_input)
+        # Buttons
+        button_layout = PyQt6.QtWidgets.QHBoxLayout()
+        self.submit_button = PyQt6.QtWidgets.QPushButton("Submit")
+        self.hex_input.textChanged.connect(self.check_signature)
+        self.submit_button.clicked.connect(self.submit)
+        self.submit_button.setEnabled(False)
+        cancel_button = PyQt6.QtWidgets.QPushButton("Cancel")
+        cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.submit_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
 
 def windows_theme_is_light():
     """Detect if the user is using Dark Mode in Windows.
