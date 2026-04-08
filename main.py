@@ -928,6 +928,14 @@ class AboutDialog(PyQt6.QtWidgets.QDialog):
         """Display the about box with the release number updated."""
         PyQt6.QtWidgets.QDialog.__init__(self, parent)
         PyQt6.uic.loadUi(helper.res_path("about.ui"), self)
+        self.parent = parent
+        self.init_ui()
+
+        self.sig_dialog.signature_result.connect(parent.update_signature)
+        self.sig_dialog.signature_result.connect(lambda : self.init_ui())
+
+    def init_ui(self):
+        parent = self.parent
         verstr = "Version: " + VERSION
         self.hwuid = parent.hwuid
         self.sig_dialog = SignatureInputDialog(self,parent.hwuid)
@@ -943,14 +951,12 @@ class AboutDialog(PyQt6.QtWidgets.QDialog):
         self.pushButton_signature.setEnabled(False)
 
         signaturestr = self.tr("Signature: ")
-        if not parent.hwsignature:
+        if not parent.hwsignature or parent.hwsignature == bytes([0xff])*64:
             signaturestr += self.tr("Missing")
             self.pushButton_signature.setEnabled(True)
         else:
             signaturestr += self.tr("Valid ✅" if parent.signature_valid else "Invalid ❌")
         self.label_signature.setText(signaturestr)
-
-        self.sig_dialog.signature_result.connect(parent.update_signature)
 
     def signature_dialog(self):
         self.sig_dialog.open()
