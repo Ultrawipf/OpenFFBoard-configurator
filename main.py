@@ -57,6 +57,7 @@ import simplemotion_ui
 import activetasks
 import rmd_ui
 import canremote_ui
+import settings_ui
 
 # This GUIs version
 VERSION = "1.17.0"
@@ -75,6 +76,21 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
     maxaxischanged = PyQt6.QtCore.pyqtSignal(int)
     languagechanged = PyQt6.QtCore.pyqtSignal()
+    TAB_MAPPING = {} # Rempli dans setup_ui
+
+    # PANEL_CONFIG définit l'ordre et les propriétés des panels (onglets).
+    # Chaque entrée est un dict contenant :
+    # - name: identifiant interne (utilisé comme clé de TAB_MAPPING)
+    # - title: texte affiché dans le menu latéral
+    # - icon: nom d'icône optionnel (non utilisé ici mais conservé pour futur usage)
+    # - static: True si l'onglet fait partie du configurator (créé au démarrage),
+    #           False s'il s'agit d'un onglet dynamique venant du board
+    PANEL_CONFIG = [
+        {"name": "dashboard", "title": "Dashboard", "icon": "res/img/dashboard.png", "static": True, "position": "top"},
+        {"name": "settings", "title": "Settings", "icon": "res/img/settings.png", "static": True, "position": "bottom"},
+        {"name": "about", "title": "About", "icon": "res/img/support.png", "static": True, "position": "bottom"},
+    ]
+    
     def __init__(self):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
@@ -84,6 +100,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
 
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
+        self.apply_stylesheet(helper.res_path("style.qss"))
 
         self.restart_app_flag = False
 
@@ -105,15 +122,19 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         # Systray
         self.systray = SystrayWrapper(self)
+        
         # Profile
         self.profile_ui.initialize_ui() # Profile UI
         self.make_lang_selector()
+        
+        # Settings panel
+        self.settings_ui = settings_ui.Settings(self, self.serial)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
-        self.tabWidget_main.currentChanged.connect(self.tab_changed)
+        #self.tabWidget_main.currentChanged.connect(self.tab_changed)
         # Force the main window to resize to the content of the newly selected tab
-        self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
+        #self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
         self.errors_dlg = errors.ErrorsDialog(self)
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
@@ -149,7 +170,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.systray.change_profile_signal.connect(self.change_profile)
         
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
-        self.tabWidget_main.addTab(self.serialchooser, self.tr("Serial"))
+        self.serial_panel.layout().addWidget(self.serialchooser)
         self.serialchooser.connected.connect(self.systray.set_connected)
         self.serialchooser.connected.connect(self.profile_ui.setEnabled)
 
@@ -160,6 +181,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # self.serial.readyRead.connect(self.serialReceive)
         self.actionAbout.triggered.connect(self.open_about)
         self.serialchooser.connected.connect(self.serial_connected)
+        # Keep Settings UI in sync when the serial port opens/closes
+        self.serialchooser.connected.connect(self.settings_ui.update_connected)
 
         self.actionUpdates.triggered.connect(self.open_updater)
 
@@ -184,29 +207,39 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.actionActive_threads.triggered.connect(self.active_threads_dlg.show)
 
-        self.actionRestore_chip_config.triggered.connect(self.load_flashdump_from_file)
-        self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
-
-        self.actionSave_chip_config.triggered.connect(self.save_flashdump_to_file)
-        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
-
-        self.actionReboot.triggered.connect(self.reboot)
-        self.serialchooser.connected.connect(self.actionReboot.setEnabled)
-
-        self.actionReset_Factory_Config.triggered.connect(self.reset_factory_btn)
-        self.serialchooser.connected.connect(self.actionReset_Factory_Config.setEnabled)
-
         self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
 
         self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
+        
+        icon = PyQt6.QtGui.QPixmap("res/img/openffboard.png", "PNG")
+        self.icon.setPixmap(icon.scaled(60, 60, PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
         # Main Panel
         layout = PyQt6.QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.profile_ui)
-        self.groupBox_main.setLayout(layout)
+        self.groupBox_profilemanager.setLayout(layout)
+        
+        # Add static panels defined in PANEL_CONFIG (order matters)
+        for panel in self.PANEL_CONFIG:
+            if panel.get("static"):
+                if panel.get("name") == "settings":
+                    widget = self.settings_ui
+                else:
+                    widget = PyQt6.QtWidgets.QWidget()
+                pos = panel.get("position", "auto")
+                self.add_tab(widget, panel.get("name"), panel.get("title"), panel.get("icon"), position=pos)
+        
+    def apply_stylesheet(self, qss_file):
+        """Charge et applique une feuille de style QSS."""
+        try:
+            with open(qss_file, "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Erreur: Le fichier QSS '{qss_file}' n'a pas été trouvé.")
+            self.setStyleSheet("") # Applique un style vide pour éviter des erreurs
         
         
     def autoconnect(self) :
@@ -254,12 +287,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.lang_actions[langid] = action
             self.menuLanguage.addAction(action)
             action.toggled.connect(self.change_lang_callback)
-
-
-    def reboot(self):
-        """Send the reboot message to the board."""
-        self.send_command("sys", "reboot")
-        self.reconnect()
 
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
@@ -337,37 +364,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         # Reload mainclasses
         self.serialchooser.get_main_classes() # TODO better move somewhere else
 
-
-    def save_flashdump_to_file(self):
-        """Send a async message to get the flashdump from board."""
-        self.get_value_async("sys", "flashdump", config.saveDump)
-
-    def load_flashdump_from_file(self):
-        """Load dumpfile and send config to board."""
-        dump = config.loadDump()
-        if not dump:
-            return
-
-        if self.connected:
-            for sector in dump["flash"]:
-                self.send_value("sys", "flashraw", sector["val"], sector["addr"], 0)
-            # Message
-            msg = PyQt6.QtWidgets.QMessageBox(
-                PyQt6.QtWidgets.QMessageBox.Icon.Information,
-                self.tr("Restore flash dump"),
-                self.tr("Uploaded flash dump.\nPlease reboot."),
-            )
-        else:
-            # Message
-            msg = PyQt6.QtWidgets.QMessageBox(
-                PyQt6.QtWidgets.QMessageBox.Icon.Warning,
-                self.tr("Can't restore flash dump"),
-                self.tr("Please connect board first."),
-            )
-
-
-        msg.exec()
-
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
         self.process_events_timer.stop()
@@ -393,27 +389,145 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 self.get_value_async("sys", "temp", self.wrapper_status_bar.update_temp)
 
     def tab_changed(self, id_tab):
-        """Add an handler on tab changed : do nothing for the moment."""
+        """Add an handler on tab changed : do nothing for e moment."""
 
-    def add_tab(self, widget, name):
+    def add_tab(self, widget, class_name:str, tab_text:str=None, icon_path:str=None, position:str="auto"):
         """Add a new tab in the tabWidget with a specific name."""
-        return self.tabWidget_main.addTab(widget, name)
+        
+        if class_name in self.TAB_MAPPING:
+            print(f"Attention: L'onglet avec l'ID '{class_name}' existe déjà.")
+            return
+        
+        side_menu_frame = self.centralwidget.findChild(PyQt6.QtWidgets.QFrame, "sideMenuFrame")
+        nav_button = PyQt6.QtWidgets.QPushButton(class_name, self)
+        if tab_text:
+            nav_button.setText(tab_text)
+        else:
+            nav_button.setText(class_name)
+        nav_button.clicked.connect(lambda: self.select_tab(class_name))
+        # Mark navigation group on the button for ordering logic
+        nav_group = position if position in ("top", "bottom") else "middle"
+        nav_button.setProperty("nav_group", nav_group)
+            
+        # 2. Ajout du bouton au layout du menu latéral
+        layout = side_menu_frame.layout()
+        if layout is None:
+            # Ensure a layout exists
+            layout = PyQt6.QtWidgets.QVBoxLayout()
+            side_menu_frame.setLayout(layout)
 
-    def del_tab(self, widget : PyQt6.QtWidgets.QWidget):
+        # Find spacer index if present
+        spacer_index = None
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item and item.spacerItem():
+                spacer_index = i
+                break
+        if spacer_index is None:
+            spacer_index = layout.count()
+
+        # Helper to find first/last index of buttons with a given nav_group
+        first_index_of_group = lambda grp: next((i for i in range(layout.count()) if (layout.itemAt(i).widget() is not None and isinstance(layout.itemAt(i).widget(), PyQt6.QtWidgets.QPushButton) and layout.itemAt(i).widget().property("nav_group") == grp)), None)
+        last_index_of_group = lambda grp: next((i for i in reversed(range(layout.count())) if (layout.itemAt(i).widget() is not None and isinstance(layout.itemAt(i).widget(), PyQt6.QtWidgets.QPushButton) and layout.itemAt(i).widget().property("nav_group") == grp)), None)
+
+        if nav_group == "top":
+            layout.insertWidget(0, nav_button)
+        elif nav_group == "middle":
+            # Insert before first bottom if exists, else before spacer
+            first_bottom = first_index_of_group("bottom")
+            insert_at = first_bottom if first_bottom is not None else spacer_index
+            layout.insertWidget(insert_at, nav_button)
+        else:  # bottom
+            # Insert after last bottom if exists, else before spacer
+            last_bottom = last_index_of_group("bottom")
+            if last_bottom is not None:
+                layout.insertWidget(last_bottom + 1, nav_button)
+            else:
+                layout.insertWidget(spacer_index, nav_button)
+        nav_button.setIcon(PyQt6.QtGui.QIcon(icon_path))
+        nav_button.setIconSize(PyQt6.QtCore.QSize(24, 24))
+        
+        self.content_stack.addWidget(widget)
+        page_index = self.content_stack.indexOf(widget)
+        
+        # Determine if this panel is defined as static in PANEL_CONFIG
+        is_static = False
+        try:
+            for panel in self.PANEL_CONFIG:
+                if panel.get("name") == class_name:
+                    is_static = bool(panel.get("static", False))
+                    break
+        except Exception:
+            is_static = False
+
+        self.TAB_MAPPING[class_name] = {
+            "button": nav_button,
+            "page": widget,
+            "index": page_index,
+            "from_board": (not is_static)
+        }
+
+    def del_tab(self, class_name):
         """Remove a tab in the widget and unregister the serial callback."""
-        self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
-        base_ui.CommunicationHandler.remove_callbacks(widget)
-        widget.deleteLater()
-        del widget
+        # Remove button from layout and delete it to avoid stale widgets
+        try:
+            btn = self.TAB_MAPPING[class_name]["button"]
+            if btn is not None:
+                layout = self.sideMenuFrame.layout()
+                if layout is not None:
+                    layout.removeWidget(btn)
+                # Detach from parent and schedule deletion
+                try:
+                    btn.setParent(None)
+                except Exception:
+                    pass
+                try:
+                    btn.deleteLater()
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
-    def select_tab(self, idx):
+        # Remove page and callbacks
+        try:
+            page = self.TAB_MAPPING[class_name]["page"]
+            self.content_stack.removeWidget(page)
+            base_ui.CommunicationHandler.remove_callbacks(page)
+            page.deleteLater()
+        except Exception:
+            pass
+
+        # Finally remove from mapping
+        try:
+            del self.TAB_MAPPING[class_name]
+        except Exception:
+            pass
+        
+    def select_tab(self, class_name):
         """Select a specific tab from the idx parameter."""
-        self.tabWidget_main.setCurrentIndex(idx)
+        if class_name not in self.TAB_MAPPING:
+            print(f"Erreur: L'onglet avec l'ID '{class_name}' n'existe pas.")
+            return
+
+        # Désactive le style "active" de l'ancien onglet
+        for existing_tab_id, data in self.TAB_MAPPING.items():
+            if data["button"]:
+                data["button"].setProperty("active", False)
+                data["button"].setStyle(data["button"].style()) # Rafraîchit le style
+
+        # Active le style "active" du nouvel onglet
+        selected_tab_data = self.TAB_MAPPING[class_name]
+        if selected_tab_data["button"]:
+            selected_tab_data["button"].setProperty("active", True)
+            selected_tab_data["button"].setStyle(selected_tab_data["button"].style()) # Rafraîchit le style
+
+        # Change la page dans le QStackedWidget
+        self.content_stack.setCurrentWidget(selected_tab_data["page"])
 
     def has_tab(self, name) -> bool:
         """Check if the tab "name" exist in the tab list."""
         names = [
-            self.tabWidget_main.tabText(i) for i in range(self.tabWidget_main.count())
+            #self.tabWidget_main.tabText(i) for i in range(self.tabWidget_main.count())
         ]
         return name in names
 
@@ -421,8 +535,16 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """Remove all the tab and unregister the callBack."""
         self.active_classes = {}
         self.profile_ui.set_save_btn(False)
-        for i in range(self.tabWidget_main.count() - 1, 0, -1):
-            self.del_tab(self.tabWidget_main.widget(i))
+        
+        # Remove tabs from board, keep settings/support/serial
+        tab_to_delete = []
+        for item in self.TAB_MAPPING:
+            if self.TAB_MAPPING[item]["from_board"]:
+                tab_to_delete.append(item)
+                
+        for tab_id in tab_to_delete:
+            self.del_tab(tab_id)
+                
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
@@ -468,7 +590,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             #print(new_active_classes)
 
             for classe, name in delete_classes:
-                self.del_tab(classe)
+                self.del_tab(name)
                 del self.active_classes[name]
             for name, classe_active in new_active_classes.items():
                 if name in self.active_classes:
@@ -476,6 +598,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 classname = classe_active["name"]
                 if classe_active["id"] == 1 or classe_active["id"] == 2 or classe_active["id"] == 3:
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
+                    name_main = classname
+                    if classe_active["id"] == 1 :
+                        name_main = "FFB Wheel"
+                    elif classe_active["id"] == 2 :
+                        name_main = "FFB Joystick"
+                    self.add_tab(self.main_class_ui, classname, name_main, icon_path=helper.res_path("ffb.png","res/img"))
+                    self.select_tab(classname)
+                    
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
                     self.tab_connections.append(self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate))
@@ -489,9 +619,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     
                 elif classe_active["id"] == 0xA01:
                     classe = axis_ui.AxisUI(main=self, unique=classe_active["unique"])
-                    name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    name_axis = classe_active["name"] + " " + chr(classe.axis + ord("X"))
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("axis.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                     self.axes = max(self.axes,classe.axis)
                     self.maxaxischanged.emit(self.axes)
@@ -499,40 +629,40 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
-                    name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    name_axis = classe_active["name"] + " " + chr(classe.axis + ord("X"))
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x84:
                     classe = pwmdriver_ui.PwmDriverUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, name, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xD:
                     classe = midi_ui.MidiUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                 elif classe_active["id"] == 0xB:
                     classe = tmcdebug_ui.TMCDebugUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, name, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                 elif classe_active["id"] == 0x85 or classe_active["id"] == 0x86:
                     classe = odrive_ui.OdriveUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x87 or classe_active["id"] == 0x88:
                     classe = vesc_ui.VescUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x89 or classe_active["id"] == 0x8A:
                     classe = simplemotion_ui.SimplemotionUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xA02: # Effects manager
                     self.effects_monitor_dlg.setEnabled(True)
@@ -543,16 +673,14 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     classe = rmd_ui.RmdUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x5:
                     classe = canremote_ui.CanRemoteUi(main=self)
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis)
                     self.profile_ui.set_save_btn(True)
-
-
 
             self.tabsinitialized.emit(True)
 
@@ -725,26 +853,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.log("Disconnected")
             self.reset_tabs()
             self.comms.removeAllCallbacks() # Ensure everything is cleared
-
-    def reset_factory(self, btn):
-        """Send a async message to reset factory settings."""
-        cmd = btn.text()
-        if cmd == "OK":
-            self.send_value("sys", "format", 1)
-            self.send_command("sys", "reboot")
-            self.reset_port()
-
-    def reset_factory_btn(self):
-        """Prompt a confirmation to the user when he click on reset factory."""
-        msg = PyQt6.QtWidgets.QMessageBox()
-        msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
-        msg.setText(self.tr("Format flash and reset?"))
-        msg.setStandardButtons(
-            PyQt6.QtWidgets.QMessageBox.StandardButton.Ok
-            | PyQt6.QtWidgets.QMessageBox.StandardButton.Cancel
-        )
-        msg.buttonClicked.connect(self.reset_factory) # pylint: disable=no-value-for-parameter
-        msg.exec()
 
     def change_profile(self, profilename: str):
         """Change the current profile by this one selected."""

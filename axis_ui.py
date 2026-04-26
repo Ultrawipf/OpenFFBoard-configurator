@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6 import uic
 from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall,throttle
 from PyQt6.QtCore import QTimer,QEvent
@@ -144,7 +144,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.pushButton_submit_hw.clicked.connect(self.submitHw)
         self.pushButton_submit_enc.clicked.connect(self.submitEnc)
 
-        tabId = self.main.add_tab(self,"FFB Axis")
+        # VMA Remove it is's also done in the tab processing tabId = self.main.add_tab(self,"FFB Axis")
         # Callbacks must prevent sending a value change command
         self.register_callback("axis","power",self.updatePowerSlider,self.axis,int)
         self.register_callback("axis","degrees",lambda val : self.updateRange(val),self.axis,int)
@@ -175,8 +175,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","cmdinfo",self.expoAvailable,self.axis,int,adr = 24)
         
         # manage display
-        self.groupBox_enableAxisBlock.toggled.connect(self.toggleAxisBlock)
-
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
         self.pushButton_expo.clicked.connect(self.expo_dlg.display)
 
@@ -275,34 +273,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.register_callback("axis","equalizer",self.update_eq_enabled,self.axis,int)
         for i in range(6):
             self.register_callback("axis",f"eqb{i+1}",lambda val, index=i: self.update_eq_band(val, index),self.axis,int)
-
-        # Set initial state of the collapsible groupbox
-        self.toggleAxisBlock(self.groupBox_enableAxisBlock.isChecked())
-    
-    def toggleAxisBlock(self, checked):
-        # This function hides/shows the content of the groupbox and adjusts its height
-        # to create a collapsible effect.
-        self.groupBox_hardware.setVisible(checked)
-        self.groupBox_axisOption.setVisible(checked)
-        self.groupBox_encoder.setVisible(checked)
-
-        if checked:
-            # When checked (expanded), remove the maximum height constraint.
-            self.groupBox_enableAxisBlock.setMaximumHeight(16777215) # QWIDGETSIZE_MAX
-        else:
-            # When unchecked (collapsed), set a fixed height for the title bar.
-            # You might need to adjust this value (e.g., 30) to fit your UI style.
-            self.groupBox_enableAxisBlock.setMaximumHeight(40)
-            self.groupBox_enableAxisBlock.setMaximumWidth(800)
-        
-        # Notify this widget (the tab page) that its size hint has changed.
-        self.updateGeometry()
-        # Also notify the parent tab widget, forcing it to recalculate its own size hint.
-        self.main.tabWidget_main.updateGeometry()
-        
-        # Use a single shot timer to allow the event to process, then update the main window layout.
-        # This will now get the correct, updated size hint from the tab widget.
-        QTimer.singleShot(0, self.main.adjustSize)
 
     def setSpeedLimit(self,val):
         if self.checkBox_speedlimit.isChecked():
@@ -439,9 +409,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
     def init_ui(self):
         try:
-            self.getMotorDriver()
+            self.getMotorDriver() # Call the motor driver and update the slicer when received message (updateSliders)
             self.getEncoder()
-            #self.updateSliders()
             self.send_commands("axis",["invert","cpr"],self.axis)
             self.send_command("axis","cmdinfo",self.axis,adr=19) # reduction
             self.send_command("axis","cmdinfo",self.axis,adr=24) # Expo

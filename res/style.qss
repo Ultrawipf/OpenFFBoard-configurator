@@ -1,0 +1,223 @@
+/* Fichier: style.qss (Ajusté pour boutons de menu créés dynamiquement) */
+
+/* Styles Globaux de la Fenêtre */
+QMainWindow {
+    background-color: #22252a;
+    color: #E0E0E0;
+}
+
+/* --- Cadre du Menu Latéral --- */
+QFrame#sideMenuFrame { /* objectName donné dans Qt Designer */
+    background-color: transparent; /* #2D3035; */
+    border-radius: 8px;
+    border: 3px solid #3A3D42;
+    padding: 5px;
+}
+
+/* --- Boutons du Menu Latéral (créés dynamiquement) --- */
+/* Cible TOUS les QPushButton à l'intérieur de sideMenuFrame */
+QFrame#sideMenuFrame QPushButton {
+    background-color: #2D3035; /* Boutons de menu transparents par défaut */
+    color: #E0E0E0;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 0px;
+    margin: 5px 0px; /* Marge verticale entre les boutons */
+    min-height: 40px; /* Hauteur minimale de chaque bouton */
+    text-align: left; /* Aligne le texte et l'icône à gauche */
+    padding-left: 15px; /* Espace à gauche pour le texte/icône */
+    padding-right: 15px;
+    icon-size: 24px; /* Taille des icônes pour ces boutons */
+}
+
+QFrame#sideMenuFrame QPushButton:hover {
+    background-color: #3A3D42; /* Fond au survol */
+    color: #00BFFF;
+}
+
+/* Style pour le bouton "onglet" ACTIF */
+/* Utilise la propriété dynamique "active" définie en Python */
+QFrame#sideMenuFrame QPushButton[active="true"] {
+    background-color: #00BFFF; /* Fond bleu pour l'onglet actif */
+    color: white;
+    border: 1px solid #00BFFF;
+}
+
+/* --- QStackedWidget pour le contenu principal --- */
+QStackedWidget#content_stack { /* objectName donné dans Qt Designer */
+    /*background-color: #22252a;*/
+    border: none;
+}
+
+QStackedWidget#content_stack > QWidget { /* Pages individuelles à l'intérieur du stacked widget */
+    background-color: #22252a;
+    padding: 20px;
+}
+
+QGroupBox#groupBox_profilemanager {
+    border: 3px solid #2f7c2f;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton {
+    background-color: #00AA00;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 20px;
+    min-width: 120px;
+}
+QGroupBox#groupBox_profilemanager QPushButton:hover {
+    background-color: #008800;
+}
+
+/* --- Styles pour le bandeau supérieur (statusBarFrame) --- */
+QWidget#serial_panel {
+    /*background-color: #4dd84d;*/
+    color: white;
+    border-radius: 0px;
+}
+
+QWidget#serial_panel QComboBox {
+    /*background-color: #21392b;*/
+    border: 1px solid #3A3D42;
+    color: #f2f2f2;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    padding: 5px 10px;
+    min-height:30px
+}
+
+QWidget#serial_panel QComboBox:disabled {
+    background-color: #45c145;
+    color: #E0E0E0;
+}
+
+/* Cache la flèche déroulante quand il est désactivé */
+QWidget#serial_panel QComboBox::drop-down:disabled {
+    background-color: transparent;
+    border: none;
+    width: 0px;
+    image: none;
+}
+
+
+QWidget#serial_panel QPushButton {
+    background-color: #d68c02;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+QWidget#serial_panel QPushButton#pushButton_settings {
+    min-width:30px;
+}
+
+QWidget#serial_panel QPushButton:hover {
+    background-color: #a26900;
+}
+
+QWidget#serial_panel QPushButton:disabled {
+    background-color: #523600;
+}
+
+
+QPushButton#statusBarSettingsButton {
+    background-color: transparent;
+    border: none;
+}
+QPushButton#statusBarSettingsButton QIcon {
+    qproperty-iconSize: 24px;
+}
+
+QStatusBar {
+    background-color: #2D3035;
+}
+
+/* Style for tab */
+
+QTabBar:tab {
+    background-color: #2D3035;
+    border-radius: 0px;
+
+    min-height: 40px;
+    min-width: 150px;
+    margin: 0px 10px 10px 0px;
+    padding-left: 15px;
+    padding-right: 15px;
+
+    icon-size: 18px;
+
+    /*color: #E0E0E0;*/
+    font-weight: bold;
+    font-size: 16px;
+    text-align: left;
+}
+
+QTabBar:tab:hover {
+    background-color: #3A3D42; /* Fond au survol */
+    color: #00BFFF;
+}
+
+QTabBar:tab:selected {
+    background-color: #00BFFF;
+    color: white;
+}
+
+QTabWidget:pane {
+    /*border :  1px solid red;*/
+    padding: 0px 0px;
+    margin: 0px 0px;
+}
+
+QTabWidget > QWidget {
+    background-color: #22252a;
+}
+
+
+/* GroupBox */
+QGroupBox {
+    background-color:  #2D3035;
+    border: 3px solid #005e7d;
+    border-radius: 8px;
+    padding: 25px 10px 5px 10px;
+    /*margin: 0px 15px 15px 0px;*/
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+QGroupBox:disabled {
+    background-color:  transparent;
+    border: 3px solid #222c30;
+}
+
+QGroupBox::title {
+    background-color: transparent;
+    subcontrol-origin: padding;
+    subcontrol-position: top left;
+    padding: 5px 10px;
+}
+
+
+/* --- Styles pour les boutons d'action généraux --- */
+
+QPushButton {
+    background-color: #00BFFF;
+    /*color: white;*/
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 10px;
+    min-width: 100px;
+}
+QPushButton:hover {
+    background-color: #0099CC;
+}
+QPushButton:disabled {
+    background-color: #003547;
+    /*color: #3e3e3e;*/
+}

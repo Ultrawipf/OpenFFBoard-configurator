@@ -118,10 +118,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
         self.radioButton_reconfilter_3.toggled.connect(lambda checked: self.send_recon_filter(3) if checked else None)
         self.register_callback("fx", "reconFilterMode", self.update_recon_filter_ui, 0, int)
 
-        if(self.init_ui()):
-            tabId = self.main.add_tab(self,title)
-            self.main.select_tab(tabId)
-            self.timer.start(500) # timer always updates
+        self.init_ui()
 
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
@@ -149,12 +146,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         return True
 
     # Tab is currently shown
-    # def showEvent(self,event):
-    #     self.timer.start(500)
+    def showEvent(self,event):
+        self.init_ui()
+        self.startTimer()
 
     # # Tab is hidden
-    # def hideEvent(self,event):
-    #     self.timer.stop()
+    def hideEvent(self,event):
+        self.stopTimer()
 
     def startTimer(self):
         self.timer.start(500)
