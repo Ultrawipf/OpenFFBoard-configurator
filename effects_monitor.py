@@ -3,6 +3,7 @@ from base_ui import WidgetUI,CommunicationHandler
 from PyQt6 import QtGui,QtWidgets
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QDialog, QVBoxLayout
+import effects_graph_ui
 
 class EffectStatsUI(WidgetUI, CommunicationHandler):
     def __init__(self, main=None, parent = None):
@@ -11,8 +12,16 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             self.main = main #type: main.MainUi
             self.parent = parent
 
+            self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
+            
+            self.main.maxaxischanged.connect(self.spinBox_axis.setMaximum)
+            self.main.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
+
             self.pushButton_ResetData.clicked.connect(self.resetData)
+            self.pushButton_graph.clicked.connect(self.openGraph)
             self.spinBox_axis.valueChanged.connect(self.setAxis)
+
+            self.monitoring_available = False
 
             self.timer = QTimer(self)
             self.timer.timeout.connect(self.refreshUi)
@@ -33,11 +42,16 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             # enable axis selection
             self.spinBox_axis.setEnabled(True)
 
-    def setEnabled(self, a0: bool) -> None:
-        self.pushButton_ResetData.setEnabled(a0)
-        if not a0 and self.isVisible() and self.timer.isActive : 
-            self.parent.hide()
-        return super().setEnabled(a0)
+    def setEnabled(self, enable: bool) -> None:
+        if not self.monitoring_available :
+            enable = False
+        self.pushButton_ResetData.setEnabled(enable)
+        return super().setEnabled(enable)
+    
+    def setEffectAvailable(self, available: bool) -> None:
+        self.monitoring_available = available
+        if available:
+            self.setEnabled(available)
 
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
         self.timer.start(1000)
@@ -105,26 +119,6 @@ class EffectStatsUI(WidgetUI, CommunicationHandler):
             self.progressBar_11.setValue(json_data[10]["max"])
             self.progressBar_12.setValue(json_data[11]["max"])
 
-class EffectsMonitorDialog(QDialog):
-    def __init__(self,main=None):
-        QDialog.__init__(self, main)
-        self.ui = EffectStatsUI(main,self)
-        self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.ui)
-        self.setLayout(self.layout)
-        self.setWindowTitle("Effects statistics")
-    
-    def set_max_axes(self,axes):
-        self.ui.spinBox_axis.setMaximum(axes)
-    
-    def setEnabled(self, a0: bool) -> None:
-        self.ui.setEnabled(a0)
-        if not a0:
-            self.close()
-        return super().setEnabled(a0)
-
-    def display(self):
-        self.show()
-        self.raise_()
-        self.activateWindow()
+    def openGraph(self):
+        self.effects_graph_dlg.display()
+        self.effects_graph_dlg.set_total_output_display(False) # come from the main

@@ -66,22 +66,6 @@ class ActiveTaskModel(QAbstractTableModel):
         self.items = items
         self.endResetModel()
 
-class ActiveTaskDialog(PyQt6.QtWidgets.QDialog):
-    def __init__(self, parent = None):
-        PyQt6.QtWidgets.QDialog.__init__(self, parent)
-        self.active_class_ui = ActiveTaskUI(parent)
-        self.layout = PyQt6.QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.active_class_ui)
-        self.setLayout(self.layout)
-        self.setWindowTitle("Active threads")
-
-    def set_taskstats_enabled(self,enabled):
-        self.active_class_ui.taskstats_enabled = enabled
-        
-    def set_tasklist_enabled(self,enabled):
-        self.active_class_ui.tasklist_enabled = enabled
-
 class ActiveTaskUI(WidgetUI, CommunicationHandler):
     def __init__(self, parent = None):
         WidgetUI.__init__(self, parent, 'activelist.ui')
@@ -96,27 +80,45 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
         header = self.tableView.horizontalHeader()
         header.setSectionResizeMode(0,PyQt6.QtWidgets.QHeaderView.ResizeMode.Stretch) # Stretch first section
         self.tableView.setSortingEnabled(True)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.read)
+
+        self.isConnected = False
 
         self.items_list = []
         self.items_stats = []
 
         self.taskstats_enabled = False
         self.tasklist_enabled = False
-    
+
+    def connect(self, is_connected):
+        self.isConnected = is_connected
+        if is_connected:
+            self.check_taskstats()    
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
         self.read()
-        self.timer.start(1000)
-        return super().showEvent(a0)
 
     def hideEvent(self, a0: QHideEvent) -> None:
-        self.timer.stop()
-        return super().hideEvent(a0)
+        pass
+    
+    def set_taskstats_enabled(self, enabled):
+        self.taskstats_enabled = enabled
+
+    def set_tasklist_enabled(self, enabled):
+        self.tasklist_enabled = enabled
+
+    def check_taskstats(self):
+        # Check if the taskstats and tasklist command are available
+        self.get_value_async("sys", "cmdinfo", adr=18, conversion=int, callback=lambda x: self.set_taskstats_enabled(x==1))
+        # Vérifier tasklist
+        self.get_value_async("sys", "cmdinfo", adr=25, conversion=int, callback=lambda x: self.set_tasklist_enabled(x==1))
+
     
     def read(self):
+        # Don't refresh if connection is down
+        if not self.isConnected:
+            return
+        
         self.items_stats.clear()
         self.items_list.clear()
         if self.taskstats_enabled:
@@ -138,8 +140,6 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
                 items.setdefault(item["name"], {})
                 items[item["name"]].update(item)
             self.items.setItems(list(items.values()))
-            self.parent.show()
-
 
     def updateStatsCb(self,string):
         for line in string.split("\n"):
@@ -163,4 +163,3 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
             self.items_list.append(item)
 
         self.updateItems()
-        

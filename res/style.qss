@@ -221,3 +221,25 @@ QPushButton:disabled {
     background-color: #003547;
     /*color: #3e3e3e;*/
 }
+
+QGroupBox#groupBox_FFBAxes > QProgressBar, 
+QGroupBox#groupBox_secAxis > QProgressBar,
+QGroupBox#groupBox_ffbeffect > QProgressBar{
+    background-color: #31363b;
+    border: 1px solid #76797C;
+    border-radius: 2px;
+    text-align: center;
+}
+
+QGroupBox#groupBox_FFBAxes > QProgressBar::chunk, 
+QGroupBox#groupBox_secAxis > QProgressBar::chunk, 
+QGroupBox#groupBox_ffbeffect > QProgressBar::chunk {
+    background-color: #3daee9;
+}
+
+
+QLabel#lbl_status {
+    font-size: 24px;
+    font-weight: bold;
+    color: #a40000;
+}
