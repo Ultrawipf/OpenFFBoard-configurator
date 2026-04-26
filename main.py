@@ -354,7 +354,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
         self.process_events_timer.stop()
-        if port_checked != self.serialchooser.main_id:
+        if port_checked != self.settings_ui.main_id:
             self.reset_port()
             self.log("Communication error. Please reconnect")
         else:
@@ -593,7 +593,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     self.profile_ui.set_save_btn(True)
                     self.tab_connections.append(self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate))
                     # Start ffb timer
-                    
+      	       
                     self.tab_connections.append(self.serialchooser.hidden.connect(self.main_class_ui.startTimer))
                     self.tab_connections.append(self.serialchooser.shown.connect(self.main_class_ui.stopTimer))
                     self.tab_connections.append(self.serialchooser.shown.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(False)))
@@ -697,9 +697,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.serial.flush() # Immediately send
             PyQt6.QtCore.QTimer.singleShot(250, close) # Close port after 250ms because no signal is currently working. Should ensure data has been sent.
 
-        else:
-            close() # Close port
-        
     def version_check(self, ver):
         """Check if the UI is compatible with this board firmware."""
         self.fw_version_str = ver.replace("\n", "")
@@ -715,12 +712,17 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         fw_outdated = False
         gui_outdated = False
 
+        # Simplified version comparison logic
         fw_outdated = (
-            min_fw_split[0] > fw_ver_split[0] \
-            or min_fw_split[1] > fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]  \
-            or min_fw_split[2] > fw_ver_split[2] and min_fw_split[1] ==  fw_ver_split[1] and  min_fw_split[0] == fw_ver_split[0]
+            min_fw_split[0] > fw_ver_split[0] or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] > fw_ver_split[1]) or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] == fw_ver_split[1] and min_fw_split[2] > fw_ver_split[2])
         )
-        gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]
+        gui_outdated = (
+            min_fw_split[0] < fw_ver_split[0] or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] < fw_ver_split[1]) or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] == fw_ver_split[1] and min_fw_split[2] < fw_ver_split[2])
+        )
 
         if gui_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
@@ -732,6 +734,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "firmware and GUI are up to date if you encounter errors.")
             )
             msg.exec()
+            if hasattr(self, 'serialchooser') and self.serialchooser:
+                self.serialchooser.update_port_name_outdated()
+
         elif fw_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
@@ -744,6 +749,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "and GUI are up to date if you encounter errors.")
             )
             msg.exec()
+            if hasattr(self, 'serialchooser') and self.serialchooser:
+                self.serialchooser.update_port_name_outdated()
+                
         # Check github for firmware updates
         mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
@@ -754,12 +762,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 msg = self.tr( "New firmware available")
                 notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
                 notification.exec()
+                
         # Check for updates and show button in serial UI
         if hasattr(self, 'serialchooser') and self.serialchooser:
             # Schedule the check for updates after a short delay to ensure UI is ready
             PyQt6.QtCore.QTimer.singleShot(100, self.serialchooser.check_for_updates)
-   
-
 
     def serial_connected(self, connected):
         """Check the release when a board is connected."""
