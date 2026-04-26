@@ -111,7 +111,7 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
         # Check if the taskstats and tasklist command are available
         self.get_value_async("sys", "cmdinfo", adr=18, conversion=int, callback=lambda x: self.set_taskstats_enabled(x==1))
         # Vérifier tasklist
-        self.get_value_async("sys", "cmdinfo", adr=25, conversion=int, callback=lambda x: self.set_tasklist_enabled(x==1))
+        self.get_value_async("sys", "cmdinfo", adr=23, conversion=int, callback=lambda x: self.set_tasklist_enabled(x==1))
 
     
     def read(self):

@@ -1,18 +1,10 @@
-from base_ui import WidgetUI
-from PyQt6.QtWidgets import QDialog, QTableWidgetItem, QHeaderView
-from PyQt6.QtWidgets import (
-    QMessageBox,
-    QVBoxLayout,
-    QCheckBox,
-    QButtonGroup,
-    QPushButton,
-    QLabel,
-    QSpinBox,
-    QComboBox,
-)
+import PyQt6.QtWidgets
+from PyQt6 import uic
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex
-from base_ui import CommunicationHandler
-
+import base_ui
+import helper
+import activelist
+import activetasks
 
 class ErrorsModel(QAbstractTableModel):
     def __init__(self, parent):
@@ -69,31 +61,32 @@ class ErrorsModel(QAbstractTableModel):
         self.errors = errors
         self.endResetModel()
 
+class AboutUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
+    """
+    About page widget
+    """
 
-class ErrorsDialog(QDialog):
-    def __init__(self, main=None):
-        QDialog.__init__(self, main)
-        self.main = main
-        self.ui = ErrorsUI(main, self)
-        self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.ui)
-        self.setLayout(self.layout)
-        self.setWindowTitle("Errors")
+    def __init__(self, main_ui, version_str, fw_version_str):
+        base_ui.WidgetUI.__init__(self, main_ui, "about_page.ui")
+        base_ui.CommunicationHandler.__init__(self)
+        self.main = main_ui
 
-    def registerCallbacks(self):
-        self.ui.registerCallbacks()
+        verstr = "Version: " + version_str
+        if fw_version_str:
+            verstr += " / Firmware: " + fw_version_str
+        self.version.setText(verstr)
 
-    def connected_cb(self,connected):
-        if connected:
-            self.ui.clear_stored_errors()
+        try:
+            with open("LICENSE", "r") as f:
+                self.textBrowser_license.setText(f.read())
+        except FileNotFoundError:
+            self.textBrowser_license.setText("LICENSE file not found.")
+            
+        # Setup logging for all apps to get event here
+        self.logger.register_to_logger(self.append_log)
 
-class ErrorsUI(WidgetUI, CommunicationHandler):
-    def __init__(self, main=None, parent=None):
-        WidgetUI.__init__(self, parent, "errors.ui")
-        CommunicationHandler.__init__(self)
-        self.main = main
-        self.parent = parent
+    
+        # Setup logic for Errors tab
         self.pushButton_refresh.clicked.connect(self.readErrors)
         self.pushButton_clearErrors.clicked.connect(self.clear_errors)
         self.pushButton_clearLogs.clicked.connect(self.clear_logs)
@@ -101,9 +94,41 @@ class ErrorsUI(WidgetUI, CommunicationHandler):
         self.tableView.setModel(self.errors)
         header = self.tableView.horizontalHeader()
         header.setStretchLastSection(True)
-        self.registerCallbacks()
-        self.logger.register_to_logger(self.append_log)
+                
+        # Setup Modules tab
+        self.active_class_ui = activelist.ActiveClassUI(self)
+        self.active_task_ui = activetasks.ActiveTaskUI(self)
 
+        # Push content in groupBox_features
+        layout = self.groupBox_features.layout()
+        for i in reversed(range(layout.count())):
+            widgetToRemove = layout.itemAt(i).widget()
+            layout.removeWidget(widgetToRemove)
+            widgetToRemove.setParent(None)
+        layout.addWidget(self.active_class_ui)
+
+        # Replace content in groupBox_thread
+        layout = self.groupBox_thread.layout()
+        for i in reversed(range(layout.count())):
+            widgetToRemove = layout.itemAt(i).widget()
+            layout.removeWidget(widgetToRemove)
+            widgetToRemove.setParent(None)
+        layout.addWidget(self.active_task_ui)
+        
+    def showEvent(self, a0):
+        self.tableView.resizeColumnsToContents()
+
+    def set_connected(self, connected):
+        self.tab_log.setEnabled(connected)
+        self.tab_module.setEnabled(connected)
+        self.active_task_ui.connect(connected)
+        if connected:
+            self.registerCallbacks()
+        else:
+            # remove the handler on disconnect
+            self.remove_callbacks()
+
+    
     def append_log(self, message):
         """Display the log message."""
         self.logBox_1.append(message)
@@ -125,17 +150,13 @@ class ErrorsUI(WidgetUI, CommunicationHandler):
     def registerCallbacks(self):
         self.register_callback("sys", "errors", self.errorCallback, 0, typechar="?")
 
-    def showEvent(self, a0):
-        self.tableView.resizeColumnsToContents()
-        # self.readErrors()
-
     def readErrors(self):
-        if self.isEnabled:
+        if self.isEnabled():
             self.send_command("sys", "errors", 0)
 
     def errorCallback(self, errorstring):
-        if errorstring != "None":
-            self.parent.show()
+        if errorstring != "None" and not self.main.isVisible():
+            self.main.show()
         errors = []
         for errorline in errorstring.split("\n"):
             e = errorline.split(":", 2)

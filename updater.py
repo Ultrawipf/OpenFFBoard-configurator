@@ -4,19 +4,13 @@
 Module : updater
 Authors : yannick
 """
-import PyQt6.QtGui
-import PyQt6.QtCore
-import PyQt6.QtWidgets
-from PyQt6.QtWidgets import QListWidgetItem,QCheckBox,QGroupBox,QHBoxLayout,QVBoxLayout,QLabel,QDialog,QTextBrowser,QPushButton
+
 import requests
 import json
 import re
-import helper
-from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QCheckBox, QVBoxLayout, QLabel, QDialog, QTextBrowser
 from datetime import datetime
-from optionsdialog import OptionsDialogGroupBox
-from profile_ui import ProfileUI
 
 MAINREPO = "Ultrawipf/OpenFFBoard"
 GUIREPO = "Ultrawipf/OpenFFBoard-Configurator"
@@ -110,93 +104,7 @@ class UpdateChecker():
         
         return UpdateChecker.compare_versions(version,releasever), release
 
-    
-class UpdateBrowser(PyQt6.QtWidgets.QDialog):
-    """Gets updates and displays them in a list"""
-    def __init__(self,parentWidget,settingsmanager : ProfileUI = None):
-        PyQt6.QtWidgets.QDialog.__init__(self, parentWidget)
-        PyQt6.uic.loadUi(helper.res_path("updatebrowser.ui"), self)
-
-        self.listWidget_release.currentItemChanged.connect(self.release_changed)
-        self.listWidget_files.currentItemChanged.connect(self.file_changed)
-        self.buttonGroup_repo.buttonClicked.connect(self.repo_changed)
-        self.read_releases(MAINREPO)
-        self.settingsmanager = settingsmanager
-
-        if settingsmanager:
-            self.checkBox_notify.setChecked(not self.settingsmanager.get_global_setting("donotnotify_updates",False))
-            self.checkBox_notify.toggled.connect(self.notify_checkbox_toggled)
-        else:
-            self.checkBox_notify.setVisible(False)
-
-    def notify_checkbox_toggled(self,status):
-        self.settingsmanager.set_global_setting("donotnotify_updates",not status)
-
-
-    def fill_releases(self,releases : dict):
-        self.listWidget_release.clear()
-        for r in releases:
-            if r.get("name",None):
-                name = f"{r.get('tag_name','No tag')} ({r.get('name')})"
-            else:
-                name = f"{r.get('tag_name','No tag')}"
-            item = QListWidgetItem(name)
-            if r.get("prerelease",False):
-                item.setBackground(QColor('#ffb810'))
-            else:
-                item.setBackground(QColor('#70ea5d'))
-            item.setData(Qt.ItemDataRole.UserRole, r)
-            self.listWidget_release.addItem(item)
-
-        self.listWidget_release.setCurrentRow(0)
-
-    
-    def get_selected_release(self):
-        r = self.listWidget_release.currentItem().data(Qt.ItemDataRole.UserRole)
-        return r
-    
-    def repo_changed(self,button):
-        if button == self.radioButton_configurator:
-            self.read_releases(GUIREPO)
-        else:
-            self.read_releases(MAINREPO)
-
-    def read_releases(self,repo : str):
-        releases = GithubRelease.get_releases(repo,True)
-        if releases:
-            self.fill_releases(releases)
-            
-
-    def fill_files(self,release : dict):
-        self.listWidget_files.clear()
-        for r in release.get("assets",[]):
-            name = r['name']
-            url = r['browser_download_url']
-            item = QListWidgetItem(name)
-            item.setData(Qt.ItemDataRole.UserRole, url)
-            self.listWidget_files.addItem(item)
-        self.listWidget_files.setCurrentRow(0)
-
-
-    def release_changed(self,current : QListWidgetItem,old : QListWidgetItem):
-        if not current:
-            return
-        release = current.data(Qt.ItemDataRole.UserRole)
-        self.textBrowser_releasenotes.setMarkdown(GithubRelease.get_description(release))
-        self.label_releaseUrl.setText(f"<a href=\"{release['html_url']}\">{release['html_url']}</a>")
-        self.fill_files(release)
-        publishtime = GithubRelease.get_time(release)
-        infotext = f"Date: {publishtime}"
-        self.label_releaseInfo.setText(infotext)
-
-    def file_changed(self,current : QListWidgetItem,old : QListWidgetItem):
-        if not current:
-            return
-        url = current.data(Qt.ItemDataRole.UserRole)
-        self.label_fileUrl.setText(f"<a href=\"{url}\">Download</a>")
-
-
-
+ 
 class UpdateNotification(QDialog):
     """Shows a dialog with release information"""
     def __init__(self,release,main,desc,curver,donotnotifysetting = None):
@@ -222,14 +130,11 @@ class UpdateNotification(QDialog):
         self.titlelabel = QLabel(f"<a href=\"{url}\"> {GithubRelease.get_title(release)}</a>")
         self.titlelabel.setOpenExternalLinks(True)
         self.vbox.addWidget(self.titlelabel)
-
-        self.updatebrowserbutton = QPushButton("Open update browser",self)
-        self.updatebrowserbutton.clicked.connect(self.open_updater)
-        
+             
         self.releasenotes = QTextBrowser(self)
         self.releasenotes.setMarkdown(GithubRelease.get_description(release))
         self.vbox.addWidget(self.releasenotes)
-        self.vbox.addWidget(self.updatebrowserbutton)
+        #self.vbox.addWidget(self.updatebrowserbutton)
 
         if donotnotifysetting:
             self.donotnotify = QCheckBox("Notify about releases at startup",self)
@@ -240,9 +145,3 @@ class UpdateNotification(QDialog):
                 self.main.profile_ui.set_global_setting(donotnotifysetting,not status)
 
             self.donotnotify.toggled.connect(donotnotify_save)
-        
-
-    def open_updater(self):
-        """Opens the updatebrowser"""
-        self.close()
-        UpdateBrowser(self,self.main.profile_ui).exec()
