@@ -124,6 +124,21 @@ QWidget#serial_panel QPushButton:disabled {
     background-color: #523600;
 }
 
+/* Style for the update button in serialchooser */
+QWidget#serial_panel QPushButton#pushButton_update {
+    background-color: #00BFFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QWidget#serial_panel QPushButton#pushButton_update:hover {
+    background-color: #0099CC;
+}
+
 
 QPushButton#statusBarSettingsButton {
     background-color: transparent;

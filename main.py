@@ -744,7 +744,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "and GUI are up to date if you encounter errors.")
             )
             msg.exec()
-        # Check github
+        # Check github for firmware updates
         mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
         if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
@@ -754,6 +754,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 msg = self.tr( "New firmware available")
                 notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
                 notification.exec()
+        # Check for updates and show button in serial UI
+        if hasattr(self, 'serialchooser') and self.serialchooser:
+            # Schedule the check for updates after a short delay to ensure UI is ready
+            PyQt6.QtCore.QTimer.singleShot(100, self.serialchooser.check_for_updates)
    
 
 
