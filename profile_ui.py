@@ -53,6 +53,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self._map_class_running = []
         self._running_profile = []
         self._profilename_tosave: str = None
+        self._is_communicating = False
 
         self.ui_initialized = False
         
@@ -159,6 +160,8 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def save_clicked(self):
         """Save current seeting in Flash and replace the 'Flash profile' settings by the new one."""
+        if self._is_communicating:
+            return
 
         def log_save_cb(res):
             """Display the confirmation in log."""
@@ -173,11 +176,11 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         """Remove the serial call backs on close."""
         self.remove_callbacks()
 
-    def setEnabled(self, a0: bool) -> None:  # pylint: disable=invalid-name
+    def setEnabled(self, enabled: bool) -> None:
         """Refresh the combo box content with profile when connection is up."""
-        if a0 and self.comboBox_profiles.count() == 0:
+        if enabled and self.comboBox_profiles.count() == 0:
             self.refresh_combox_list()
-        return super().setEnabled(a0)
+        return super().setEnabled(enabled)
 
     def set_save_btn(self, status):
         """Enable the save button based on status."""
@@ -190,9 +193,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def close_profile_manager(self, profile_name:str = ''):
         """Close the profile list manager."""
-        self.comboBox_profiles.currentIndexChanged.disconnect(self.apply_config)
+        self.comboBox_profiles.blockSignals(True)
         self.refresh_combox_list()
-        self.comboBox_profiles.currentIndexChanged.connect(self.apply_config)
+        self.comboBox_profiles.blockSignals(False)
         if (profile_name):
             self.select_profile(profile_name)
         self.create_or_update_profile_file()
@@ -218,7 +221,13 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         with open(self.__PROFILES_FILEPATH, "r", encoding="utf_8") as profile_file:
             self.profiles = json.load(profile_file)
         if self.profiles['release'] < self.__RELEASE :
-            os.rename(self.__PROFILES_FILEPATH, self.__PROFILES_FILEPATH + '.' + str(self.profiles['release']) + '.old')
+            backup_path = self.__PROFILES_FILEPATH + '.' + str(self.profiles['release']) + '.old'
+            if os.path.exists(backup_path):
+                try:
+                    os.remove(backup_path)
+                except OSError:
+                    pass
+            os.rename(self.__PROFILES_FILEPATH, backup_path)
             self.create_or_update_profile_file(create=True)
             self.log("Profile: profiles are not compatible, need to redo them")
         else:
@@ -264,7 +273,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def get_global_setting(self,key : str, default = None):
         """Returns an entry of the global section or saves a default if set and not found"""
         if "global" in self.profiles:
-            if (key not in self.profiles['global']) and default != None:
+            if (key not in self.profiles['global']) and default is not None:
                 self.set_global_setting(key,default)
             return self.profiles['global'].get(key,None)
         return None
@@ -284,11 +293,8 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         for profilename in data:
             listprofile.append(profilename["name"])
 
-        try:
-            listprofile.index(ProfileUI.FLASH_PROFILE_NAME)
+        if ProfileUI.FLASH_PROFILE_NAME in listprofile and ProfileUI.NONE_PROFILE_NAME in listprofile:
             listprofile.remove(ProfileUI.NONE_PROFILE_NAME)
-        except ValueError:
-            pass
 
         self.comboBox_profiles.addItems(listprofile)
         self.profiles_updated_event.emit(listprofile)
@@ -315,7 +321,7 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Send the paramter for active class to the board.
         """
         # if not enabled, don't select profile
-        if not self.isEnabled():
+        if not self.isEnabled() or self._is_communicating:
             return
 
         # read the selected profile name, if profile is None, remove the last message
@@ -339,6 +345,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         When the profile_name is pass, we don't check if "None or Flash Profile", else we have recursivity with method
         'save_clicked'.
         """
+        if self._is_communicating:
+            return
+
         if not(profile_name) or profile_name == "":
             self._profilename_tosave = str(self.comboBox_profiles.currentText())
             
@@ -360,6 +369,9 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
     def _read_running_class_and_go_cb(self, call_back):
         """Get the running class from board, and process the call_back when board respond."""
         # refresh the global var when starting to read value from board
+        self._is_communicating = True
+        self.comboBox_profiles.setEnabled(False)
+        self.set_save_btn(False)
         self._current_class = -1
         self._current_command = -1
         self._current_instance = -1
@@ -372,28 +384,27 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
     def _build_running_map(self, buffer: str):
         self._map_class_running = []
-        # Split the string buffer into array
-        splitted_running_class = [x.split(":") for x in buffer.split("\n")]
-        # Format the arrray in array of object {classname, fullname, instance}
-        formated_iterator = list(
-            map(
-                lambda tab: {
-                    "classname": tab[1],
-                    "fullname": tab[0],
-                    "instance": int(tab[2]),
-                },
-                splitted_running_class,
-            )
-        )
+        formated_iterator = []
+        for line in buffer.splitlines():
+            tab = line.split(":")
+            if len(tab) >= 3:
+                try:
+                    formated_iterator.append({
+                        "classname": tab[1],
+                        "fullname": tab[0],
+                        "instance": int(tab[2])
+                    })
+                except ValueError:
+                    pass
+
         # For each class to saved declared in the cfg file,
         # we filter the running instance to keep only those
         for call_order in self.profile_setup["callOrder"]:
-            filtered_iterator = filter(
-                lambda x, call=call_order: x["classname"] == call["classname"]
-                and x["fullname"] == call["fullname"],
-                formated_iterator,
-            )
-            self._map_class_running.extend(list(filtered_iterator))
+            filtered_iterator = [
+                x for x in formated_iterator
+                if x["classname"] == call_order["classname"] and x["fullname"] == call_order["fullname"]
+            ]
+            self._map_class_running.extend(filtered_iterator)
 
     def _get_instance_running(self, indexclass: int, indexinstance: int):
         if indexclass > len(self.profile_setup["callOrder"]):
@@ -549,74 +560,110 @@ class ProfileUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self._read_value(
                 self._current_class, self._current_command, self._current_instance
             )
-        elif self._profilename_tosave is not False:
+        elif self._profilename_tosave is not None:
             self._save_profile_in_file(self._running_profile, self._profilename_tosave)
+            self._is_communicating = False
+            self.comboBox_profiles.setEnabled(True)
+            self.set_save_btn(True)
         else:
             self.log("Profiles: profile read from board")
+            self._is_communicating = False
+            self.comboBox_profiles.setEnabled(True)
+            self.set_save_btn(True)
 
     def _write_profile_cb(self, buffer: str):
-        # process the incoming buffer
-        if self._current_class == -1:
-            # first call is sys.lsactive to get all active class
-            # that running and we extract a map of class/instances
-            self._build_running_map(buffer)
-        else:
-            return
+        try:
+            # process the incoming buffer
+            if self._current_class == -1:
+                # first call is sys.lsactive to get all active class
+                # that running and we extract a map of class/instances
+                self._build_running_map(buffer)
+            else:
+                return
 
-        # read the selected profile name
-        profilename = str(self.comboBox_profiles.currentText())
-        if profilename == "":
-            return
+            # read the selected profile name
+            profilename = str(self.comboBox_profiles.currentText())
+            if profilename == "":
+                return
 
-        # From the profile, filter parameters that are running
-        parameters_running = []
-        profile_json_entry = next(
-            filter(lambda x: x["name"] == profilename, self.profiles["profiles"]), None
-        )
-        for running_class in self._map_class_running:
-            parameters_running.extend(
-                list(
-                    filter(
-                        lambda x, running=running_class: x["fullname"]
-                        == running["fullname"]
-                        and x["cls"] == running["classname"]
-                        and x["instance"] == running["instance"],
-                        profile_json_entry["data"],
-                    )
-                )
+            # From the profile, filter parameters that are running
+            parameters_running = []
+            profile_json_entry = next(
+                filter(lambda x: x["name"] == profilename, self.profiles["profiles"]), None
             )
 
-        # sent the filter running parameter to the board
-        # and after, read a new time values to refresh UI
-        if len(parameters_running) > 0:
-            for pararmeter in parameters_running:
-                self.send_value(
-                    cls=pararmeter["cls"],
-                    cmd=pararmeter["cmd"],
-                    val=pararmeter["value"],
-                    instance=pararmeter["instance"],
+            if not profile_json_entry:
+                self.log(f"Profile: '{profilename}' not found in configuration data.")
+                return
+
+            for running_class in self._map_class_running:
+                parameters_running.extend(
+                    list(
+                        filter(
+                            lambda x, running=running_class: x["fullname"]
+                            == running["fullname"]
+                            and x["cls"] == running["classname"]
+                            and x["instance"] == running["instance"],
+                            profile_json_entry["data"],
+                        )
+                    )
                 )
 
-                # axis.0.degrees?|900
-                replytext = (
-                    "["
-                    + pararmeter["cls"]
-                    + "."
-                    + str(pararmeter["instance"])
-                    + "."
-                    + pararmeter["cmd"]
-                    + "?|"
-                    + str(pararmeter["value"])
-                    + "]"
-                )
-                self.process_virtual_comms_buffer(replytext)
+            # sent the filter running parameter to the board
+            # and after, read a new time values to refresh UI
+            if len(parameters_running) > 0:
+                for pararmeter in parameters_running:
+                    self.send_value(
+                        cls=pararmeter["cls"],
+                        cmd=pararmeter["cmd"],
+                        val=pararmeter["value"],
+                        instance=pararmeter["instance"],
+                    )
 
-            # self.sendCommand(cls=pararmeter["cls"],
-            # cmd=pararmeter["cmd"], instance=pararmeter["instance"])
+                    # axis.0.degrees?|900
+                    replytext = f"[{pararmeter['cls']}.{pararmeter['instance']}.{pararmeter['cmd']}?|{pararmeter['value']}]"
+                    self.process_virtual_comms_buffer(replytext)
 
-        # send message that announce new profile is selected
-        self.profile_selected_event.emit(profilename)
-        self.log("Profile: '" + profilename + "' is active")
+                # self.sendCommand(cls=pararmeter["cls"],
+                # cmd=pararmeter["cmd"], instance=pararmeter["instance"])
+
+            # send message that announce new profile is selected
+            self.profile_selected_event.emit(profilename)
+            self.log("Profile: '" + profilename + "' is active")
+        finally:
+            self._is_communicating = False
+            self.comboBox_profiles.setEnabled(True)
+            self.set_save_btn(True)
+
+    def delete_profile(self, item_name: str):
+        """Remove the specified profile from the list."""
+        for i in range(len(self.profiles["profiles"])):
+            if self.profiles["profiles"][i]["name"] == item_name:
+                self.profiles["profiles"].pop(i)
+                break
+        self.create_or_update_profile_file()
+
+    def copy_profile(self, item_name: str, new_name: str):
+        """Copy the specified profile under a new name."""
+        profile_json_entry = next(
+            filter(lambda x: x["name"] == item_name, self.profiles["profiles"]),
+            None,
+        )
+        if profile_json_entry is not None:
+            new_profile = copy.deepcopy(profile_json_entry)
+            new_profile["name"] = new_name
+            self.profiles["profiles"].append(new_profile)
+            self.create_or_update_profile_file()
+
+    def rename_profile(self, item_name: str, new_name: str):
+        """Rename the specified profile."""
+        profile_json_entry = next(
+            filter(lambda x: x["name"] == item_name, self.profiles["profiles"]),
+            None,
+        )
+        if profile_json_entry is not None:
+            profile_json_entry["name"] = new_name
+            self.create_or_update_profile_file()
 
 
 class ProfilesDialog(PyQt6.QtWidgets.QDialog):
@@ -704,10 +751,7 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         if len(self.selection_model.selection().indexes()) <= 0:
             return
         item_name = self.selection_model.selection().indexes()[0].data()
-        for i in range(len(self.profile_dlg.profiles["profiles"])):
-            if self.profile_dlg.profiles["profiles"][i]["name"] == item_name:
-                self.profile_dlg.profiles["profiles"].pop(i)
-                break
+        self.profile_dlg.parent().delete_profile(item_name)
         self.read_profiles()
 
     def copy_as(self):
@@ -717,17 +761,7 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
         item_name = self.selection_model.selection().indexes()[0].data()
         name, status = PyQt6.QtWidgets.QInputDialog.getText(self, "Copy as", "new name")
         if status and (name != "") and (name not in self.get_profiles_name()):
-            profile_json_entry = next(
-                filter(
-                    lambda x: x["name"] == item_name,
-                    self.profile_dlg.profiles["profiles"],
-                ),
-                None,
-            )
-            new_profile = copy.deepcopy(profile_json_entry)
-            if profile_json_entry is not None:
-                new_profile["name"] = name
-                self.profile_dlg.profiles["profiles"].append(new_profile)
+            self.profile_dlg.parent().copy_profile(item_name, name)
         self.read_profiles()
 
     def rename(self):
@@ -739,15 +773,7 @@ class ProfilesManagerUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             self, "Copy as", "new name", text=item_name
         )
         if status and (name != "") and (name not in self.get_profiles_name()):
-            profile_json_entry = next(
-                filter(
-                    lambda x: x["name"] == item_name,
-                    self.profile_dlg.profiles["profiles"],
-                ),
-                None,
-            )
-            if profile_json_entry is not None:
-                profile_json_entry["name"] = name
+            self.profile_dlg.parent().rename_profile(item_name, name)
         self.read_profiles()
 
     def read_profiles(self):

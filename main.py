@@ -289,6 +289,15 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         dfu.deleteLater()
         
 
+    def changeEvent(self, event: PyQt6.QtCore.QEvent):
+        """Minimize to systray when window is minimized."""
+        if event.type() == PyQt6.QtCore.QEvent.Type.WindowStateChange:
+            if self.windowState() & PyQt6.QtCore.Qt.WindowState.WindowMinimized:
+                self.hide()
+                event.ignore()
+                return
+        super().changeEvent(event)
+
     def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
         """Move all modal dialog when moving main ui."""
         super().moveEvent(event)
@@ -760,7 +769,7 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
         self._submenu_profiles: PyQt6.QtWidgets.QMenu = None
 
         # Adding an icon
-        icon = PyQt6.QtGui.QIcon("app.png")
+        icon = PyQt6.QtGui.QIcon(helper.res_path('app.ico'))
 
         # Adding item on the menu bar
         tray = PyQt6.QtWidgets.QSystemTrayIcon(main)
@@ -1053,6 +1062,12 @@ def process_events():
 
 if __name__ == "__main__":
     logging.config.fileConfig(helper.res_path('logger.conf'))
+    if sys.platform == "win32" or "Windows" in sys.platform:
+        import ctypes
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("openffboard.configurator.app")
+        except Exception:
+            pass
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)

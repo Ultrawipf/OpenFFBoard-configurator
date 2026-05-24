@@ -41,7 +41,8 @@ class EncoderOptions(QGroupBox):
 
         layout.setContentsMargins(5,0,5,0)
         layout.setStretch(0,0)
-        layout.addWidget(self.widget)
+        if self.widget:
+            layout.addWidget(self.widget)
         self.setLayout(layout)
         
         if self.widget:            
