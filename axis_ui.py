@@ -11,6 +11,88 @@ from encoderconf_ui import EncoderOptions
 import encoder_tuning_ui
 import expo_ui
 
+from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QValueAxis
+from PyQt6.QtCore import Qt, QPointF, QMargins
+from PyQt6.QtGui import QColor, QPainter, QPen
+from PyQt6.QtWidgets import QApplication
+import math
+from biquad import Biquad
+
+def calc_freq_response(b, a, freqs, fs):
+    resp = []
+    for f in freqs:
+        w = 2 * math.pi * f / fs
+        cos_w = math.cos(w)
+        sin_w = -math.sin(w)
+        cos_2w = math.cos(2*w)
+        sin_2w = -math.sin(2*w)
+        
+        num_real = b[0] + b[1]*cos_w + b[2]*cos_2w
+        num_imag = b[1]*sin_w + b[2]*sin_2w
+        
+        den_real = 1 + a[1]*cos_w + a[2]*cos_2w
+        den_imag = a[1]*sin_w + a[2]*sin_2w
+        
+        mag_num = math.sqrt(num_real**2 + num_imag**2)
+        mag_den = math.sqrt(den_real**2 + den_imag**2)
+        
+        mag = mag_num / (mag_den + 1e-10)
+        resp.append(20 * math.log10(mag + 1e-10))
+    return resp
+
+class EqChartView(QChartView):
+    def __init__(self, chart, parent=None):
+        super().__init__(chart, parent)
+        self.setRenderHint(QPainter.RenderHint.Antialiasing)
+        self.dragged_index = -1
+        self.scatter_series = None
+        self.frequencies = []
+        self.on_gain_changed = None
+
+    def set_data_series(self, scatter_series, frequencies):
+        self.scatter_series = scatter_series
+        self.frequencies = frequencies
+
+    def mousePressEvent(self, event):
+        if self.scatter_series:
+            for i, p in enumerate(self.scatter_series.points()):
+                p_pixel = self.chart().mapToPosition(p)
+                dist = math.hypot(p_pixel.x() - event.position().x(), p_pixel.y() - event.position().y())
+                if dist < 15:
+                    if event.button() == Qt.MouseButton.LeftButton:
+                        self.dragged_index = i
+                        event.accept()
+                        return
+                    elif event.button() == Qt.MouseButton.RightButton:
+                        self.scatter_series.replace(i, self.frequencies[i], 0.0)
+                        if self.on_gain_changed:
+                            self.on_gain_changed(i, 0)
+                        event.accept()
+                        return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.dragged_index >= 0 and self.scatter_series:
+            val_point = self.chart().mapToValue(event.position())
+            y = max(-120.0, min(120.0, val_point.y()))
+            self.scatter_series.replace(self.dragged_index, self.frequencies[self.dragged_index], y)
+            if self.on_gain_changed:
+                self.on_gain_changed(self.dragged_index, int(y))
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.dragged_index >= 0:
+            val_point = self.chart().mapToValue(event.position())
+            y = max(-120.0, min(120.0, val_point.y()))
+            self.scatter_series.replace(self.dragged_index, self.frequencies[self.dragged_index], y)
+            if self.on_gain_changed:
+                self.on_gain_changed(self.dragged_index, int(y))
+            self.dragged_index = -1
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
 
 class AxisUI(WidgetUI,CommunicationHandler):
 
@@ -108,22 +190,96 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
 
         # --- Equalizer Controls ---
-        # Store all equalizer sliders in a list for easy access
-        self.eq_sliders = [self.verticalSlider_eq1, self.verticalSlider_eq2, self.verticalSlider_eq3, self.verticalSlider_eq4, self.verticalSlider_eq5, self.verticalSlider_eq6]
-        # Connect the checkbox stateChanged signal to send the enable/disable command
-        self.checkBox_eq.stateChanged.connect(self.send_eq_enabled)
-        # Iterate through each slider to connect its valueChanged signal
-        for i, slider in enumerate(self.eq_sliders):
-            # When a slider value changes, call send_eq_band_value with the slider's value and band number (index + 1)
-            slider.valueChanged.connect(lambda val, index=i: self.send_eq_band_value(val, index + 1))
         
-        # Connect the reset button's clicked signal to the reset function
+        self.eq_freqs = [10, 15, 25, 40, 60, 100]
+        self.eq_gains = [0] * len(self.eq_freqs)
+        self.eq_q = 2.14
+        self.eq_fs = 1000.0
+        
+        self.chart_eq = QChart()
+        self.chart_eq.legend().hide()
+        self.chart_eq.setBackgroundRoundness(5)
+        self.chart_eq.setBackgroundBrush(QApplication.instance().palette().window())
+        
+        self.axis_x_eq = QValueAxis(self.chart_eq)
+        self.axis_x_eq.setRange(0, 120)
+        self.axis_x_eq.setTitleText("Frequency (Hz)")
+        grid_color = QColor(QApplication.instance().palette().text().color())
+        grid_color.setAlpha(40)
+        self.axis_x_eq.setGridLineColor(grid_color)
+        self.chart_eq.addAxis(self.axis_x_eq, Qt.AlignmentFlag.AlignBottom)
+        
+        self.axis_y_eq = QValueAxis(self.chart_eq)
+        self.axis_y_eq.setRange(-120, 120)
+        self.axis_y_eq.setTitleText("Gain (%)")
+        self.axis_y_eq.setTickCount(7)
+        self.axis_y_eq.setGridLineColor(grid_color)
+        self.chart_eq.addAxis(self.axis_y_eq, Qt.AlignmentFlag.AlignLeft)
+        
+        self.line_series_eq = QLineSeries()
+        pen = QPen(QColor("cornflowerblue"))
+        pen.setWidth(3)
+        self.line_series_eq.setPen(pen)
+        self.line_series_eq.setUseOpenGL(True)
+        self.chart_eq.addSeries(self.line_series_eq)
+        self.line_series_eq.attachAxis(self.axis_x_eq)
+        self.line_series_eq.attachAxis(self.axis_y_eq)
+        
+        self.axis_y_eq_right = QValueAxis(self.chart_eq)
+        self.axis_y_eq_right.setRange(-120, 120)
+        self.axis_y_eq_right.setTickCount(7)
+        self.axis_y_eq_right.setGridLineVisible(False)
+        self.chart_eq.addAxis(self.axis_y_eq_right, Qt.AlignmentFlag.AlignRight)
+        self.line_series_eq.attachAxis(self.axis_y_eq_right)
+        
+        self.zero_line_eq = QLineSeries()
+        pen_zero = QPen(QApplication.instance().palette().text().color())
+        pen_zero.setWidth(1)
+        pen_zero.setDashPattern([4, 4])
+        self.zero_line_eq.setPen(pen_zero)
+        self.zero_line_eq.setUseOpenGL(True)
+        self.zero_line_eq.append(0, 0)
+        self.zero_line_eq.append(120, 0)
+        self.chart_eq.addSeries(self.zero_line_eq)
+        self.zero_line_eq.attachAxis(self.axis_x_eq)
+        self.zero_line_eq.attachAxis(self.axis_y_eq)
+        self.zero_line_eq.attachAxis(self.axis_y_eq_right)
+        
+        self.scatter_series_eq = QScatterSeries()
+        self.scatter_series_eq.setMarkerShape(QScatterSeries.MarkerShape.MarkerShapeCircle)
+        self.scatter_series_eq.setMarkerSize(12.0)
+        self.scatter_series_eq.setColor(QColor("white"))
+        self.scatter_series_eq.setBorderColor(QColor("cornflowerblue"))
+        
+        for f in self.eq_freqs:
+            self.scatter_series_eq.append(f, 0)
+            
+        self.chart_eq.addSeries(self.scatter_series_eq)
+        self.scatter_series_eq.attachAxis(self.axis_x_eq)
+        self.scatter_series_eq.attachAxis(self.axis_y_eq)
+        self.scatter_series_eq.attachAxis(self.axis_y_eq_right)
+        
+        idx = self.gridLayout_9.indexOf(self.graphWidget_eq)
+        row, col, rowSpan, colSpan = self.gridLayout_9.getItemPosition(idx)
+        self.graphWidget_eq.deleteLater()
+        
+        self.graphWidget_eq = EqChartView(self.chart_eq)
+        self.graphWidget_eq.set_data_series(self.scatter_series_eq, self.eq_freqs)
+        self.graphWidget_eq.on_gain_changed = self.on_eq_point_moved
+        self.gridLayout_9.addWidget(self.graphWidget_eq, row, col, rowSpan, colSpan)
+        
+        for ax in self.chart_eq.axes():
+            ax.setLabelsBrush(QApplication.instance().palette().text())
+            ax.setTitleBrush(QApplication.instance().palette().text())
+        
+        self.update_eq_curve()
+
+        self.checkBox_eq.stateChanged.connect(self.send_eq_enabled)
+        
         self.pushButton_resetEq.clicked.connect(self.reset_eq)
 
-        # Register callbacks to receive equalizer status updates from the firmware
         self.register_callback("axis","equalizer",self.update_eq_enabled,self.axis,int)
         for i in range(6):
-            # Register a callback for each equalizer band (eqb1, eqb2, etc.)
             self.register_callback("axis",f"eqb{i+1}",lambda val, index=i: self.update_eq_band(val, index),self.axis,int)
 
         # Set initial state of the collapsible groupbox
@@ -268,37 +424,59 @@ class AxisUI(WidgetUI,CommunicationHandler):
         """Sends the command to enable or disable the equalizer on the firmware."""
         self.send_value("axis", "equalizer", 1 if state else 0, instance=self.axis)
 
-    # Called when any equalizer slider's value is changed
+    def on_eq_point_moved(self, band_index, value):
+        self.eq_gains[band_index] = value
+        self.update_eq_curve()
+        self.send_eq_band_value(value, band_index + 1)
+
     def send_eq_band_value(self, value, band):
         """Sends the gain value for a specific equalizer band to the firmware."""
         self.send_value("axis", f"eqb{band}", value, instance=self.axis)
 
-    # Called when the 'Reset gain' button is clicked
     def reset_eq(self):
-        """Asks for user confirmation and then resets all equalizer sliders to 0."""
-        # Display a confirmation dialog
+        """Asks for user confirmation and then resets all equalizer bands to 0."""
         reply = QMessageBox.question(self, 'Reset Equalizer', "Are you sure you want to reset all equalizer bands to 0?",
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-        # If the user clicks 'Yes'
         if reply == QMessageBox.StandardButton.Yes:
-            # Set each slider's value to 0, which will also trigger the send_eq_band_value signal
-            for slider in self.eq_sliders:
-                slider.setValue(0)
+            for band in range(len(self.eq_freqs)):
+                self.update_eq_band(0, band)
+                self.send_eq_band_value(0, band + 1)
 
-    # Callback function to update the checkbox when a value is received from the firmware
     def update_eq_enabled(self, value):
         """Updates the 'Effect equalizer' checkbox state based on data from the firmware."""
-        # qtBlockAndCall temporarily blocks signals from the checkbox, sets its state,
-        # and then unblocks them. This prevents the checkbox from re-sending the same value
-        # back to the firmware, avoiding a potential infinite loop.
         qtBlockAndCall(self.checkBox_eq, self.checkBox_eq.setChecked, value)
 
-    # Callback function to update a slider when a value is received from the firmware
     def update_eq_band(self, value, band):
-        """Updates an equalizer slider's value based on data from the firmware."""
-        # qtBlockAndCall is used here for the same reason as in update_eq_enabled:
-        # to prevent the slider's valueChanged signal from firing and re-sending the value.
-        qtBlockAndCall(self.eq_sliders[band], self.eq_sliders[band].setValue, value)
+        """Updates an equalizer gain value based on data from the firmware."""
+        self.eq_gains[band] = value
+        self.scatter_series_eq.replace(band, self.eq_freqs[band], value)
+        self.update_eq_curve()
+
+    def update_eq_curve(self):
+        """Calculates and draws the frequency response curve of the equalizer."""
+        freqs = [f for f in range(5, 121)]
+        resp_total = [0] * len(freqs)
+        
+        for i, f0 in enumerate(self.eq_freqs):
+            gain = self.eq_gains[i] / 10.0
+            if abs(gain) > 0.01:
+                if i == 0:
+                    b_type = 5  # lowshelf
+                elif i == len(self.eq_freqs) - 1:
+                    b_type = 6  # highshelf
+                else:
+                    b_type = 4  # peak
+                    
+                bq = Biquad(b_type, f0 / self.eq_fs, self.eq_q, gain)
+                b = [bq.a0, bq.a1, bq.a2]
+                a = [1.0, bq.b1, bq.b2]
+                
+                resp = calc_freq_response(b, a, freqs, self.eq_fs)
+                for j in range(len(freqs)):
+                    resp_total[j] += resp[j]
+        
+        points = [QPointF(f, r * 10.0) for f, r in zip(freqs, resp_total)]
+        self.line_series_eq.replace(points)
 
     def init_ui(self):
         try:
