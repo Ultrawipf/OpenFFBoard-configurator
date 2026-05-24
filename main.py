@@ -268,18 +268,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
 
-    def open_dfu_dialog(self):
-        """Open the dfu dialog and start managing."""
-        msg = PyQt6.QtWidgets.QDialog()
-        msg.setWindowTitle(self.tr("Firmware"))
-        dfu = dfu_ui.DFUModeUI(parentWidget=msg, mainUI=self)
-        layout = PyQt6.QtWidgets.QVBoxLayout()
-        layout.addWidget(dfu)
-        msg.setLayout(layout)
-        msg.exec()
-        dfu.deleteLater()
-        
-
     def changeEvent(self, event: PyQt6.QtCore.QEvent):
         """Minimize to systray when window is minimized."""
         if event.type() == PyQt6.QtCore.QEvent.Type.WindowStateChange:
@@ -288,40 +276,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 event.ignore()
                 return
         super().changeEvent(event)
-
-    def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
-        """Move all modal dialog when moving main ui."""
-        super().moveEvent(event)
-        diff = event.pos() - event.oldPos()
-
-        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.errors_dlg, self.effects_monitor_dlg,
-            self.effects_graph_dlg, self.active_class_dlg]
-        for dialog in list_dialog:
-            if dialog and dialog.isVisible():
-                dialog.move(dialog.pos() + diff)
-                dialog.update()
-
-    def open_logs_errors_dialog(self):
-        """Display the log file on the right if it fill in the screen."""
-        # Move the dialog to the widget that called it
-        self.errors_dlg.show()
-
-        point = self.window().frameGeometry().topRight()
-        height = self.size().height()
-        width = self.errors_dlg.size().width()
-
-        if (point.x() + width) < self.screen().size().width() :
-            self.errors_dlg.move(point)
-            self.errors_dlg.resize(width,height)
-
-
-    def open_about(self):
-        """Open the about dialog box."""
-        AboutDialog(self).exec()
-
-    def open_updater(self):
-        """Opens updater window"""
-        updater.UpdateBrowser(self,self.profile_ui).exec()
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
         # Reload mainclasses
