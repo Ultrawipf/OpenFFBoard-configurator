@@ -4,7 +4,7 @@
 
 /* --- Main Window Backdrop --- */
 QMainWindow {
-    background-image: url("./res/img/background_dark.png");
+    background-image: url("./res/img/background.png");
     background-repeat: no-repeat;
     background-position: center;
     background-attachment: fixed;
@@ -30,10 +30,12 @@ QTabWidget::pane {
     background-color: transparent;
     border: none;
 }
+
 QTabBar {
     background-color: transparent;
     border: none;
 }
+
 QTabWidget,
 QTabWidget QStackedWidget, 
 QTabWidget QStackedWidget > QWidget {
@@ -48,7 +50,7 @@ QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget {
 /* --- Global Buttons (Configurator Blue) --- */
 QPushButton {
     background-color: #0097c9;
-    color: #E0E0E0;
+    color: #FFFFFF;
     font-size: 12px;
     font-weight: bold;
     border-radius: 5px;
@@ -60,11 +62,11 @@ QPushButton:hover {
     background-color: #007ca5;
 }
 QPushButton:disabled {
-    background-color: #002e3d;
-    color: #5c6a6f;
+    background-color: #cceaf4;
+    color: #8ba3ab;
 }
 
-/* --- Group Boxes (Configurator Blue Border & Transparent Dark Background) --- */
+/* --- Group Boxes (Configurator Blue Border & Transparent Light Background) --- */
 QGroupBox {
     border: 3px solid #005e7d;
     border-radius: 8px;
@@ -72,11 +74,11 @@ QGroupBox {
     font-size: 14px;
     text-transform: uppercase;
     font-weight: bold;
-    color: #E0E0E0;
+    color: #1E1E1E;
 }
 QGroupBox:disabled {
-    border: 3px solid #32393c;
-    color: #5c6a6f;
+    border: 3px solid #d0d0d0;
+    color: #888888;
 }
 QGroupBox::title {
     subcontrol-origin: padding;
@@ -90,7 +92,7 @@ QGroupBox::title {
 
 /* --- Serial Panel (Orange Theme) --- */
 QLabel#label_port {
-    color: #45c145;
+    color: #2e8b2e;
     font-size: 24px;
     font-weight: bold;
 }
@@ -99,7 +101,7 @@ QLabel#label_port:disabled {
 }
 QWidget#serial_panel QPushButton {
     background-color: #d68c02;
-    color: #E0E0E0;
+    color: #FFFFFF;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -112,12 +114,12 @@ QWidget#serial_panel QPushButton:hover {
     background-color: #a26900;
 }
 QWidget#serial_panel QPushButton:disabled {
-    background-color: #523600;
-    color: #5c6a6f;
+    background-color: #f5e2bf;
+    color: #b38f54;
 }
 QWidget#serial_panel QPushButton#pushButton_update {
     background-color: #00BFFF;
-    color: #E0E0E0;
+    color: #FFFFFF;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -145,6 +147,7 @@ QGroupBox#groupBox_profilemanager:disabled {
 }
 QGroupBox#groupBox_profilemanager QPushButton {
     background-color: #00AA00;
+    color: #FFFFFF;
     font-size: 14px;
     font-weight: bold;
     border-radius: 5px;
@@ -155,8 +158,8 @@ QGroupBox#groupBox_profilemanager QPushButton:hover {
     background-color: #008800;
 }
 QGroupBox#groupBox_profilemanager QPushButton:disabled {
-    background-color: #334633;
-    color: #5c6a6f;
+    background-color: #c3eec3;
+    color: #79a679;
 }
 
 /*********************************************************************************************************************************/
@@ -165,7 +168,7 @@ QGroupBox#groupBox_profilemanager QPushButton:disabled {
 
 /* --- Side Menu Panel (Left Navigation) --- */
 QFrame#sideMenuFrame {
-    background-color: #202124;
+    background-color: #f8f9fa;
     border-radius: 8px;
     border: 3px solid #005e7d;
     padding: 5px;
@@ -178,7 +181,7 @@ QFrame#sideMenuFrame QPushButton {
     margin: 5px 0px;
     padding: 0px 15px;
     icon-size: 24px;
-    color: #E0E0E0;
+    color: #1E1E1E;
     font-size: 18px;
     font-weight: bold;
     text-align: left;
@@ -186,10 +189,12 @@ QFrame#sideMenuFrame QPushButton {
 QFrame#sideMenuFrame QPushButton:hover {
     background-color: rgba(0, 151, 201, 64);
     border: 1px solid #0097c9;
+    color: #1E1E1E;
 }
 QFrame#sideMenuFrame QPushButton[active="true"] {
     background-color: #0097c9;
     border: none;
+    color: #FFFFFF;
 }
 
 /*********************************************************************************************************************************/
@@ -198,22 +203,23 @@ QFrame#sideMenuFrame QPushButton[active="true"] {
 
 /* --- Tab bar (Top navigation inside tabs) --- */
 QTabBar::tab {
-    background-color: #365059;
-    border: 1px solid transparent;
-    border-radius: 6px;
+    background-color: rgba(0, 151, 201, 50);
+    border: none;
+    border-radius: 0px;
     min-height: 32px;
     min-width: 120px;
-    margin: 3px 6px;
-    padding: 0px 10px;
+    margin: 3px 0px 3px 6px;
+    padding: 0px 15px;
     icon-size: 16px;
-    color: #B0B5BC;
+    color: #bcbcbc;
     font-size: 13px;
     font-weight: bold;
     text-align: center;
 }
 QTabBar::tab:hover {
-    background-color: rgba(0, 94, 125, 64);
+    background-color: rgba(0, 94, 125, 170);
     border: 1px solid #005e7d;
+    color: #1E1E1E;
 }
 QTabBar::tab:selected {
     background-color: #005e7d;
@@ -221,19 +227,20 @@ QTabBar::tab:selected {
     color: #FFFFFF;
 }
 QTabBar::tab:disabled {
-    background: rgba(45, 48, 53, 160);
+    background: rgba(240, 240, 240, 160);
     border: none;
-    color: #5c6a6f;
+    color: #888888;
 }
 
 /* --- Progress Bars inside Axes/FFB GroupBoxes --- */
 QGroupBox#groupBox_FFBAxes QProgressBar, 
 QGroupBox#groupBox_secAxis QProgressBar,
 QGroupBox#groupBox_ffbeffect QProgressBar {
-    background-color: #31363b;
-    border: 1px solid #76797C;
+    background-color: #e5e5e5;
+    border: 1px solid #B0B0B0;
     border-radius: 2px;
     text-align: center;
+    color: #1E1E1E;
 }
 QGroupBox#groupBox_FFBAxes QProgressBar::chunk, 
 QGroupBox#groupBox_secAxis QProgressBar::chunk, 
@@ -254,5 +261,6 @@ QLabel#lbl_status {
 
 /* --- Status Bar --- */
 QStatusBar {
-    background-color: rgba(45, 48, 53, 128);
+    background-color: rgba(255, 255, 255, 0);
+    color: #1E1E1E;
 }

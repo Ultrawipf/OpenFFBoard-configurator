@@ -1051,6 +1051,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QWidget</extends>
+   <header location="global">PyQt6/QtCharts</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -1214,12 +1222,4 @@
    </hints>
   </connection>
  </connections>
- <customwidgets>
-  <customwidget>
-   <class>QChartView</class>
-   <extends>QWidget</extends>
-   <header location="global">PyQt6/QtCharts</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
 </ui>

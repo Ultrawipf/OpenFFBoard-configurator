@@ -226,7 +226,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
-        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        chart_theme = PyQt6.QtCharts.QChart.ChartTheme.ChartThemeLight if is_light else PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark
+        chart.setTheme(chart_theme)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()
@@ -344,7 +346,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
-        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        chart_theme = PyQt6.QtCharts.QChart.ChartTheme.ChartThemeLight if is_light else PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark
+        chart.setTheme(chart_theme)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()
@@ -445,7 +449,9 @@ class AdvancedTweakUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         # Chart setup
         chart = PyQt6.QtCharts.QChart()
-        chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        chart_theme = PyQt6.QtCharts.QChart.ChartTheme.ChartThemeLight if is_light else PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark
+        chart.setTheme(chart_theme)
         chart.setBackgroundRoundness(5)
         chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         chart.legend().hide()

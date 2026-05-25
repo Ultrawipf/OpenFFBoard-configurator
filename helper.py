@@ -110,3 +110,25 @@ def throttle(ms):
 # Splits a reply in the format "name:value,name2:value2"... into a dict
 def map_infostring(repl,type=float):
     return{key:type(value) for (key,value) in [entry.split(":") for entry in repl.split(",")]}
+
+
+def windows_theme_is_light():
+    """Detect if the user is using Light Mode in Windows.
+
+    Returns True if Light Mode is enabled, False if Dark Mode is enabled,
+    and None if the detection is not applicable or fails.
+    """
+    import sys
+    if sys.platform != "win32":
+        return None
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+        )
+        subkey, regtype = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        winreg.CloseKey(key)
+        return subkey == 1
+    except Exception:
+        return None

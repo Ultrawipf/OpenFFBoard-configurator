@@ -68,7 +68,9 @@ class ExpoTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 	
     def makeGraph(self):
         
-        self.chart.setTheme(PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark)
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        chart_theme = PyQt6.QtCharts.QChart.ChartTheme.ChartThemeLight if is_light else PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark
+        self.chart.setTheme(chart_theme)
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         self.chart.legend().hide()

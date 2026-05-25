@@ -8,4 +8,4 @@ intelhex
 requests
 cryptography
 hidapi
-qdarkstyle
+pyqtdarktheme

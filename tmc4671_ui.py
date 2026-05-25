@@ -74,7 +74,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
    
         # Chart setup
         self.chart = QChart()
-        self.chart.setTheme(QChart.ChartTheme.ChartThemeDark)
+        is_light = QApplication.instance().property("is_light_theme")
+        chart_theme = QChart.ChartTheme.ChartThemeLight if is_light else QChart.ChartTheme.ChartThemeDark
+        self.chart.setTheme(chart_theme)
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(QMargins(0,0,0,0))
         self.chartXaxis = QValueAxis(self.chart)
@@ -145,6 +147,9 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
         # Cogging Chart setup
         self.chart_cogging = QChart()
+        is_light = QApplication.instance().property("is_light_theme")
+        chart_theme = QChart.ChartTheme.ChartThemeLight if is_light else QChart.ChartTheme.ChartThemeDark
+        self.chart_cogging.setTheme(chart_theme)
         self.chart_cogging.setBackgroundRoundness(5)
         self.chart_cogging.setMargins(QMargins(0,0,0,0))
         self.chart_cogging_Xaxis = QValueAxis(self.chart_cogging)
