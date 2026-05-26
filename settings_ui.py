@@ -216,6 +216,13 @@ class Settings(base_ui.WidgetUI, base_ui.CommunicationHandler):
         
         if state:
             self.get_main_classes()
+        else:
+            try:
+                self.get_raw_reply().disconnect(self.serial_log)
+            except Exception:
+                pass
+            if self.timer.isActive():
+                self.timer.stop()
 
     def update_mains(self, dat):
         """Parse the list of main classes received from board, and update the combobox."""

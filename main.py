@@ -13,12 +13,12 @@ min_fw = "1.9.1"
 version = "1.8.7"
 """
 import sys
-import functools
+import os
 import logging
 import logging.config
+import functools
 from typing import List
 import glob
-import os
 
 import PyQt6.QtWidgets
 import PyQt6.QtCore
@@ -326,7 +326,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             nav_button.setText(tab_text)
         else:
             nav_button.setText(class_name)
-        nav_button.clicked.connect(lambda: self.select_tab(class_name))
+        nav_button.clicked.connect(functools.partial(self.select_tab, class_name))
         # Mark navigation group on the button for ordering logic
         nav_group = position if position in ("top", "bottom") else "middle"
         nav_button.setProperty("nav_group", nav_group)
@@ -923,11 +923,14 @@ def process_events():
     """Function to force processing background events. Do NOT call from any slots in the main thread without blocking as that may lead to recursion"""
     app.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents,50)
 
-
-
-    
+def qt_message_handler(mode, context, message):
+    if "Unexpected nullptr parameter" in message:
+        logging.getLogger("main").warning("Silencing benign 'Unexpected nullptr parameter' warning caused by PyQt6 QChart destruction bug.")
+        return
+    sys.stderr.write(message + "\n")
 
 if __name__ == "__main__":
+    PyQt6.QtCore.qInstallMessageHandler(qt_message_handler)
     logging.config.fileConfig(helper.res_path('logger.conf'))
     if sys.platform == "win32" or "Windows" in sys.platform:
         import ctypes
