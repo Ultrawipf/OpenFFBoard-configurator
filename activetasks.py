@@ -89,17 +89,30 @@ class ActiveTaskUI(WidgetUI, CommunicationHandler):
         self.taskstats_enabled = False
         self.tasklist_enabled = False
 
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timer_cb)
+
     def connect(self, is_connected):
         self.isConnected = is_connected
         if is_connected:
-            self.check_taskstats()    
+            self.check_taskstats()
+            if self.isVisible():
+                self.timer.start(1000)
+        else:
+            self.timer.stop()
 
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
         self.read()
+        if self.isConnected:
+            self.timer.start(1000)
 
     def hideEvent(self, a0: QHideEvent) -> None:
-        pass
+        self.timer.stop()
+
+    def timer_cb(self):
+        if self.isConnected:
+            self.read()
     
     def set_taskstats_enabled(self, enabled):
         self.taskstats_enabled = enabled
