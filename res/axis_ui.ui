@@ -85,30 +85,7 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_14">
-            <property name="text">
-             <string>N/A</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSlider" name="horizontalSlider">
-            <property name="maximum">
-             <number>65535</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_13">
-            <property name="text">
-             <string>Slew rate limit</string>
-            </property>
-           </widget>
-          </item>
+
           <item row="1" column="1">
            <widget class="QChartView" name="graphWidget_eq" native="true">
             <property name="sizePolicy">
@@ -720,13 +697,6 @@
           <property name="bottomMargin">
            <number>5</number>
           </property>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>Driver Slew rate</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QSpinBox" name="spinBox_speedlimit">
             <property name="enabled">
@@ -756,13 +726,6 @@
            <widget class="QCheckBox" name="checkBox_speedlimit">
             <property name="text">
              <string>Speed limit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="label_maxDrvSlewRate">
-            <property name="text">
-             <string>N/A</string>
             </property>
            </widget>
           </item>
