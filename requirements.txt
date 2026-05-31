@@ -7,3 +7,5 @@ pyusb
 intelhex
 requests
 cryptography
+hidapi
+pyqtdarktheme

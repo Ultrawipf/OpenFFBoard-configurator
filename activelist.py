@@ -64,16 +64,6 @@ class ActiveClassModel(QAbstractTableModel):
         self.items = items
         self.endResetModel()
 
-class ActiveClassDialog(PyQt6.QtWidgets.QDialog):
-    def __init__(self, parent = None):
-        PyQt6.QtWidgets.QDialog.__init__(self, parent)
-        self.active_class_ui = ActiveClassUI(parent)
-        self.layout = PyQt6.QtWidgets.QVBoxLayout()
-        self.layout.setContentsMargins(0,0,0,0)
-        self.layout.addWidget(self.active_class_ui)
-        self.setLayout(self.layout)
-        self.setWindowTitle("Active modules")
-
 class ActiveClassUI(WidgetUI, CommunicationHandler):
     def __init__(self, parent = None):
         WidgetUI.__init__(self, parent, 'activelist.ui')
@@ -84,7 +74,7 @@ class ActiveClassUI(WidgetUI, CommunicationHandler):
         self.tableView.setModel(self.items)
         header = self.tableView.horizontalHeader()
         header.setSectionResizeMode(0,PyQt6.QtWidgets.QHeaderView.ResizeMode.Stretch) # Stretch first section
-
+    
     def showEvent(self, a0):
         self.tableView.resizeColumnsToContents()
         self.read()
@@ -93,7 +83,6 @@ class ActiveClassUI(WidgetUI, CommunicationHandler):
         self.get_value_async("sys","lsactive",self.updateCb)
 
     def updateCb(self,string):
-        self.parent.show()
         items = []
         for line in string.split("\n"):
             e = line.split(":")

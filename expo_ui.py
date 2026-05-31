@@ -68,12 +68,13 @@ class ExpoTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
 	
     def makeGraph(self):
         
-
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        chart_theme = PyQt6.QtCharts.QChart.ChartTheme.ChartThemeLight if is_light else PyQt6.QtCharts.QChart.ChartTheme.ChartThemeDark
+        self.chart.setTheme(chart_theme)
         self.chart.setBackgroundRoundness(5)
         self.chart.setMargins(PyQt6.QtCore.QMargins(0, 0, 0, 0))
         self.chart.legend().hide()
-        self.chart.setBackgroundBrush(PyQt6.QtWidgets.QApplication.instance().palette().window())
-
+        
         font = PyQt6.QtGui.QFont()
         font.setPixelSize(10)
         
@@ -105,13 +106,6 @@ class ExpoTuneUI(base_ui.WidgetUI, base_ui.CommunicationHandler):
             )
         )
         self.chart.addAxis(self.chart_y_axis, PyQt6.QtCore.Qt.AlignmentFlag.AlignLeft)
-        for axe in self.chart.axes():
-            axe.setTitleBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
-            axe.setLabelsBrush(
-                PyQt6.QtWidgets.QApplication.instance().palette().text()
-            )
         self.graph_expo.setChart(self.chart)
 
     def updateCurve(self,exponent):

@@ -1,0 +1,324 @@
+/*********************************************************************************************************************************/
+/*                                                    1. GLOBAL WINDOW & CONTAINER STYLES                                        */
+/*********************************************************************************************************************************/
+
+/* Main window background image */
+QMainWindow {
+    background-image: url("./res/img/background_dark.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Semi-transparent overlay to control contrast and darken background image */
+#centralwidget {
+    background-color: rgba(0, 0, 0, 40);
+    border: none;
+}
+
+/* Make standard container elements transparent to let the background show through */
+QLabel#icon,
+QWidget#serial_panel,
+QWidget#serial_panel > QWidget {
+    background-color: transparent;
+    border: none;
+}
+
+/* Make text labels, radio buttons, and checkboxes transparent by default */
+QLabel, QRadioButton, QCheckBox {
+    background-color: transparent;
+}
+
+/* Remove borders and background from scroll areas */
+QScrollArea, QScrollArea > QWidget, QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}
+
+/*********************************************************************************************************************************/
+/*                                                    2. GLOBAL COMPONENT STYLES                                                 */
+/*********************************************************************************************************************************/
+
+/* Global Push Button styles (Configurator Blue) */
+QPushButton {
+    background-color: #0097c9;
+    color: #E0E0E0;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 10px;
+    min-width: 100px;
+    border: none;
+}
+
+QPushButton:hover {
+    background-color: #007ca5;
+}
+
+QPushButton:disabled {
+    background-color: #002e3d;
+    color: #5c6a6f;
+}
+
+/* Global Group Box styles (Configurator Blue Border & Dark Glass Background) */
+QGroupBox {
+    background-color: rgba(45, 48, 53, 160);
+    border: 3px solid #005e7d;
+    border-radius: 8px;
+    padding: 25px 10px 5px 10px;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #E0E0E0;
+}
+
+QGroupBox:disabled {
+    background-color: rgba(31, 33, 36, 160);
+    border: 3px solid #32393c;
+    color: #5c6a6f;
+}
+
+QGroupBox::title {
+    subcontrol-origin: padding;
+    subcontrol-position: top left;
+    padding: 5px 10px;
+}
+
+/*********************************************************************************************************************************/
+/*                                                    3. NORTH ZONE: HEADER & CONNECTIVITY                                       */
+/*********************************************************************************************************************************/
+
+/* Serial Port connection indicator */
+QLabel#label_port {
+    color: #45c145;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+QLabel#label_port:disabled {
+    color: #a03b00;
+}
+
+/* Serial connection panel action buttons (Orange Theme) */
+QWidget#serial_panel QPushButton {
+    background-color: #d68c02;
+    color: #E0E0E0;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+QWidget#serial_panel QPushButton#pushButton_settings {
+    min-width: 30px;
+}
+
+QWidget#serial_panel QPushButton:hover {
+    background-color: #a26900;
+}
+
+QWidget#serial_panel QPushButton:disabled {
+    background-color: #523600;
+    color: #5c6a6f;
+}
+
+/* Update firmware button inside serial panel */
+QWidget#serial_panel QPushButton#pushButton_update {
+    background-color: #00BFFF;
+    color: #E0E0E0;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QWidget#serial_panel QPushButton#pushButton_update:hover {
+    background-color: #0099CC;
+}
+
+/* Settings button in the status bar */
+QPushButton#statusBarSettingsButton {
+    background-color: transparent;
+    border: none;
+}
+
+QPushButton#statusBarSettingsButton QIcon {
+    qproperty-iconSize: 24px;
+}
+
+/* Profile Manager groupbox and controls (Green Theme) */
+QGroupBox#groupBox_profilemanager {
+    border: 3px solid #2f7c2f;
+}
+
+QGroupBox#groupBox_profilemanager:disabled {
+    border: 3px solid #2f7c2f;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton {
+    background-color: #00AA00;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 20px;
+    min-width: 120px;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton:hover {
+    background-color: #008800;
+}
+
+QGroupBox#groupBox_profilemanager QPushButton:disabled {
+    background-color: #334633;
+    color: #5c6a6f;
+}
+
+/*********************************************************************************************************************************/
+/*                                                    4. WEST ZONE & NAVIGATION                                                  */
+/*********************************************************************************************************************************/
+
+/* Side Menu Panel (Left Navigation) */
+QFrame#sideMenuFrame {
+    background-color: #202124;
+    border-radius: 8px;
+    border: 3px solid #005e7d;
+    padding: 5px;
+}
+
+QFrame#sideMenuFrame QPushButton {
+    background-color: rgba(0, 151, 201, 32);
+    border: none;
+    border-radius: 0px;
+    min-height: 40px;
+    margin: 5px 0px;
+    padding: 0px 15px;
+    icon-size: 24px;
+    color: #E0E0E0;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: left;
+}
+
+QFrame#sideMenuFrame QPushButton:hover {
+    background-color: rgba(0, 151, 201, 64);
+    border: 1px solid #0097c9;
+}
+
+QFrame#sideMenuFrame QPushButton[active="true"] {
+    background-color: #0097c9;
+    border: none;
+}
+
+/* Make main content stack and its immediate child pages transparent */
+#content_stack, 
+#content_stack > QWidget,
+#content_stack > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}
+
+/* Override transparency for Group Boxes inside the content stack */
+#content_stack > QWidget > QGroupBox {
+    background-color: rgba(45, 48, 53, 160);
+    border: 3px solid #005e7d;
+}
+
+#content_stack > QWidget > QGroupBox:disabled {
+    background-color: rgba(31, 33, 36, 160);
+    border: 3px solid #32393c;
+}
+
+/* Top Navigation Tabs inside the pages of the content stack */
+#content_stack > QWidget > QTabWidget::pane {
+    background-color: transparent;
+    border: none;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar {
+    background-color: transparent;
+    border: none;
+}
+
+#content_stack > QWidget > QTabWidget,
+#content_stack > QWidget > QTabWidget QStackedWidget, 
+#content_stack > QWidget > QTabWidget QStackedWidget > QWidget {
+    background-color: transparent;
+}
+
+/* Style top navigation tabs to look like buttons matching the sidebar */
+#content_stack > QWidget > QTabWidget > QTabBar::tab {
+    background-color: #1c3039;
+    border: 1px solid transparent;
+    border-radius: 0px;
+    min-height: 32px;
+    min-width: 120px;
+    margin: 6px 8px 6px 0px;
+    padding: 0px 10px;
+    icon-size: 16px;
+    color: #E0E0E0;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar::tab:last {
+    margin-right: 0px;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar::tab:only-one {
+    margin-right: 0px;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar::tab:hover {
+    background-color: #183f4d;
+    border: 1px solid #0097c9;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar::tab:selected {
+    background-color: #0097c9;
+    border: 1px solid transparent;
+    color: #E0E0E0;
+}
+
+#content_stack > QWidget > QTabWidget > QTabBar::tab:disabled {
+    background: rgba(45, 48, 53, 160);
+    border: none;
+    color: #5c6a6f;
+}
+
+/*********************************************************************************************************************************/
+/*                                                    5. EAST ZONE: CONTENT COMPONENTS                                           */
+/*********************************************************************************************************************************/
+
+/* Progress Bars inside Axis and FFB tuning pages */
+QGroupBox#groupBox_FFBAxes QProgressBar, 
+QGroupBox#groupBox_secAxis QProgressBar,
+QGroupBox#groupBox_ffbeffect QProgressBar {
+    background-color: #31363b;
+    border: 1px solid #76797C;
+    border-radius: 2px;
+    text-align: center;
+}
+
+QGroupBox#groupBox_FFBAxes QProgressBar::chunk, 
+QGroupBox#groupBox_secAxis QProgressBar::chunk, 
+QGroupBox#groupBox_ffbeffect QProgressBar::chunk {
+    background-color: #3daee9;
+}
+
+/* Status / Error label indicator */
+QLabel#lbl_status {
+    font-size: 24px;
+    font-weight: bold;
+    color: #a40000;
+}
+
+/*********************************************************************************************************************************/
+/*                                                    6. SOUTH ZONE: FOOTER & STATUS BAR                                         */
+/*********************************************************************************************************************************/
+
+/* Status bar backdrop */
+QStatusBar {
+    background-color: rgba(45, 48, 53, 240);
+}

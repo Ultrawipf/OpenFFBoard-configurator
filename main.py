@@ -13,12 +13,12 @@ min_fw = "1.9.1"
 version = "1.8.7"
 """
 import sys
-import functools
+import os
 import logging
 import logging.config
+import functools
 from typing import List
 import glob
-import os
 
 import PyQt6.QtWidgets
 import PyQt6.QtCore
@@ -26,18 +26,14 @@ import PyQt6.QtGui
 import PyQt6.QtSerialPort
 import PyQt6
 from PyQt6.QtCore import QEventLoop
-from PyQt6.QtGui import QAction,QActionGroup
 
 import config
 import helper
-from devsignature import ECSignature
 
 
 # UIs
 import base_ui
 import serial_ui
-import dfu_ui
-import dark_palette
 import profile_ui
 import ffb_ui
 import axis_ui
@@ -45,45 +41,68 @@ import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
-import errors
-import activelist
 import tmcdebug_ui
 import odrive_ui
 import vesc_ui
-import effects_monitor
 import effects_graph_ui
 import updater
 import simplemotion_ui
-import activetasks
 import rmd_ui
 import canremote_ui
+import settings_ui
+import about_ui
+import dashboard
+import qdarktheme
+
 
 # This GUIs version
-VERSION = "1.17.0"
+VERSION = "1.16.9"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.17.0"
+MIN_FW = "1.16.6"
 
 DEFAULTLANG = "en_US"
-
-# Internal signature
-PUBKEY = bytes.fromhex("7d78762398c6e397e4faa2b03c4cdfa481c2c861add82bc8a5f6ed369d8259c0")
 
 class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.CommunicationHandler):
     """Display and manage the main UI."""
     tabsinitialized = PyQt6.QtCore.pyqtSignal(bool)
     maxaxischanged = PyQt6.QtCore.pyqtSignal(int)
     languagechanged = PyQt6.QtCore.pyqtSignal()
-    def __init__(self):
+    TAB_MAPPING = {} # Rempli dans setup_ui
+
+    # PANEL_CONFIG définit l'ordre et les propriétés des panels (onglets).
+    # Chaque entrée est un dict contenant :
+    # - name: identifiant interne (utilisé comme clé de TAB_MAPPING)
+    # - title: texte affiché dans le menu latéral
+    # - icon: nom d'icône optionnel (non utilisé ici mais conservé pour futur usage)
+    # - static: True si l'onglet fait partie du configurator (créé au démarrage),
+    #           False s'il s'agit d'un onglet dynamique venant du board
+    PANEL_CONFIG = [
+        {"name": "dashboard", "title": "Dashboard", "icon": "res/img/dashboard.png", "static": True, "position": "top"},
+        {"name": "settings", "title": "Settings", "icon": "res/img/settings.png", "static": True, "position": "bottom"},
+        {"name": "about", "title": "About", "icon": "res/img/support.png", "static": True, "position": "bottom"},
+    ]
+    
+    def __init__(self, translator=None):
         """Init the mainUI : init the UI, all the dlg element, and the main timer."""
         PyQt6.QtWidgets.QMainWindow.__init__(self)
         base_ui.CommunicationHandler.__init__(self)
         
+        # Initialize translator here so it's accessible from the class
+        self.translator = translator if translator is not None else PyQt6.QtCore.QTranslator(self)
+
         self.profile_ui = profile_ui.ProfileUI(main=self) # load profile without UI
         self.load_language_id(self.profile_ui.get_global_setting("language",DEFAULTLANG)) # load language file
 
         base_ui.WidgetUI.__init__(self, None, "MainWindow.ui")
+        # Check system theme to apply the correct QSS file
+        is_light = PyQt6.QtWidgets.QApplication.instance().property("is_light_theme")
+        self.is_light_theme = (is_light is True)
+        if self.is_light_theme:
+            self.apply_stylesheet(helper.res_path("style_light.qss"))
+        else:
+            self.apply_stylesheet(helper.res_path("style.qss"))
 
         self.restart_app_flag = False
 
@@ -97,35 +116,33 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.systray : SystrayWrapper = None
 
-        self.lang_actions = {}
-        self.language_action_group = QActionGroup(self)
-        self.language_action_group.setExclusive(True)
-
         self.tab_connections = [] # Signals to disconnect on reset
 
         # Systray
         self.systray = SystrayWrapper(self)
+        
         # Profile
         self.profile_ui.initialize_ui() # Profile UI
-        self.make_lang_selector()
+        # Settings panel
+        self.settings_ui = settings_ui.Settings(self, self.serial)
+        # Initialize language selector in settings tab
+        self.settings_ui.init_language_selector()
+        
+        # About panel
+        self.about_ui = about_ui.AboutUI(self, VERSION, None)
+        
+        # Dashboard panel
+        self.dashboard = dashboard.DashboardUI(self)
 
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
-        self.tabWidget_main.currentChanged.connect(self.tab_changed)
-        self.errors_dlg = errors.ErrorsDialog(self)
-        self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
-        self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
-        self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
-        self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
-        self.active_class_dlg = activelist.ActiveClassDialog(self)
-        self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
+        # Force the main window to resize to the content of the newly selected tab
+        #TODO VMA remove self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
+        #TODO VMA remove self.effects_graph_dlg = effects_graph_ui.EffectsGraphDialog(self)
+        #TODO VMA remove self.maxaxischanged.connect(self.effects_graph_dlg.set_max_axes)
         self.active_classes = {}
         self.fw_version_str = None
-        self.hwtype = None
-        self.hwuid = None
-        self.hwsignature = None
-        self.signature_valid = False
-
 
         self.process_events_timer = PyQt6.QtCore.QTimer()
         self.process_events_timer.timeout.connect(process_events) # Kick eventloop when timeouting
@@ -139,15 +156,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
     def setup(self):
         """Init the systray, the serial, the toolbar, the status bar and the connection status."""
-                # Error dialog clear TODO possibly call after the tab has changed so that it does not appear in the serial log
-        self.tabsinitialized.connect(self.errors_dlg.connected_cb)
-        self.tabsinitialized.connect(self.connected_callback_late)
-
         self.systray.open_main_ui_signal.connect(self.display_ui)
         self.systray.change_profile_signal.connect(self.change_profile)
         
         self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main_ui=self)
-        self.tabWidget_main.addTab(self.serialchooser, self.tr("Serial"))
+        self.serial_panel.layout().addWidget(self.serialchooser)
         self.serialchooser.connected.connect(self.systray.set_connected)
         self.serialchooser.connected.connect(self.profile_ui.setEnabled)
 
@@ -156,55 +169,62 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.serialchooser.connected.connect(self.wrapper_status_bar.serial_connected)
 
         # self.serial.readyRead.connect(self.serialReceive)
-        self.actionAbout.triggered.connect(self.open_about)
         self.serialchooser.connected.connect(self.serial_connected)
-
-        self.actionUpdates.triggered.connect(self.open_updater)
-
-        self.actionDebug_mode.triggered.connect(self.toggle_debug)
+        # Keep Settings UI in sync when the serial port opens/closes
+        self.serialchooser.connected.connect(self.settings_ui.update_connected)
+        
+        self.serialchooser.connected.connect(self.about_ui.set_connected)
 
         #self.serialchooser.connected.connect(self.effects_monitor_dlg.setEnabled) # Gets enabled in class management
-        self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
 
         #self.serialchooser.connected.connect(self.effects_graph_dlg.setEnabled)
-        self.effects_graph_dlg.setEnabled(False)
+        #TODO check if always required self.effects_graph_dlg.setEnabled(False)
 
-        # Toolbar menu items
-        self.actionDFU_Uploader.triggered.connect(self.open_dfu_dialog)
+        #self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
 
-        self.actionErrors.triggered.connect(self.open_logs_errors_dialog)  # Open error list
-
-        self.actionActive_features.triggered.connect(
-            self.active_class_dlg.show
-        )  # Open active classes list
-        self.serialchooser.connected.connect(self.actionActive_features.setEnabled)
-        self.serialchooser.connected.connect(self.actionDebug_mode.setEnabled)
-
-        self.actionActive_threads.triggered.connect(self.active_threads_dlg.show)
-
-        self.actionRestore_chip_config.triggered.connect(self.load_flashdump_from_file)
-        self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
-
-        self.actionSave_chip_config.triggered.connect(self.save_flashdump_to_file)
-        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
-
-        self.actionReboot.triggered.connect(self.reboot)
-        self.serialchooser.connected.connect(self.actionReboot.setEnabled)
-
-        self.actionReset_Factory_Config.triggered.connect(self.reset_factory_btn)
-        self.serialchooser.connected.connect(self.actionReset_Factory_Config.setEnabled)
-
-        self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display)
+        #TODO VMA remove self.actionEffectsMonitor.triggered.connect(self.effects_monitor_dlg.display) plus besoin des deux l'enable se fait si on recoit la classe
         #self.serialchooser.connected.connect(self.actionEffectsMonitor.setEnabled)
 
-        self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
+        #TODO VMA remove self.actionEffects_forces.triggered.connect(self.effects_graph_dlg.display)
         #self.serialchooser.connected.connect(self.actionEffects_forces.setEnabled)
+
+        self.serialchooser.connected.connect(self.dashboard.set_connected)
+        
+        icon = PyQt6.QtGui.QPixmap("res/img/openffboard.png", "PNG")
+        self.icon.setPixmap(icon.scaled(60, 60, PyQt6.QtCore.Qt.AspectRatioMode.KeepAspectRatio))
 
         # Main Panel
         layout = PyQt6.QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.profile_ui)
-        self.groupBox_main.setLayout(layout)
+        self.groupBox_profilemanager.setLayout(layout)
+        
+        # Add static panels defined in PANEL_CONFIG (order matters)
+        for panel in self.PANEL_CONFIG:
+            if panel.get("static"):
+                if panel.get("name") == "settings":
+                    widget = self.settings_ui
+                elif panel.get("name") == "about":
+                    widget = self.about_ui
+                elif panel.get("name") == "dashboard":
+                    widget = self.dashboard
+                else:
+                    widget = PyQt6.QtWidgets.QWidget()
+                    self.log(f"Warning: Unknown static panel '{panel.get('name')}' in PANEL_CONFIG.")
+                pos = panel.get("position", "auto")
+                self.add_tab(widget, panel.get("name"), panel.get("title"), panel.get("icon"), position=pos)
+
+        self.select_tab("dashboard")
+        
+    def apply_stylesheet(self, qss_file):
+        """Charge et applique une feuille de style QSS."""
+        try:
+            with open(qss_file, "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Erreur: Le fichier QSS '{qss_file}' n'a pas été trouvé.")
+            self.setStyleSheet("") # Applique un style vide pour éviter des erreurs
         
         
     def autoconnect(self) :
@@ -216,49 +236,27 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         """load language file"""
         if langid != DEFAULTLANG:
             langfile = helper.res_path(f"{langid}.qm","translations")
-            if translator.load(langfile):
-                app.installTranslator(translator)
-
-    def change_lang_callback(self, enabled:bool):
-        """Change language of the UI, this will run too when initializing the UI"""
-        if(not enabled):  # Language not selected
-            return
-        
-        user_lang_id = self.language_action_group.checkedAction().data()
-
-        if user_lang_id == self.profile_ui.get_global_setting("language",DEFAULTLANG): # If user selected language same as current language
-            return 
-        
-        app.removeTranslator(translator)
-        self.profile_ui.set_global_setting("language",user_lang_id) # store language setting
-        self.languagechanged.emit() # loading in next start
+            if self.translator.load(langfile):
+                app = PyQt6.QtWidgets.QApplication.instance()
+                if app:
+                    app.installTranslator(self.translator)
 
     def restart_app(self):
         self.restart_app_flag = True
         self.reset_port()
+        # Ensure we clean up all callbacks before quitting
         base_ui.CommunicationHandler.comms.removeAllCallbacks()
+        # Clear all tab connections
+        for connection in self.tab_connections:
+            try:
+                PyQt6.QtCore.QObject.disconnect(connection)
+            except Exception:
+                pass
+        self.tab_connections.clear()
+        self.reset_tabs(force=True)
+
         app.quit()
  
-    def make_lang_selector(self):
-        '''Create the language selector menu, and connect the callback to change language.'''
-        languages = [DEFAULTLANG]
-        languages.extend([os.path.splitext(os.path.basename(f))[0] for f in glob.glob(helper.res_path("*.qm","translations"))])
-        
-        for langid in languages:
-            action = QAction(langid)
-            action.setData(langid)
-            action.setCheckable(True)
-            self.language_action_group.addAction(action)
-            self.lang_actions[langid] = action
-            self.menuLanguage.addAction(action)
-            action.toggled.connect(self.change_lang_callback)
-
-
-    def reboot(self):
-        """Send the reboot message to the board."""
-        self.send_command("sys", "reboot")
-        self.reconnect()
-
     def check_configurator_update(self):
         """Checks if there is an update for the configurator only"""
         donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
@@ -275,92 +273,23 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             notification = updater.UpdateNotification(release,self,msg,VERSION,donotnotifysetting="donotnotify_updates")
             notification.exec()
 
-    def open_dfu_dialog(self):
-        """Open the dfu dialog and start managing."""
-        msg = PyQt6.QtWidgets.QDialog()
-        msg.setWindowTitle(self.tr("Firmware"))
-        dfu = dfu_ui.DFUModeUI(parentWidget=msg, mainUI=self)
-        layout = PyQt6.QtWidgets.QVBoxLayout()
-        layout.addWidget(dfu)
-        msg.setLayout(layout)
-        msg.exec()
-        dfu.deleteLater()
-        
-
-    def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
-        """Move all modal dialog when moving main ui."""
-        super().moveEvent(event)
-        diff = event.pos() - event.oldPos()
-
-        list_dialog:List[PyQt6.QtWidgets.QDialog] = [self.errors_dlg, self.effects_monitor_dlg,
-            self.effects_graph_dlg, self.active_class_dlg]
-        for dialog in list_dialog:
-            if dialog and dialog.isVisible():
-                dialog.move(dialog.pos() + diff)
-                dialog.update()
-
-    def open_logs_errors_dialog(self):
-        """Display the log file on the right if it fill in the screen."""
-        # Move the dialog to the widget that called it
-        self.errors_dlg.show()
-
-        point = self.window().frameGeometry().topRight()
-        height = self.size().height()
-        width = self.errors_dlg.size().width()
-
-        if (point.x() + width) < self.screen().size().width() :
-            self.errors_dlg.move(point)
-            self.errors_dlg.resize(width,height)
-
-
-    def open_about(self):
-        """Open the about dialog box."""
-        AboutDialog(self).exec()
-
-    def open_updater(self):
-        """Opens updater window"""
-        updater.UpdateBrowser(self,self.profile_ui).exec()
-
+    def changeEvent(self, event: PyQt6.QtCore.QEvent):
+        """Minimize to systray when window is minimized."""
+        if event.type() == PyQt6.QtCore.QEvent.Type.WindowStateChange:
+            if self.windowState() & PyQt6.QtCore.Qt.WindowState.WindowMinimized:
+                self.hide()
+                event.ignore()
+                return
+        super().changeEvent(event)
     def toggle_debug(self,enabled):
         self.send_value("sys","debug",1 if enabled else 0)
         # Reload mainclasses
-        self.serialchooser.get_main_classes() # TODO better move somewhere else
-
-
-    def save_flashdump_to_file(self):
-        """Send a async message to get the flashdump from board."""
-        self.get_value_async("sys", "flashdump", config.saveDump)
-
-    def load_flashdump_from_file(self):
-        """Load dumpfile and send config to board."""
-        dump = config.loadDump()
-        if not dump:
-            return
-
-        if self.connected:
-            for sector in dump["flash"]:
-                self.send_value("sys", "flashraw", sector["val"], sector["addr"], 0)
-            # Message
-            msg = PyQt6.QtWidgets.QMessageBox(
-                PyQt6.QtWidgets.QMessageBox.Icon.Information,
-                self.tr("Restore flash dump"),
-                self.tr("Uploaded flash dump.\nPlease reboot."),
-            )
-        else:
-            # Message
-            msg = PyQt6.QtWidgets.QMessageBox(
-                PyQt6.QtWidgets.QMessageBox.Icon.Warning,
-                self.tr("Can't restore flash dump"),
-                self.tr("Please connect board first."),
-            )
-
-
-        msg.exec()
+        self.settings_ui.get_main_classes()
 
     def timeout_check_cb(self, port_checked):
         """Close the serial connection if the port is not open after a timeout."""
         self.process_events_timer.stop()
-        if port_checked != self.serialchooser.main_id:
+        if port_checked != self.settings_ui.main_id:
             self.reset_port()
             self.log("Communication error. Please reconnect")
         else:
@@ -382,45 +311,167 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 self.get_value_async("sys", "temp", self.wrapper_status_bar.update_temp)
 
     def tab_changed(self, id_tab):
-        """Add an handler on tab changed : do nothing for the moment."""
+        """Add an handler on tab changed : do nothing for e moment."""
 
-    def add_tab(self, widget, name):
+    def add_tab(self, widget, class_name:str, tab_text:str=None, icon_path:str=None, position:str="auto"):
         """Add a new tab in the tabWidget with a specific name."""
-        return self.tabWidget_main.addTab(widget, name)
+        
+        if class_name in self.TAB_MAPPING:
+            print(f"Attention: L'onglet avec l'ID '{class_name}' existe déjà.")
+            return
+        
+        side_menu_frame = self.centralwidget.findChild(PyQt6.QtWidgets.QFrame, "sideMenuFrame")
+        nav_button = PyQt6.QtWidgets.QPushButton(class_name, self)
+        if tab_text:
+            nav_button.setText(tab_text)
+        else:
+            nav_button.setText(class_name)
+        nav_button.clicked.connect(functools.partial(self.select_tab, class_name))
+        # Mark navigation group on the button for ordering logic
+        nav_group = position if position in ("top", "bottom") else "middle"
+        nav_button.setProperty("nav_group", nav_group)
+            
+        # 2. Ajout du bouton au layout du menu latéral
+        layout = side_menu_frame.layout()
+        if layout is None:
+            # Ensure a layout exists
+            layout = PyQt6.QtWidgets.QVBoxLayout()
+            side_menu_frame.setLayout(layout)
 
-    def del_tab(self, widget : PyQt6.QtWidgets.QWidget):
+        # Find spacer index if present
+        spacer_index = None
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item and item.spacerItem():
+                spacer_index = i
+                break
+        if spacer_index is None:
+            spacer_index = layout.count()
+
+        # Helper to find first/last index of buttons with a given nav_group
+        first_index_of_group = lambda grp: next((i for i in range(layout.count()) if (layout.itemAt(i).widget() is not None and isinstance(layout.itemAt(i).widget(), PyQt6.QtWidgets.QPushButton) and layout.itemAt(i).widget().property("nav_group") == grp)), None)
+        last_index_of_group = lambda grp: next((i for i in reversed(range(layout.count())) if (layout.itemAt(i).widget() is not None and isinstance(layout.itemAt(i).widget(), PyQt6.QtWidgets.QPushButton) and layout.itemAt(i).widget().property("nav_group") == grp)), None)
+
+        if nav_group == "top":
+            layout.insertWidget(0, nav_button)
+        elif nav_group == "middle":
+            # Insert before first bottom if exists, else before spacer
+            first_bottom = first_index_of_group("bottom")
+            insert_at = first_bottom if first_bottom is not None else spacer_index
+            layout.insertWidget(insert_at, nav_button)
+        else:  # bottom
+            # Insert after last bottom if exists, else before spacer
+            last_bottom = last_index_of_group("bottom")
+            if last_bottom is not None:
+                layout.insertWidget(last_bottom + 1, nav_button)
+            else:
+                layout.insertWidget(spacer_index, nav_button)
+        nav_button.setIcon(PyQt6.QtGui.QIcon(icon_path))
+        nav_button.setIconSize(PyQt6.QtCore.QSize(24, 24))
+        
+        self.content_stack.addWidget(widget)
+        page_index = self.content_stack.indexOf(widget)
+        
+        # Determine if this panel is defined as static in PANEL_CONFIG
+        is_static = False
+        try:
+            for panel in self.PANEL_CONFIG:
+                if panel.get("name") == class_name:
+                    is_static = bool(panel.get("static", False))
+                    break
+        except Exception:
+            is_static = False
+
+        self.TAB_MAPPING[class_name] = {
+            "button": nav_button,
+            "page": widget,
+            "index": page_index,
+            "from_board": (not is_static)
+        }
+
+    def del_tab(self, class_name):
         """Remove a tab in the widget and unregister the serial callback."""
-        self.tabWidget_main.removeTab(self.tabWidget_main.indexOf(widget))
-        base_ui.CommunicationHandler.remove_callbacks(widget)
-        widget.deleteLater()
-        del widget
+        # Remove button from layout and delete it to avoid stale widgets
+        try:
+            btn = self.TAB_MAPPING[class_name]["button"]
+            if btn is not None:
+                layout = self.sideMenuFrame.layout()
+                if layout is not None:
+                    layout.removeWidget(btn)
+                # Detach from parent and schedule deletion
+                try:
+                    btn.setParent(None)
+                except Exception:
+                    pass
+                try:
+                    btn.deleteLater()
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
-    def select_tab(self, idx):
+        # Remove page and callbacks
+        try:
+            page = self.TAB_MAPPING[class_name]["page"]
+            self.content_stack.removeWidget(page)
+            base_ui.CommunicationHandler.remove_callbacks(page)
+            page.deleteLater()
+        except Exception:
+            pass
+
+        # Finally remove from mapping
+        try:
+            del self.TAB_MAPPING[class_name]
+        except Exception:
+            pass
+        
+    def select_tab(self, class_name):
         """Select a specific tab from the idx parameter."""
-        self.tabWidget_main.setCurrentIndex(idx)
+        if not self.has_tab(class_name):
+            print(f"Erreur: L'onglet avec l'ID '{class_name}' n'existe pas.")
+            return
 
-    def has_tab(self, name) -> bool:
+        # Désactive le style "active" de l'ancien onglet
+        for existing_tab_id, data in self.TAB_MAPPING.items():
+            if data["button"]:
+                data["button"].setProperty("active", False)
+                data["button"].setStyle(data["button"].style()) # Rafraîchit le style
+
+        # Active le style "active" du nouvel onglet
+        selected_tab_data = self.TAB_MAPPING[class_name]
+        if selected_tab_data["button"]:
+            selected_tab_data["button"].setProperty("active", True)
+            selected_tab_data["button"].setStyle(selected_tab_data["button"].style()) # Rafraîchit le style
+
+        # Change la page dans le QStackedWidget
+        self.content_stack.setCurrentWidget(selected_tab_data["page"])
+
+    def has_tab(self, class_name) -> bool:
         """Check if the tab "name" exist in the tab list."""
-        names = [
-            self.tabWidget_main.tabText(i) for i in range(self.tabWidget_main.count())
-        ]
-        return name in names
+        return class_name in self.TAB_MAPPING
 
-    def reset_tabs(self):
+    def reset_tabs(self, force=False):
         """Remove all the tab and unregister the callBack."""
         self.active_classes = {}
         self.profile_ui.set_save_btn(False)
-        for i in range(self.tabWidget_main.count() - 1, 0, -1):
-            self.del_tab(self.tabWidget_main.widget(i))
+        
+        # Remove tabs from board, keep settings/support/serial
+        tab_to_delete = []
+        for item in self.TAB_MAPPING:
+            if self.TAB_MAPPING[item]["from_board"] or force:
+                tab_to_delete.append(item)
+                
+        for tab_id in tab_to_delete:
+            self.del_tab(tab_id)
+                
         self.remove_callbacks()
         self.tabsinitialized.emit(False)
 
-        self.effects_monitor_dlg.setEnabled(False)
-        self.effects_graph_dlg.setEnabled(False)
-        self.effects_graph_dlg.set_total_output_display(False)
-        self.actionActive_threads.setEnabled(False)
-        self.actionEffectsMonitor.setEnabled(False)
-        self.actionEffects_forces.setEnabled(False)
+        #TODO VMA remove self.effects_monitor_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.setEnabled(False)
+        #TODO VMA remove self.effects_graph_dlg.set_total_output_display(False)
+        #TODO VMA remove self.actionEffectsMonitor.setEnabled(False)
+        #TODO VMA remove self.actionEffects_forces.setEnabled(False)
         self.axes = 0
         self.maxaxischanged.emit(self.axes)
 
@@ -457,7 +508,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             #print(new_active_classes)
 
             for classe, name in delete_classes:
-                self.del_tab(classe)
+                self.del_tab(name)
                 del self.active_classes[name]
             for name, classe_active in new_active_classes.items():
                 if name in self.active_classes:
@@ -465,11 +516,19 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 classname = classe_active["name"]
                 if classe_active["id"] == 1 or classe_active["id"] == 2 or classe_active["id"] == 3:
                     self.main_class_ui = ffb_ui.FfbUI(main=self, title=classname)
+                    name_main = classname
+                    if classe_active["id"] == 1 :
+                        name_main = "FFB Wheel"
+                    elif classe_active["id"] == 2 :
+                        name_main = "FFB Joystick"
+                    self.add_tab(self.main_class_ui, classname, name_main, icon_path=helper.res_path("ffb.png","res/img"))
+                    # self.select_tab(classname)
+                    
                     self.active_classes[name] = self.main_class_ui
                     self.profile_ui.set_save_btn(True)
                     self.tab_connections.append(self.main_class_ui.ffb_rate_event.connect(self.wrapper_status_bar.update_ffb_rate))
                     # Start ffb timer
-                    
+      	       
                     self.tab_connections.append(self.serialchooser.hidden.connect(self.main_class_ui.startTimer))
                     self.tab_connections.append(self.serialchooser.shown.connect(self.main_class_ui.stopTimer))
                     self.tab_connections.append(self.serialchooser.shown.connect(lambda : self.wrapper_status_bar.update_ffb_block_display(False)))
@@ -478,70 +537,70 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                     
                 elif classe_active["id"] == 0xA01:
                     classe = axis_ui.AxisUI(main=self, unique=classe_active["unique"])
-                    name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    name_axis = classe_active["name"] + " " + chr(classe.axis + ord("X"))
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("axis.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                     self.axes = max(self.axes,classe.axis)
                     self.maxaxischanged.emit(self.axes)
-                    self.effects_graph_dlg.set_total_output_display(True)
+                    #TODO VMA A analyser self.effects_graph_dlg.set_total_output_display(True)
                 elif classe_active["id"] == 0x81 or classe_active["id"] == 0x82 or \
                     classe_active["id"] == 0x83:
                     classe = tmc4671_ui.TMC4671Ui(main=self, unique=classe_active["unique"])
-                    name_axis = classe_active["name"] + ":" + chr(classe.axis + ord("0"))
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    name_axis = classe_active["name"] + " " + chr(classe.axis + ord("X"))
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x84:
                     classe = pwmdriver_ui.PwmDriverUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, name, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xD:
                     classe = midi_ui.MidiUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                 elif classe_active["id"] == 0xB:
                     classe = tmcdebug_ui.TMCDebugUI(main=self)
                     self.active_classes[name] = classe
-                    self.add_tab(classe, classe_active["name"])
+                    self.add_tab(classe, name, classe_active["name"], icon_path=helper.res_path("motordriver.png","res/img"))
                 elif classe_active["id"] == 0x85 or classe_active["id"] == 0x86:
                     classe = odrive_ui.OdriveUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x87 or classe_active["id"] == 0x88:
                     classe = vesc_ui.VescUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x89 or classe_active["id"] == 0x8A:
                     classe = simplemotion_ui.SimplemotionUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0xA02: # Effects manager
-                    self.effects_monitor_dlg.setEnabled(True)
-                    self.effects_graph_dlg.setEnabled(True)
-                    self.actionEffectsMonitor.setEnabled(True)
-                    self.actionEffects_forces.setEnabled(True)
+                    self.dashboard.setEffectAvailable(True)
+                    #TODO VMA enabled the effects self.effects_monitor_dlg.setEnabled(True)
+                    #TODO VMA enabled self.effects_graph_dlg.setEnabled(True)
+                    #TODO VMA remove self.actionEffectsMonitor.setEnabled(True)
+                    #TODO VMA remove self.actionEffects_forces.setEnabled(True)
+                    pass
                 elif classe_active["id"] == 0x8B or classe_active["id"] == 0x8C:
                     classe = rmd_ui.RmdUI(main=self, unique=classe_active["unique"])
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis, icon_path=helper.res_path("motordriver.png","res/img"))
                     self.profile_ui.set_save_btn(True)
                 elif classe_active["id"] == 0x5:
                     classe = canremote_ui.CanRemoteUi(main=self)
                     name_axis = classe_active["name"]
                     self.active_classes[name] = classe
-                    self.add_tab(classe, name_axis)
+                    self.add_tab(classe, name, name_axis)
                     self.profile_ui.set_save_btn(True)
-
-
 
             self.tabsinitialized.emit(True)
 
@@ -549,11 +608,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.get_value_async(
             "sys", "heapfree", self.wrapper_status_bar.update_ram_used, delete=True
         )
-        def cmdinfo18_cb(x):
-            self.actionActive_threads.setEnabled(x==1)
-            self.active_threads_dlg.set_taskstats_enabled(x==1) 
-        self.get_value_async("sys","cmdinfo",adr=18,conversion=int,callback=cmdinfo18_cb) # Check taskstats
-        self.get_value_async("sys","cmdinfo",adr=25,conversion=int,callback=lambda x:self.active_threads_dlg.set_tasklist_enabled(x==1) ) # Check taskstats
+        
 
     def reconnect(self):
         """Reconnect the board : re-open the serial link, and check it."""
@@ -579,9 +634,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.serial.flush() # Immediately send
             PyQt6.QtCore.QTimer.singleShot(250, close) # Close port after 250ms because no signal is currently working. Should ensure data has been sent.
 
-        else:
-            close() # Close port
-        
     def version_check(self, ver):
         """Check if the UI is compatible with this board firmware."""
         self.fw_version_str = ver.replace("\n", "")
@@ -597,12 +649,17 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         fw_outdated = False
         gui_outdated = False
 
+        # Simplified version comparison logic
         fw_outdated = (
-            min_fw_split[0] > fw_ver_split[0] \
-            or min_fw_split[1] > fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]  \
-            or min_fw_split[2] > fw_ver_split[2] and min_fw_split[1] ==  fw_ver_split[1] and  min_fw_split[0] == fw_ver_split[0]
+            min_fw_split[0] > fw_ver_split[0] or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] > fw_ver_split[1]) or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] == fw_ver_split[1] and min_fw_split[2] > fw_ver_split[2])
         )
-        gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]
+        gui_outdated = (
+            min_fw_split[0] < fw_ver_split[0] or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] < fw_ver_split[1]) or
+            (min_fw_split[0] == fw_ver_split[0] and min_fw_split[1] == fw_ver_split[1] and min_fw_split[2] < fw_ver_split[2])
+        )
 
         if gui_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
@@ -614,6 +671,9 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "firmware and GUI are up to date if you encounter errors.")
             )
             msg.exec()
+            if hasattr(self, 'serialchooser') and self.serialchooser:
+                self.serialchooser.update_port_name_outdated()
+
         elif fw_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
@@ -626,7 +686,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "and GUI are up to date if you encounter errors.")
             )
             msg.exec()
-        # Check github
+            if hasattr(self, 'serialchooser') and self.serialchooser:
+                self.serialchooser.update_port_name_outdated()
+                
+        # Check github for firmware updates
         mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
         if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
@@ -636,58 +699,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 msg = self.tr( "New firmware available")
                 notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
                 notification.exec()
-   
-    def signature_check(self,signature,uid,suffix=""):
-        """Checks if the chip signature matches its UID"""
-        key = ECSignature.key_from_bytes_public(PUBKEY)
-        sigres = ECSignature.check(uid,signature,key,bytes(suffix,"utf-8"))
-        self.signature_valid = sigres
-        if(sigres):
-            self.wrapper_status_bar.set_board_text(self.hwtype + " ✅")
-        else:
-            self.wrapper_status_bar.set_board_text(self.hwtype + " ❓")
-        return sigres
-    
-    def update_signature(self,sig):
-        try:
-            sigbytes = bytes.fromhex(sig)
-            ints = ECSignature.signature_to_ints(sigbytes)
-            # Write into chip
-            for a,v in enumerate(ints):
-                self.send_value("sys","signature",v,a)
-        except Exception as e:
-            return
-        self.hwsignature = sigbytes
-        self.signature_check(self.hwsignature,self.hwuid)
+                
+        # Check for updates and show button in serial UI
+        if hasattr(self, 'serialchooser') and self.serialchooser:
+            # Schedule the check for updates after a short delay to ensure UI is ready
+            PyQt6.QtCore.QTimer.singleShot(100, self.serialchooser.check_for_updates)
 
-    
-    def connected_callback_late(self,connected):
-        """Called after the tabs have been initialized to speed up initial connection"""
-        if not connected:
-            return
-        def sig_cb(signature):
-            if(signature == "0" or len(signature) % 2 != 0):
-                self.hwsignature = bytes(0)
-            else:
-                self.hwsignature = bytes.fromhex(signature)
-            if(self.hwsignature != None and self.hwuid != None):
-                self.signature_check(self.hwsignature,self.hwuid)
-
-        def uid_cb(uid):
-            self.hwuid = ECSignature.processuid(uid)
-            if(self.hwsignature != None and self.hwuid != None):
-                self.signature_check(self.hwsignature,self.hwuid)
-
-        def hwtype_cb(hwtype):
-            self.hwtype = hwtype
-            self.wrapper_status_bar.set_board_text(hwtype)
-
-        self.get_value_async("sys", "swver", self.version_check)
-        self.get_value_async("sys", "hwtype", hwtype_cb)
-        self.get_value_async("sys", "debug", self.actionDebug_mode.setChecked,0,int)
-        self.get_value_async("sys", "uid", uid_cb,typechar="?")
-        self.get_value_async("sys", "signature", sig_cb,typechar="!")
-    
     def serial_connected(self, connected):
         """Check the release when a board is connected."""
         
@@ -703,7 +720,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         if connected:
             self.get_value_async("main", "id", id_cb, 0)
-            self.errors_dlg.registerCallbacks()
+            self.get_value_async("sys", "swver", self.version_check)
+            self.get_value_async("sys", "hwtype", self.wrapper_status_bar.set_board_text)
             
             if (self.serial_timer is None) :
                 self.serial_timer = PyQt6.QtCore.QTimer(singleShot=True, timeout=timer_cb)
@@ -714,26 +732,6 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.log("Disconnected")
             self.reset_tabs()
             self.comms.removeAllCallbacks() # Ensure everything is cleared
-
-    def reset_factory(self, btn):
-        """Send a async message to reset factory settings."""
-        cmd = btn.text()
-        if cmd == "OK":
-            self.send_value("sys", "format", 1)
-            self.send_command("sys", "reboot")
-            self.reset_port()
-
-    def reset_factory_btn(self):
-        """Prompt a confirmation to the user when he click on reset factory."""
-        msg = PyQt6.QtWidgets.QMessageBox()
-        msg.setIcon(PyQt6.QtWidgets.QMessageBox.Icon.Warning)
-        msg.setText(self.tr("Format flash and reset?"))
-        msg.setStandardButtons(
-            PyQt6.QtWidgets.QMessageBox.StandardButton.Ok
-            | PyQt6.QtWidgets.QMessageBox.StandardButton.Cancel
-        )
-        msg.buttonClicked.connect(self.reset_factory) # pylint: disable=no-value-for-parameter
-        msg.exec()
 
     def change_profile(self, profilename: str):
         """Change the current profile by this one selected."""
@@ -758,7 +756,7 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
         self._submenu_profiles: PyQt6.QtWidgets.QMenu = None
 
         # Adding an icon
-        icon = PyQt6.QtGui.QIcon("app.png")
+        icon = PyQt6.QtGui.QIcon(helper.res_path('app.ico'))
 
         # Adding item on the menu bar
         tray = PyQt6.QtWidgets.QSystemTrayIcon(main)
@@ -921,157 +919,45 @@ class WrapperStatusBar(base_ui.WidgetUI):
         """Display the last log message in the status bar."""
         self.label_log.setText(message)
 
-class AboutDialog(PyQt6.QtWidgets.QDialog):
-    """Display the about dialog box."""
-
-    def __init__(self, parent : MainUi = None ):
-        """Display the about box with the release number updated."""
-        PyQt6.QtWidgets.QDialog.__init__(self, parent)
-        PyQt6.uic.loadUi(helper.res_path("about.ui"), self)
-        self.parent = parent
-        self.init_ui()
-
-        self.sig_dialog.signature_result.connect(parent.update_signature)
-        self.sig_dialog.signature_result.connect(lambda : self.init_ui())
-
-    def init_ui(self):
-        parent = self.parent
-        verstr = "Version: " + VERSION
-        self.hwuid = parent.hwuid
-        self.sig_dialog = SignatureInputDialog(self,parent.hwuid)
-        if parent.fw_version_str:
-            verstr += " / Firmware: " + parent.fw_version_str
-
-        self.version.setText(verstr)
-        self.pushButton_signature.clicked.connect(self.signature_dialog)
-
-        if parent.hwuid:
-            self.label_hwid.setText("HW UID: "+parent.hwuid.hex())
-        self.frame_signature.setVisible(parent.hwuid != None)
-        self.pushButton_signature.setEnabled(False)
-
-        signaturestr = self.tr("Signature: ")
-        if not parent.hwsignature or parent.hwsignature == bytes([0xff])*64:
-            signaturestr += self.tr("Missing")
-            self.pushButton_signature.setEnabled(True)
-        else:
-            signaturestr += self.tr("Valid ✅" if parent.signature_valid else "Invalid ❌")
-        self.label_signature.setText(signaturestr)
-
-    def signature_dialog(self):
-        self.sig_dialog.open()
-
-class SignatureInputDialog(PyQt6.QtWidgets.QDialog):
-    signature_result = PyQt6.QtCore.pyqtSignal(str)
-    def __init__(self, parent=None,hwid = None):
-        super().__init__(parent)
-        self.parent = parent
-        self.uidstring = hwid.hex() if hwid else ""
-        self.setWindowTitle("Enter Signature")
-        self.setModal(True)
-        self.setup_ui()
-
-    def check_signature(self,text):
-        result = False
-        try:
-            sig = bytes.fromhex(text)
-            key = ECSignature.key_from_bytes_public(PUBKEY)
-            result = ECSignature.check(self.parent.hwuid,sig,key)
-        except Exception as e:
-            result = False
-        self.submit_button.setEnabled(result)
-        return result
-    
-    def submit(self):
-        if self.check_signature(self.hex_input.text()):
-            self.signature_result.emit(self.hex_input.text())
-            self.accept()
-        else:
-            self.reject()
-        
-    def setup_ui(self):
-        layout = PyQt6.QtWidgets.QVBoxLayout()
-        # Header
-        uidlayout = PyQt6.QtWidgets.QHBoxLayout()
-        layout.addWidget(PyQt6.QtWidgets.QLabel(self.tr("Enter signature and click \"submit\" to write to chip.\nTHIS CAN NOT BE UNDONE")))
-        uidlabel = PyQt6.QtWidgets.QLabel("UID: "+self.uidstring)
-        uidlabel.setTextInteractionFlags(PyQt6.QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
-        uidlayout.addWidget(uidlabel)
-        uidcopybutton = PyQt6.QtWidgets.QPushButton("Copy to clipboard")
-        uidlayout.addWidget(uidcopybutton)
-        layout.addLayout(uidlayout)
-        uidcopybutton.clicked.connect(lambda: app.clipboard().setText(self.uidstring))
-        # Text input
-        self.hex_input = PyQt6.QtWidgets.QLineEdit("")
-        self.hex_input.setPlaceholderText("AABB112233...")
-        layout.addWidget(self.hex_input)
-        # Buttons
-        button_layout = PyQt6.QtWidgets.QHBoxLayout()
-        self.submit_button = PyQt6.QtWidgets.QPushButton("Submit")
-        self.hex_input.textChanged.connect(self.check_signature)
-        self.submit_button.clicked.connect(self.submit)
-        self.submit_button.setEnabled(False)
-        cancel_button = PyQt6.QtWidgets.QPushButton("Cancel")
-        cancel_button.clicked.connect(self.reject)
-        button_layout.addWidget(self.submit_button)
-        button_layout.addWidget(cancel_button)
-        layout.addLayout(button_layout)
-        self.setLayout(layout)
-
-def windows_theme_is_light():
-    """Detect if the user is using Dark Mode in Windows.
-
-    Registry will return 0 if Windows is in Dark Mode and 1
-    if Windows is in Light Mode. This dictionary converts that
-    output into the text that the program is expecting.
-    0 = Dark, 1 = Light
-    In HKEY_CURRENT_USER, get the Personalisation Key.
-    """
-    try:
-        key = getKey( hkey, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize" )
-        # In the Personalisation Key, get the AppsUseLightTheme subkey. This returns a tuple.
-        # The first item in the tuple is the result we want
-        # (0 or 1 indicating Dark Mode or Light Mode); the other value
-        # is the type of subkey e.g. DWORD, QWORD, String, etc.
-        subkey = getSubkeyValue(key, "AppsUseLightTheme")[0]
-    except FileNotFoundError:
-        # some headless Windows instances (e.g. GitHub Actions or Docker images)
-        # do not have this key
-        return None
-    return subkey
-
-
 def process_events():
     """Function to force processing background events. Do NOT call from any slots in the main thread without blocking as that may lead to recursion"""
     app.processEvents(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents,50)
 
-
-
-    
+def qt_message_handler(mode, context, message):
+    if "Unexpected nullptr parameter" in message:
+        logging.getLogger("main").warning("Silencing benign 'Unexpected nullptr parameter' warning caused by PyQt6 QChart destruction bug.")
+        return
+    sys.stderr.write(message + "\n")
 
 if __name__ == "__main__":
+    PyQt6.QtCore.qInstallMessageHandler(qt_message_handler)
     logging.config.fileConfig(helper.res_path('logger.conf'))
+    if sys.platform == "win32" or "Windows" in sys.platform:
+        import ctypes
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("openffboard.configurator.app")
+        except Exception:
+            pass
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
+    
+    # Detect system theme and store on application instance
+    is_light = helper.windows_theme_is_light()
+    is_light_bool = (is_light is True)
+    app.setProperty("is_light_theme", is_light_bool)
+    
+    if is_light_bool:
+        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
+    else:
+        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
+
     translator = PyQt6.QtCore.QTranslator(app) # Translator must be created before UI loaded
     while(restart):
         restart = False
-        window = MainUi()
-        if (sys.platform == "win32" or "Windows" in sys.platform):
-            # only on windows, for macOS and linux use system palette.
-            # windows server is not called win32
-            # pylint: disable=import-error
-            from winreg import (
-                HKEY_CURRENT_USER as hkey,
-                QueryValueEx as getSubkeyValue,
-                OpenKey as getKey,
-            )
-            # Check if is not using windows 11 style(windows 11 style is dark mode compatible)
-            if windows_theme_is_light() == 0 and app.style().objectName() != "windows11":
-                app.setStyle("Fusion")
-                app.setPalette(dark_palette.PALETTE_DARK)
-                window.menubar.setStyleSheet("QMenu::item {color: white; }") # Menu item text ignores palette setting and stays black. Force to white.
+               
+        window = MainUi(translator = translator)
+        # Force dark theme on all platforms
 
         window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
         window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))

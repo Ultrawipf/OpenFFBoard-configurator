@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
 from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSpinBox
 from PyQt6 import uic
-from helper import res_path,classlistToIds,splitListReply,throttle
+from helper import res_path,classlistToIds,splitListReply,throttle,qtBlockAndCall
 from PyQt6.QtCore import QTimer,QEvent, pyqtSignal
 import main
 import buttonconf_ui
@@ -111,10 +111,14 @@ class FfbUI(WidgetUI,CommunicationHandler):
         
         self.register_callback("fx", "frictionPctSpeedToRampup", self.set_friction_pct_speed_rampup,0,int)
 
-        if(self.init_ui()):
-            tabId = self.main.add_tab(self,title)
-            self.main.select_tab(tabId)
-            self.timer.start(500) # timer always updates
+        # --- Smoothing Controls ---
+        self.radioButton_reconfilter_0.toggled.connect(lambda checked: self.send_recon_filter(0) if checked else None)
+        self.radioButton_reconfilter_1.toggled.connect(lambda checked: self.send_recon_filter(1) if checked else None)
+        self.radioButton_reconfilter_2.toggled.connect(lambda checked: self.send_recon_filter(2) if checked else None)
+        self.radioButton_reconfilter_3.toggled.connect(lambda checked: self.send_recon_filter(3) if checked else None)
+        self.register_callback("fx", "reconFilterMode", self.update_recon_filter_ui, 0, int)
+
+        self.init_ui()
 
         self.buttonbtns.buttonClicked.connect(self.buttonsChanged)
         self.axisbtns.buttonClicked.connect(self.axesChanged)
@@ -131,6 +135,7 @@ class FfbUI(WidgetUI,CommunicationHandler):
             self.send_command("main","lsain",0,'?') # get analog types
             self.send_command("main","aintypes",0,'?') # get active analog
 
+            self.send_commands("fx", ["reconFilterMode"])
 
             self.updateSliders()
             self.send_command("main","hidsendspd",0,'!') # get speed
@@ -141,12 +146,13 @@ class FfbUI(WidgetUI,CommunicationHandler):
         return True
 
     # Tab is currently shown
-    # def showEvent(self,event):
-    #     self.timer.start(500)
+    def showEvent(self,event):
+        self.init_ui()
+        self.startTimer()
 
     # # Tab is hidden
-    # def hideEvent(self,event):
-    #     self.timer.stop()
+    def hideEvent(self,event):
+        self.stopTimer()
 
     def startTimer(self):
         self.timer.start(500)
@@ -336,6 +342,28 @@ class FfbUI(WidgetUI,CommunicationHandler):
             btn.setEnabled(creatable or enabled)
 
         self.groupBox_analogaxes.setLayout(layout)
+
+    # Called when the reconstruction filter slider is moved
+    def send_recon_filter(self, value):
+        """Sends the selected reconstruction filter mode to the firmware."""
+        self.send_value("fx", "reconFilterMode", value)
+
+    # Callback to update the reconstruction filter UI from firmware data
+    def update_recon_filter_ui(self, value):
+        """Updates the reconstruction filter slider and label."""
+        button_radio = None 
+        if (value < 0 or value >= 4):
+            self.main.log(f"Warning: Received unknown reconstruction filter mode value: {value}")
+        elif value == 0:
+            button_radio = self.radioButton_reconfilter_0
+        elif value == 1:
+            button_radio = self.radioButton_reconfilter_1
+        elif value == 2:
+            button_radio = self.radioButton_reconfilter_2
+        elif value == 3:
+            button_radio = self.radioButton_reconfilter_3
+        qtBlockAndCall(button_radio, button_radio.setChecked, True)
+        button_radio.setChecked(True)
 
     @throttle(50)
     def cffilter_changed(self,v,send=True):

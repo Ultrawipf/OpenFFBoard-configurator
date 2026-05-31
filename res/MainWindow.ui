@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>644</width>
-    <height>489</height>
+    <width>778</width>
+    <height>468</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,228 +15,138 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QTabWidget" name="tabWidget_main">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>20</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>200</height>
-       </size>
-      </property>
-      <property name="currentIndex">
-       <number>-1</number>
-      </property>
-     </widget>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <property name="leftMargin">
+     <number>10</number>
+    </property>
+    <property name="topMargin">
+     <number>10</number>
+    </property>
+    <property name="rightMargin">
+     <number>10</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>20</number>
+    </property>
+    <item row="0" column="0" colspan="2">
+     <layout class="QHBoxLayout" name="top_layout_for_boardinfo" stretch="0,1,1">
+      <item>
+       <widget class="QLabel" name="icon">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Icon</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="serial_panel" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3"/>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_profilemanager">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Profiles Manager</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item>
-     <widget class="QGroupBox" name="groupBox_main">
+    <item row="1" column="0">
+     <widget class="QFrame" name="sideMenuFrame">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="title">
-       <string>Profiles Manager</string>
+      <property name="minimumSize">
+       <size>
+        <width>250</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LayoutDirection::LeftToRight</enum>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QStackedWidget" name="content_stack">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <property name="lineWidth">
+       <number>1</number>
       </property>
      </widget>
     </item>
-    <item>
-     <layout class="QGridLayout" name="gridLayout"/>
-    </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>644</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuHelp">
-    <property name="title">
-     <string>Help</string>
-    </property>
-    <widget class="QMenu" name="menuLanguage">
-     <property name="title">
-      <string>Language</string>
-     </property>
-     <addaction name="separator"/>
-    </widget>
-    <addaction name="actionErrors"/>
-    <addaction name="actionActive_features"/>
-    <addaction name="actionActive_threads"/>
-    <addaction name="actionDebug_mode"/>
-    <addaction name="actionUpdates"/>
-    <addaction name="menuLanguage"/>
-    <addaction name="actionAbout"/>
-   </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Hardware</string>
-    </property>
-    <addaction name="actionDFU_Uploader"/>
-    <addaction name="separator"/>
-    <addaction name="actionReset_Factory_Config"/>
-    <addaction name="actionSave_chip_config"/>
-    <addaction name="actionRestore_chip_config"/>
-    <addaction name="separator"/>
-    <addaction name="actionReboot"/>
-   </widget>
-   <widget class="QMenu" name="menuMonitoring">
-    <property name="title">
-     <string>Monitoring</string>
-    </property>
-    <addaction name="actionEffectsMonitor"/>
-    <addaction name="actionEffects_forces"/>
-   </widget>
-   <addaction name="menuSettings"/>
-   <addaction name="menuMonitoring"/>
-   <addaction name="menuHelp"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionAbout">
-   <property name="text">
-    <string>About</string>
-   </property>
-  </action>
   <action name="actionFFB_Wheel_TMC_wizard">
    <property name="text">
     <string>FFB Wheel TMC</string>
    </property>
   </action>
-  <action name="actionDFU_Uploader">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Firmware Update...</string>
-   </property>
-  </action>
-  <action name="actionSave_chip_config">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Save chip config</string>
-   </property>
-  </action>
-  <action name="actionRestore_chip_config">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Load chip config</string>
-   </property>
-  </action>
-  <action name="actionErrors">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Logs, Errors...</string>
-   </property>
-   <property name="iconText">
-    <string>Logs, Errors</string>
-   </property>
-   <property name="toolTip">
-    <string>Logs, Errors</string>
-   </property>
-  </action>
-  <action name="actionActive_features">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Active features</string>
-   </property>
-  </action>
   <action name="actionToggle_dark_mode">
    <property name="text">
     <string>toggle dark mode</string>
-   </property>
-  </action>
-  <action name="actionReboot">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Reboot</string>
-   </property>
-  </action>
-  <action name="actionReset_Factory_Config">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Reset factory config</string>
-   </property>
-  </action>
-  <action name="actionEffectsMonitor">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Effect stats</string>
-   </property>
-  </action>
-  <action name="actionEffects_forces">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Effect live forces</string>
-   </property>
-  </action>
-  <action name="actionAdvanced_tweaks">
-   <property name="text">
-    <string>Encoder tuning...</string>
-   </property>
-  </action>
-  <action name="actionUpdates">
-   <property name="text">
-    <string>Updates</string>
-   </property>
-  </action>
-  <action name="actionDebug_mode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Debug mode</string>
-   </property>
-  </action>
-  <action name="actionDefault">
-   <property name="text">
-    <string>Default</string>
-   </property>
-  </action>
-  <action name="actionActive_threads">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Active threads</string>
    </property>
   </action>
  </widget>

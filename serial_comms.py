@@ -220,7 +220,7 @@ class SerialComms(QObject):
 
                 if callbackObject["delete"]: # delete if flag is set
                     #print("Deleting",callbackObject)
-                    if (SerialComms.callbackDict[cls] is not None) \
+                    if (SerialComms.callbackDict.get(cls) is not None) \
                         and (callbackObject in SerialComms.callbackDict[cls]) :
                         SerialComms.callbackDict[cls].remove(callbackObject)
                     else :

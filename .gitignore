@@ -1,5 +1,6 @@
 __pycache__/*
 .vscode/*
 .qt_for_python/*
+.clinerules
 profiles.json*
 /.venv
