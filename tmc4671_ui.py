@@ -771,10 +771,12 @@ class TMC4671Ui(WidgetUI,CommunicationHandler):
 
     def coggingScaleChanged(self, val):
         qtBlockAndCall(self.doubleSpinBox_coggScale, self.doubleSpinBox_coggScale.setValue, val / 10000.0)
+        self.send_value("tmc", "coggingScale", val=val, instance=self.axis)
 
     def coggingSpinBoxChanged(self, val):
         slider_val = int(round(val * 10000.0))
         qtBlockAndCall(self.horizontalSlider_coggmag, self.horizontalSlider_coggmag.setValue, slider_val)
+        self.send_value("tmc", "coggingScale", val=slider_val, instance=self.axis)
 
     def coggingScaleCb(self, val):
         qtBlockAndCall(self.horizontalSlider_coggmag, self.horizontalSlider_coggmag.setValue, val)
