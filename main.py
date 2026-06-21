@@ -265,7 +265,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if donotnotify:
             return
 
-        release = updater.GithubRelease.get_latest_release(updater.GUIREPO)
+        try:
+            release = updater.GithubRelease.get_latest_release(updater.GUIREPO)
+        except Exception:
+            return  # No internet — silently skip update check
         if not release:
             return
         releaseversion,_ = updater.GithubRelease.get_version(release)
@@ -1076,7 +1079,8 @@ if __name__ == "__main__":
         window.setWindowTitle(PyQt6.QtCore.QCoreApplication.translate("MainUi", "Open FFBoard Configurator"))
         window.setWindowIcon(PyQt6.QtGui.QIcon(helper.res_path('app.ico')))
         window.show()
-        window.check_configurator_update() # Check for updates after window is shown
+        # Defer update check so UI loads instantly even without internet
+        PyQt6.QtCore.QTimer.singleShot(2000, window.check_configurator_update)
         window.autoconnect()
 
         exit_code = app.exec()
