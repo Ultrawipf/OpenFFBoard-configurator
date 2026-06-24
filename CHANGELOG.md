@@ -1,3 +1,7 @@
+### v1.17.1
+- Update check fails more gracefully at startup with no network
+
+
 ### v1.17.0
 - Fixes analog axis progressbars cutting off text and ADS111x progressbars not populating when set to 4
 - Fixed task list sorting and command ID
