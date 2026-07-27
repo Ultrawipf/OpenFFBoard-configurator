@@ -112,6 +112,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.timer = PyQt6.QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_timer) # pylint: disable=no-value-for-parameter
         self.tabWidget_main.currentChanged.connect(self.tab_changed)
+        # Force the main window to resize to the content of the newly selected tab
+        self.tabWidget_main.currentChanged.connect(lambda: PyQt6.QtCore.QTimer.singleShot(0, self.adjustSize))
         self.errors_dlg = errors.ErrorsDialog(self)
         self.effects_monitor_dlg = effects_monitor.EffectsMonitorDialog(self)
         self.maxaxischanged.connect(self.effects_monitor_dlg.set_max_axes)
@@ -289,6 +291,15 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         msg.exec()
         dfu.deleteLater()
         
+
+    def changeEvent(self, event: PyQt6.QtCore.QEvent):
+        """Minimize to systray when window is minimized."""
+        if event.type() == PyQt6.QtCore.QEvent.Type.WindowStateChange:
+            if self.windowState() & PyQt6.QtCore.Qt.WindowState.WindowMinimized:
+                self.hide()
+                event.ignore()
+                return
+        super().changeEvent(event)
 
     def moveEvent(self, event: PyQt6.QtGui.QMoveEvent): #pylint: disable=invalid-name
         """Move all modal dialog when moving main ui."""
@@ -761,7 +772,7 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
         self._submenu_profiles: PyQt6.QtWidgets.QMenu = None
 
         # Adding an icon
-        icon = PyQt6.QtGui.QIcon("app.png")
+        icon = PyQt6.QtGui.QIcon(helper.res_path('app.ico'))
 
         # Adding item on the menu bar
         tray = PyQt6.QtWidgets.QSystemTrayIcon(main)
@@ -1054,6 +1065,12 @@ def process_events():
 
 if __name__ == "__main__":
     logging.config.fileConfig(helper.res_path('logger.conf'))
+    if sys.platform == "win32" or "Windows" in sys.platform:
+        import ctypes
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("openffboard.configurator.app")
+        except Exception:
+            pass
     restart = True
     exit_code = -1
     app = PyQt6.QtWidgets.QApplication(sys.argv)
