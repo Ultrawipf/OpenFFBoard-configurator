@@ -1,4 +1,6 @@
 ### v1.17.1
+- Fixed app staying alive in the background after closing the window on linux
+- Serial port and timers are now released on every exit path
 - Update check fails more gracefully at startup with no network
 
 
