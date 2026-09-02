@@ -133,7 +133,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
 
         self.setup()
         self.languagechanged.connect(self.restart_app)
-        
+
+        # Release the port and stop all timers no matter how the app is closed
+        # (window close, systray quit or language restart)
+        self._shutdown_done = False
+        app.aboutToQuit.connect(self.shutdown)
+
         # start the auto disconnect timer (call the board)
         self.timer.start(5000)
 
@@ -234,9 +239,8 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.languagechanged.emit() # loading in next start
 
     def restart_app(self):
+        """Quit and let the main loop create a new instance. Cleanup is done in shutdown()."""
         self.restart_app_flag = True
-        self.reset_port()
-        base_ui.CommunicationHandler.comms.removeAllCallbacks()
         app.quit()
  
     def make_lang_selector(self):
@@ -433,6 +437,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 PyQt6.QtCore.QObject.disconnect(connection)
             except Exception as e:
                 print("Error disconnecting", e)
+        self.tab_connections.clear() # Already disconnected. Do not try again on the next reset
 
     def update_tabs(self):
         """Get the active classes from the board, and add tab when not exist."""
@@ -563,8 +568,12 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.reset_port()
         PyQt6.QtCore.QTimer.singleShot(1500, self.serialchooser.serial_connect_button)
 
-    def reset_port(self):
-        """Close serial port and remove tabs."""
+    def reset_port(self, immediate=False):
+        """Close serial port and remove tabs.
+
+        Set immediate to close the port without waiting for pending data to be sent.
+        Required when the event loop is about to stop as the delayed close would never run.
+        """
         self.log("Reset port")
         self.profile_ui.setEnabled(False)
         #self.serial.waitForBytesWritten(250) # Broken on pyqt6.3
@@ -574,17 +583,24 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
             self.serial.close()
             self.comms_reset()
             self.timeouting = False
+            self.process_events_timer.stop() # Never left running if the reply does not arrive
+            if self.serial_timer:
+                self.serial_timer.stop()
             self.serialchooser.update()
             self.reset_tabs()
 
         if self.serial.bytesToWrite() > 0:
             # Not everything has been sent
             self.serial.flush() # Immediately send
-            PyQt6.QtCore.QTimer.singleShot(250, close) # Close port after 250ms because no signal is currently working. Should ensure data has been sent.
+
+            if immediate:
+                close()
+            else:
+                PyQt6.QtCore.QTimer.singleShot(250, close) # Close port after 250ms because no signal is currently working. Should ensure data has been sent.
 
         else:
             close() # Close port
-        
+
     def version_check(self, ver):
         """Check if the UI is compatible with this board firmware."""
         self.fw_version_str = ver.replace("\n", "")
@@ -748,6 +764,36 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.show()
         self.showNormal()
 
+    def closeEvent(self, event: PyQt6.QtGui.QCloseEvent): #pylint: disable=invalid-name
+        """Closing the main window exits the application.
+
+        A visible QSystemTrayIcon keeps the application alive when the last window is
+        closed, so Qt's quitOnLastWindowClosed never fires and the process keeps running
+        invisibly with the update timer active. This happens on Linux depending on the
+        desktop environment and its systray implementation.
+        Quitting explicitly does not depend on that heuristic.
+        """
+        super().closeEvent(event)
+        if event.isAccepted():
+            app.quit()
+
+    def shutdown(self):
+        """Stop all periodic activity and release the serial port before the app exits.
+
+        Connected to aboutToQuit so it covers every exit path: window close, the systray
+        "Quit" action and the restart after a language change.
+        """
+        if self._shutdown_done: # A restarted instance leaves the old handler connected
+            return
+        self._shutdown_done = True
+
+        self.timer.stop()
+        self.reset_port(immediate=True) # Closes the port and stops the serial timers
+        self.comms.removeAllCallbacks()
+
+        if self.systray:
+            self.systray.hide()
+
 
 class SystrayWrapper(PyQt6.QtCore.QObject):
     """Manage the actions and the content of the systray menu."""
@@ -765,6 +811,7 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
 
         # Adding item on the menu bar
         tray = PyQt6.QtWidgets.QSystemTrayIcon(main)
+        self.tray = tray
         tray.setIcon(icon)
         tray.setVisible(True)
         tray.activated.connect(self.on_tray_icon_activated) # pylint: disable=no-value-for-parameter
@@ -790,6 +837,10 @@ class SystrayWrapper(PyQt6.QtCore.QObject):
 
         # Adding options to the System Tray
         tray.setContextMenu(menu)
+
+    def hide(self):
+        """Remove the icon from the systray. A visible icon can keep the app alive."""
+        self.tray.setVisible(False)
 
     def on_tray_icon_activated(self, reason):
         """Show the main UI if double click on icon in systray."""
