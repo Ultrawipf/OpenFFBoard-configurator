@@ -41,6 +41,10 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         self._class_ids = {}
         self._port = None
         self._ports = []
+        self._logging = False
+        self._closing = False
+
+        self._serial.errorOccurred.connect(self.serial_error)
 
         self.pushButton_refresh.clicked.connect(self.get_ports)
         self.pushButton_connect.clicked.connect(self.serial_connect_button)
@@ -55,7 +59,9 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
 
         Connect the communication module with the history widget to load the board response.
         """
-        self.get_raw_reply().connect(self.serial_log)
+        if not self._logging:
+            self.get_raw_reply().connect(self.serial_log)
+            self._logging = True
         self.shown.emit()
 
     # Tab is hidden
@@ -65,7 +71,9 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
         Disconnect the communication module with the history widget
         to stop to log the board response.
         """
-        self.get_raw_reply().disconnect(self.serial_log)
+        if self._logging:
+            self.get_raw_reply().disconnect(self.serial_log)
+            self._logging = False
         self.hidden.emit()
 
     def serial_log(self, txt):
@@ -130,7 +138,21 @@ class SerialChooser(base_ui.WidgetUI, base_ui.CommunicationHandler):
             if not self._serial.isOpen():
                 self.main.log("Can not open port")
             else:
+                # Discard whatever the OS buffered before we started listening
+                self._serial.clear(PyQt6.QtSerialPort.QSerialPort.Direction.AllDirections)
                 self._serial.setDataTerminalReady(True)
+
+    def serial_error(self, error):
+        """Close the port when the device reports an unrecoverable error."""
+        errors = PyQt6.QtSerialPort.QSerialPort.SerialPortError
+        if error in (errors.NoError, errors.NotOpenError) or self._closing:
+            return
+
+        self.main.log("Serial error: " + self._serial.errorString())
+        if error in (errors.ResourceError, errors.DeviceNotFoundError, errors.PermissionError) and self._serial.isOpen():
+            self._closing = True
+            self.main.reset_port(immediate=True)
+            self._closing = False
 
     def select_port(self, port_id):
         """Change the selected port."""

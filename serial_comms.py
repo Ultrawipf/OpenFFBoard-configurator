@@ -1,4 +1,4 @@
-import queue,time, traceback, sys
+import queue,time, traceback, sys, codecs
 from PyQt6.QtCore import QObject
 from PyQt6.QtWidgets import QApplication
 from collections import deque
@@ -22,6 +22,7 @@ GRP_REPLY       = 6
 class SerialComms(QObject):
     MAX_REQUEST_SIZE = 1024
     MAX_DELAY_SEND_CMD = 30
+    MAX_REPLY_BUFFER = 65536
 
     cmdRegex = re.compile(r"\[(\w+)\.(?:(\d+)\.)?(\w+)([?!=]?)(?:(\d+))?(?:\?(\d+))?\|(.+)\]",re.DOTALL)
     callbackDict = {}
@@ -35,6 +36,7 @@ class SerialComms(QObject):
         self.serial.readyRead.connect(self.serialReceive)
         self.serial.aboutToClose.connect(self.reset)
         self.replytext = ""
+        self.decoder = codecs.getincrementaldecoder("utf-8")("replace")
         self.logger = logging.getLogger("serial_comms")
 
     @staticmethod
@@ -84,7 +86,10 @@ class SerialComms(QObject):
         self.serialWriteRaw(cmdstring)
 
     def reset(self):
+        """Drops all buffered receive and send data so nothing leaks into the next session."""
         self.replytext = ""
+        self.decoder.reset()
+        self.send_buffer = []
 
     def checkOk(self,reply):
         if(reply == "OK" or reply.find("Err") == -1):
@@ -140,36 +145,40 @@ class SerialComms(QObject):
 
 
     def serialReceive(self):
-        data = self.serial.readAll()
+        """Decodes incoming bytes and dispatches every complete reply frame."""
+        # Incremental decoding keeps multibyte characters split across reads intact
+        self.replytext += self.decoder.decode(self.serial.readAll().data())
+
+        if len(self.replytext) > SerialComms.MAX_REPLY_BUFFER:
+            self.logger.error("Reply buffer overflow (%d bytes). Discarding.", len(self.replytext))
+            self.replytext = ""
+            return
+
         try:
-            newReply = data.data().decode("utf-8")
-            self.replytext += newReply # Buffer replies until newline found at end of buffer
-        except Exception as e:
-            print(f"Can not decode:\n{data}. Exception: {e}")
-        try:
-        
             while self.replytext:
-                firstEndmarker = self.replytext.find("]")
                 firstStartmarker = self.replytext.find("[")
-                if(firstStartmarker >= 0 and firstEndmarker > 1 and firstStartmarker < firstEndmarker):
-                    match = self.cmdRegex.search(self.replytext,firstStartmarker,firstEndmarker+1)
-                    if (match):
-                        curRepl = self.replytext[firstStartmarker+1:firstEndmarker]
-                        self.replytext = self.replytext[match.end()::] # cut out everything before the end of the match
-                        if self.processMatchedReply(match):
-                            pass
-                        else:
-                            self.rawReply.emit(curRepl)
-                        
-                    else:
-                        self.rawReply.emit(self.replytext[firstStartmarker+1:firstEndmarker])
-                        self.replytext = self.replytext[firstEndmarker+1::]
-                else:
+                if firstStartmarker < 0:
+                    self.replytext = "" # Nothing left that could start a frame
                     break
+                if firstStartmarker > 0:
+                    self.replytext = self.replytext[firstStartmarker::] # Drop noise or truncated frames
+
+                firstEndmarker = self.replytext.find("]")
+                if firstEndmarker < 0:
+                    break # Frame is still incomplete
+
+                match = self.cmdRegex.search(self.replytext,0,firstEndmarker+1)
+                if (match):
+                    curRepl = self.replytext[1:firstEndmarker]
+                    self.replytext = self.replytext[match.end()::] # cut out everything before the end of the match
+                    if not self.processMatchedReply(match):
+                        self.rawReply.emit(curRepl)
+                else:
+                    self.rawReply.emit(self.replytext[1:firstEndmarker])
+                    self.replytext = self.replytext[firstEndmarker+1::]
         except Exception as e:
-            print("Can not process:",e)
+            self.logger.error("Can not process reply: %s", e)
             traceback.print_exception(*sys.exc_info())
-        
 
 
     def processMatchedReply(self,match):
@@ -185,7 +194,11 @@ class SerialComms(QObject):
         val = int(groups[GRP_CMDVAL1]) if groups[GRP_CMDVAL1] != None  else None
     
         if cls in SerialComms.callbackDict:
-            for callbackObject in SerialComms.callbackDict[cls]:
+            expired = []
+            # Iterate a snapshot. Callbacks may register or remove entries while running
+            for callbackObject in list(SerialComms.callbackDict[cls]):
+                if callbackObject not in SerialComms.callbackDict[cls]:
+                    continue # Already removed by a nested call
                 if callbackObject["cmd"] != cmd:
                     continue
                 if (instance != callbackObject["instance"]) and (callbackObject["instance"] != 0xff):
@@ -206,26 +219,25 @@ class SerialComms(QObject):
                 if reply == "ERR":
                     self.logger.error(f"Error executing command {cmd}")
                     continue
+                value = reply # Conversion must not leak into the next callback
                 if(callbackObject["convert"]):
                     try:
-                        reply = callbackObject["convert"](reply)
+                        value = callbackObject["convert"](reply)
                     except ValueError as e:
                         self.logger.error("Error converting object: " + str(e))
                 try:
-                    callbackObject["callback"](reply)
+                    callbackObject["callback"](value)
                     
                 except RuntimeError as e:
                     self.logger.error(f"Error calling object {callbackObject['callback']}: " + str(e))
                     callbackObject["delete"] = True # force delete
 
                 if callbackObject["delete"]: # delete if flag is set
-                    #print("Deleting",callbackObject)
-                    if (SerialComms.callbackDict[cls] is not None) \
-                        and (callbackObject in SerialComms.callbackDict[cls]) :
-                        SerialComms.callbackDict[cls].remove(callbackObject)
-                    else :
-                        #self.logger.error(f"Not found callback {callbackObject} for {cls}")
-                        pass
+                    expired.append(callbackObject)
                     deleted = True
-          
+
+            for callbackObject in expired:
+                if callbackObject in SerialComms.callbackDict[cls]:
+                    SerialComms.callbackDict[cls].remove(callbackObject)
+
         return deleted

@@ -181,12 +181,13 @@ class CommunicationHandler:
         """Inject the string buffer in the comms parser and process it as it a board answer."""
         first_end_marker = buffer.find("]")
         first_start_marker = buffer.find("[")
+        if first_start_marker < 0 or first_end_marker < first_start_marker:
+            return
         match = self.comms.cmdRegex.search(
             buffer, first_start_marker, first_end_marker + 1
         )
         if match:
             self.comms.processMatchedReply(match)
-        self.comms.processMatchedReply(match)
 
     def get_raw_reply(self):
         """Expose the raw reply pySignal to connect on it."""
