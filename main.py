@@ -607,6 +607,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         if not self.fw_version_str:
             self.log("Communication error")
             self.reset_port()
+            return
 
         fw_ver_split = [int(i) for i in self.fw_version_str.split(".")]
         min_fw_split = [int(i) for i in MIN_FW.split(".")]
@@ -623,6 +624,11 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         )
         gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]
 
+        # Modal dialogs and network access must not run inside the serial receive path
+        PyQt6.QtCore.QTimer.singleShot(0, functools.partial(self.version_warning, gui_outdated, fw_outdated))
+
+    def version_warning(self, gui_outdated, fw_outdated):
+        """Show the version mismatch warning and check github for a newer firmware."""
         if gui_outdated:
             msg = PyQt6.QtWidgets.QMessageBox(
                 PyQt6.QtWidgets.QMessageBox.Icon.Information,
@@ -645,17 +651,21 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 "and GUI are up to date if you encounter errors.")
             )
             msg.exec()
+
+        if self.profile_ui.get_global_setting("donotnotify_updates",False):
+            return
+
         # Check github
-        mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
+        try:
+            mainreporelease = updater.GithubRelease.get_latest_release(updater.MAINREPO)
+        except Exception:
+            return
         releaseversion,_ = updater.GithubRelease.get_version(mainreporelease)
         if updater.UpdateChecker.compare_versions(self.fw_version_str,releaseversion):
-            donotnotify = self.profile_ui.get_global_setting("donotnotify_updates",False)
-            if not donotnotify:
-                # New release available for firmware
-                msg = self.tr( "New firmware available")
-                notification = updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str)
-                notification.exec()
-   
+            # New release available for firmware
+            msg = self.tr( "New firmware available")
+            updater.UpdateNotification(mainreporelease,self,msg,self.fw_version_str).exec()
+
     def signature_check(self,signature,uid,suffix=""):
         """Checks if the chip signature matches its UID"""
         key = ECSignature.key_from_bytes_public(PUBKEY)

@@ -2,7 +2,7 @@
 - Fixed app staying alive in the background after closing the window on linux
 - Serial port and timers are now released on every exit path
 - Update check fails more gracefully at startup with no network
-
+- Fixed several random timeouts and disconnects. General stability improvements
 
 ### v1.17.0
 - Fixes analog axis progressbars cutting off text and ADS111x progressbars not populating when set to 4

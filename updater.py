@@ -30,8 +30,8 @@ class GithubRelease():
         """
         url = f"https://api.github.com/repos/{repo}/releases"
         try:
-            response = requests.get(url)
-        except requests.ConnectionError:
+            response = requests.get(url,timeout=5)
+        except requests.RequestException:
             return []
         if not response:
             return []
@@ -49,7 +49,7 @@ class GithubRelease():
         url = f"https://api.github.com/repos/{repo}/releases/latest"
         try:
             response = requests.get(url,timeout=1)  # 1s timeout to avoid blocking startup
-        except requests.ConnectionError:
+        except requests.RequestException: # Timeout is not a ConnectionError
             return {}
         if not response:
             return {}
