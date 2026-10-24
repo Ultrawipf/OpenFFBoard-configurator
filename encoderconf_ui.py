@@ -36,6 +36,9 @@ class EncoderOptions(QGroupBox):
         elif(id == 6): # SSI
             self.widget = (SsiEncoderConf(self,self.main))
             self.setTitle("SSI Settings")
+        elif(id == 7): # TW39
+            self.widget = (TW39EncoderConf(self,self.main))
+            self.setTitle("Ic-Haus TW39 Settings")
         else:
             layout.addWidget(QLabel("No settings"))
 
@@ -195,8 +198,8 @@ class SsiEncoderConf(EncoderOption,CommunicationHandler):
         layout = QFormLayout()
         layout.setContentsMargins(0,0,0,0)
 
-        self.spinBox_cs = QSpinBox()
-        self.spinBox_cs.setRange(1,3)
+        # self.spinBox_cs = QSpinBox()
+        # self.spinBox_cs.setRange(1,3)
         self.spinBox_bits = QSpinBox()
         self.spinBox_bits.setRange(1,32)
         self.comboBox_mode = QComboBox()
@@ -227,3 +230,42 @@ class SsiEncoderConf(EncoderOption,CommunicationHandler):
         self.send_value("ssienc","bits",val=self.spinBox_bits.value())
         self.send_value("ssienc","speed",val=self.comboBox_speed.currentData())
         self.send_value("ssienc","mode",val=self.comboBox_mode.currentData())
+
+class TW39EncoderConf(EncoderOption,CommunicationHandler):
+    def __init__(self,parent,main):
+        self.main = main
+        EncoderOption.__init__(self,parent)
+        CommunicationHandler.__init__(self)
+        self.initUI()
+        
+
+    def initUI(self):
+        layout = QFormLayout()
+        layout.setContentsMargins(0,0,0,0)
+
+        self.spinBox_cs = QSpinBox()
+        self.spinBox_cs.setRange(1,3)
+        self.comboBox_speed = QComboBox()
+
+        layout.addWidget(QLabel("SPI3 extension port"))
+        layout.addRow(QLabel("CS pin"),self.spinBox_cs)
+        layout.addRow(QLabel("SPI speed"),self.comboBox_speed)
+        layout.addWidget(QLabel("Port is used exclusively!"))
+        self.setLayout(layout)
+
+    def updateSpeeds(self,reply):
+        updateListComboBox(self.comboBox_speed,reply,entrySep='\n')
+
+    def updateModes(self,reply):
+        updateListComboBox(self.comboBox_mode,reply,entrySep='\n')
+
+    def onshown(self):
+        self.get_value_async("tw39enc","speed",self.updateSpeeds,0,typechar="!")
+        self.get_value_async("tw39enc","speed",self.comboBox_speed.setCurrentIndex,0,int,typechar="?")
+        self.get_value_async("mtenc","cs",self.spinBox_cs.setValue,0,int)
+        
+
+    def apply(self):
+        self.send_value("tw39enc","speed",val=self.comboBox_speed.currentData())
+        val = self.spinBox_cs.value()
+        self.send_value("mtenc","cs",val=val)
