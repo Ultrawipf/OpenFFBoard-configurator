@@ -13,7 +13,7 @@ import expo_ui
 
 from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QScatterSeries, QValueAxis
 from PyQt6.QtCore import Qt, QPointF, QMargins
-from PyQt6.QtGui import QColor, QPainter, QPen
+from PyQt6.QtGui import QColor, QPainter, QPen, QFontMetrics
 from PyQt6.QtWidgets import QApplication
 import math
 from biquad import Biquad
@@ -193,11 +193,13 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.chart_eq = QChart()
         self.chart_eq.legend().hide()
         self.chart_eq.setBackgroundRoundness(5)
+        self.chart_eq.layout().setContentsMargins(0, 0, 0, 0)
+        self.chart_eq.setMargins(QMargins(3, 3, 3, 3))
         self.chart_eq.setBackgroundBrush(QApplication.instance().palette().window())
         
         self.axis_x_eq = QValueAxis(self.chart_eq)
         self.axis_x_eq.setRange(0, 120)
-        self.axis_x_eq.setTitleText("Frequency (Hz)")
+        self.axis_x_eq.setLabelFormat("%d Hz")
         grid_color = QColor(QApplication.instance().palette().text().color())
         grid_color.setAlpha(40)
         self.axis_x_eq.setGridLineColor(grid_color)
@@ -206,7 +208,6 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.axis_y_eq = QValueAxis(self.chart_eq)
         self.axis_y_eq.setRange(-120, 120)
         self.axis_y_eq.setTitleText("Gain (%)")
-        self.axis_y_eq.setTickCount(7)
         self.axis_y_eq.setGridLineColor(grid_color)
         self.chart_eq.addAxis(self.axis_y_eq, Qt.AlignmentFlag.AlignLeft)
         
@@ -221,10 +222,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         self.axis_y_eq_right = QValueAxis(self.chart_eq)
         self.axis_y_eq_right.setRange(-120, 120)
-        self.axis_y_eq_right.setTickCount(7)
         self.axis_y_eq_right.setGridLineVisible(False)
         self.chart_eq.addAxis(self.axis_y_eq_right, Qt.AlignmentFlag.AlignRight)
         self.line_series_eq.attachAxis(self.axis_y_eq_right)
+        for ax in (self.axis_y_eq, self.axis_y_eq_right):
+            ax.setTickType(QValueAxis.TickType.TicksDynamic)
+            ax.setTickAnchor(0)
+            ax.setTickInterval(25)
+        self.chart_eq.plotAreaChanged.connect(self.update_eq_y_ticks)
         
         self.zero_line_eq = QLineSeries()
         pen_zero = QPen(QApplication.instance().palette().text().color())
@@ -410,6 +415,19 @@ class AxisUI(WidgetUI,CommunicationHandler):
         self.eq_gains[band] = value
         self.scatter_series_eq.replace(band, self.eq_freqs[band], value)
         self.update_eq_curve()
+
+    def update_eq_y_ticks(self, plot_area):
+        """Increase the gain label spacing when the graph is too short to show all labels."""
+        label_height = QFontMetrics(self.axis_y_eq.labelsFont()).height() * 1.5
+        y_range = self.axis_y_eq.max() - self.axis_y_eq.min()
+        interval = 100
+        for candidate in (25, 50):
+            if plot_area.height() * candidate / y_range >= label_height:
+                interval = candidate
+                break
+        if self.axis_y_eq.tickInterval() != interval:
+            self.axis_y_eq.setTickInterval(interval)
+            self.axis_y_eq_right.setTickInterval(interval)
 
     def update_eq_curve(self):
         """Calculates and draws the frequency response curve of the equalizer."""
