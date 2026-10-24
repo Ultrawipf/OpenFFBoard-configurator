@@ -59,11 +59,11 @@ import rmd_ui
 import canremote_ui
 
 # This GUIs version
-VERSION = "1.17.1"
+VERSION = "1.18.0"
 
 # Minimal supported firmware version.
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-MIN_FW = "1.17.0"
+MIN_FW = "1.18.0"
 
 DEFAULTLANG = "en_US"
 

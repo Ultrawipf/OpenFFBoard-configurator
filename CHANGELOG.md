@@ -1,3 +1,8 @@
+### v1.18.0
+- Adds axis equalizer
+- Adds reconstruction filter setting
+- Adds TW39 encoder support
+
 ### v1.17.1
 - Fixed app staying alive in the background after closing the window on linux
 - Serial port and timers are now released on every exit path
