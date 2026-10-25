@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtWidgets import QWidget,QToolButton 
-from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout
+from PyQt6.QtWidgets import QMessageBox,QVBoxLayout,QCheckBox,QButtonGroup,QGridLayout,QSizePolicy
 from PyQt6 import uic
 from helper import res_path,classlistToIds,updateClassComboBox,qtBlockAndCall,throttle
 from PyQt6.QtCore import QTimer,QEvent
@@ -176,6 +176,8 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         # manage display
         self.groupBox_enableAxisBlock.toggled.connect(self.toggleAxisBlock)
+        self.groupBox_7.toggled.connect(self.toggleEqBlock)
+        self.stackedWidget_encoder.currentChanged.connect(self.encoderPageChanged)
 
         self.pushButton_encoderTuning.clicked.connect(self.encoder_tuning_dlg.display)
         self.pushButton_expo.clicked.connect(self.expo_dlg.display)
@@ -283,6 +285,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
 
         # Set initial state of the collapsible groupbox
         self.toggleAxisBlock(self.groupBox_enableAxisBlock.isChecked())
+        self.toggleEqBlock(self.groupBox_7.isChecked())
     
     def toggleAxisBlock(self, checked):
         # This function hides/shows the content of the groupbox and adjusts its height
@@ -294,6 +297,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
         if checked:
             # When checked (expanded), remove the maximum height constraint.
             self.groupBox_enableAxisBlock.setMaximumHeight(16777215) # QWIDGETSIZE_MAX
+            self.groupBox_enableAxisBlock.setMaximumWidth(16777215)
         else:
             # When unchecked (collapsed), set a fixed height for the title bar.
             # You might need to adjust this value (e.g., 30) to fit your UI style.
@@ -307,6 +311,21 @@ class AxisUI(WidgetUI,CommunicationHandler):
         
         # Use a single shot timer to allow the event to process, then update the main window layout.
         # This will now get the correct, updated size hint from the tab widget.
+        QTimer.singleShot(0, self.main.adjustSize)
+
+    def toggleEqBlock(self, checked):
+        # Same collapsible behaviour as the axis settings block
+        self.checkBox_eq.setVisible(checked)
+        self.pushButton_resetEq.setVisible(checked)
+        self.graphWidget_eq.setVisible(checked)
+
+        if checked:
+            self.groupBox_7.setMaximumHeight(16777215) # QWIDGETSIZE_MAX
+        else:
+            self.groupBox_7.setMaximumHeight(40)
+
+        self.updateGeometry()
+        self.main.tabWidget_main.updateGeometry()
         QTimer.singleShot(0, self.main.adjustSize)
 
     def setSpeedLimit(self,val):
@@ -614,6 +633,14 @@ class AxisUI(WidgetUI,CommunicationHandler):
             return
         self.stackedWidget_encoder.setCurrentWidget(self.encoder_widgets[id])
 
+    def encoderPageChanged(self, idx):
+        # QStackedWidget sizes to its largest page. Ignore hidden pages so only the current encoder options take space
+        for i in range(self.stackedWidget_encoder.count()):
+            policy = QSizePolicy.Policy.Preferred if i == idx else QSizePolicy.Policy.Ignored
+            self.stackedWidget_encoder.widget(i).setSizePolicy(policy, policy)
+        self.stackedWidget_encoder.adjustSize()
+        self.updateGeometry()
+
     def getEncoder(self):
        
         def f(dat):
@@ -632,6 +659,7 @@ class AxisUI(WidgetUI,CommunicationHandler):
                     self.stackedWidget_encoder.addWidget(self.encoder_widgets[id])
                     self.comboBox_encoder.addItem(c[1],c[0])
                 self.comboBox_encoder.model().item(self.encoder_ids[c[0]][0]).setEnabled(creatable)
+            self.encoderPageChanged(self.stackedWidget_encoder.currentIndex())
 
         self.get_value_async("axis","enctype",f,self.axis,str,typechar='!')
         
