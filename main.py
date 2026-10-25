@@ -121,6 +121,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         self.active_threads_dlg = activetasks.ActiveTaskDialog(self)
         self.active_classes = {}
         self.fw_version_str = None
+        self.version_warning_shown = False # Only warn once per connection, not on every tab reload
         self.hwtype = None
         self.hwuid = None
         self.hwsignature = None
@@ -624,6 +625,10 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
         )
         gui_outdated = min_fw_split[0] < fw_ver_split[0] or min_fw_split[1] < fw_ver_split[1] and min_fw_split[0] == fw_ver_split[0]
 
+        if self.version_warning_shown:
+            return
+        self.version_warning_shown = True
+
         # Modal dialogs and network access must not run inside the serial receive path
         PyQt6.QtCore.QTimer.singleShot(0, functools.partial(self.version_warning, gui_outdated, fw_outdated))
 
@@ -731,6 +736,7 @@ class MainUi(PyQt6.QtWidgets.QMainWindow, base_ui.WidgetUI, base_ui.Communicatio
                 self.connected = True
 
         if connected:
+            self.version_warning_shown = False
             self.get_value_async("main", "id", id_cb, 0)
             self.errors_dlg.registerCallbacks()
             
